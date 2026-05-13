@@ -3,7 +3,7 @@
 h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
 .sim-wrap{padding:1.5rem 0;font-family:var(--font-sans)}
 .section-label{font-size:12px;color:var(--color-text-secondary);letter-spacing:.05em;margin:0 0 10px;font-weight:500;display:flex;align-items:center;gap:5px}
-.param-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem}
+.param-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
 .param-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px}
 .param-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:0 0 10px;display:flex;align-items:center;gap:6px}
 .param-title i{font-size:16px}
@@ -15,7 +15,11 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
 .opt-btn.active-vix-med{background:#FAEEDA;border-color:#BA7517;color:#854F0B}
 .opt-btn.active-vix-high{background:#FCEBEB;border-color:#E24B4A;color:#A32D2D}
 .opt-btn.active-rate{background:#EEEDFE;border-color:#7F77DD;color:#3C3489}
-.regime-banner{border-radius:var(--border-radius-lg);padding:14px 18px;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px}
+.fund-row{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 16px}
+.fund-row label{font-size:13px;color:var(--color-text-secondary);white-space:nowrap}
+.fund-row input{width:120px;font-size:13px;padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans)}
+.fund-row span{font-size:12px;color:var(--color-text-tertiary)}
+.regime-banner{border-radius:var(--border-radius-lg);padding:14px 18px;margin-bottom:1.5rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .regime-bull{background:#EAF3DE;border:0.5px solid #639922}
 .regime-bear{background:#FCEBEB;border:0.5px solid #E24B4A}
 .regime-range{background:#FAEEDA;border:0.5px solid #BA7517}
@@ -27,19 +31,24 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
 .regime-bear .regime-name{color:#A32D2D}
 .regime-range .regime-name{color:#854F0B}
 .regime-rateup .regime-name,.regime-ratedn .regime-name{color:#D3D1C7}
-.regime-sub{font-size:12px;margin-left:auto;flex-shrink:0}
+.regime-sub{font-size:12px;margin-left:auto}
 .regime-bull .regime-sub{color:#3B6D11}
 .regime-bear .regime-sub{color:#993535}
 .regime-range .regime-sub{color:#854F0B}
 .regime-rateup .regime-sub,.regime-ratedn .regime-sub{color:#888780}
+.trigger-tag{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500;margin-left:4px}
+.trigger-vix{background:#F7C1C1;color:#791F1F}
+.trigger-trend{background:#F0997B;color:#4A1B0C}
+.trigger-both{background:#E24B4A;color:#fff}
 .card-base{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 18px;margin-bottom:12px}
 .chart-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:0 0 12px;display:flex;align-items:center;gap:5px}
-.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
 .bar-label{font-size:12px;color:var(--color-text-secondary);width:84px;flex-shrink:0}
-.bar-track{flex:1;height:16px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;position:relative}
-.bar-base-fill{height:100%;opacity:.3;border-radius:3px}
-.bar-target-fill{position:absolute;top:2px;height:12px;border-radius:2px;transition:width .4s ease}
-.bar-val{font-size:12px;font-weight:500;color:var(--color-text-primary);width:30px;text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:20px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;position:relative}
+.bar-base-fill{position:absolute;top:0;left:0;height:100%;background:#B4B2A9;opacity:.5;border-radius:3px}
+.bar-target-fill{position:absolute;top:4px;height:12px;border-radius:2px;transition:width .4s ease}
+.bar-val{font-size:12px;font-weight:500;color:var(--color-text-primary);width:28px;text-align:right;flex-shrink:0}
+.bar-amt{font-size:11px;color:var(--color-text-secondary);width:44px;text-align:right;flex-shrink:0}
 .delta-badge{font-size:11px;font-weight:500;padding:2px 6px;border-radius:4px;flex-shrink:0;width:40px;text-align:center}
 .delta-up{background:#EAF3DE;color:#27500A}
 .delta-dn{background:#FCEBEB;color:#A32D2D}
@@ -51,10 +60,16 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
 .action-item i{font-size:15px;flex-shrink:0;margin-top:1px;color:var(--color-text-secondary)}
 .action-item strong{font-weight:500}
 .memo-text{font-size:13px;color:var(--color-text-secondary);line-height:1.7;margin:0}
+.rebalance-table{width:100%;font-size:12px;border-collapse:collapse;margin-top:4px}
+.rebalance-table th{font-weight:500;color:var(--color-text-secondary);text-align:left;padding:4px 8px 6px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.rebalance-table td{padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary)}
+.rebalance-table tr:last-child td{border-bottom:none}
+.rebal-ok{color:#3B6D11}
+.rebal-warn{color:#854F0B;font-weight:500}
 .rules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .rule-item{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
 .rule-name{font-size:12px;font-weight:500;color:var(--color-text-primary);margin:0 0 4px}
-.rule-line{font-size:11px;color:var(--color-text-secondary);line-height:1.5;margin:0}
+.rule-line{font-size:11px;line-height:1.5;margin:0}
 .rule-line.ok{color:#3B6D11}
 .rule-line.no{color:#A32D2D}
 .warn-box{border-radius:var(--border-radius-md);padding:10px 14px;font-size:12px;line-height:1.6;margin-top:10px;background:#FCEBEB;color:#791F1F;border:0.5px solid #F09595}
@@ -62,7 +77,7 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
 .legend-swatch{width:12px;height:5px;border-radius:2px;display:inline-block;margin-right:3px}
 .pending{opacity:.4;pointer-events:none}
 </style>
-<h2 class="sr-only">動態資產配置模擬器：選擇三個市場參數，系統自動判定市場狀態並輸出資產配置建議與部位操作硬規則。</h2>
+<h2 class="sr-only">動態資產配置模擬器 v3：選擇市場參數與總資金，系統自動判定市場狀態並輸出配置建議、萬元換算與再平衡檢查。</h2>
 <div class="sim-wrap">
 
 <p class="section-label"><i class="ti ti-sliders" aria-hidden="true"></i>第一步：輸入市場觀測參數</p>
@@ -93,21 +108,29 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
   </div>
 </div>
 
+<div class="fund-row">
+  <label for="fund-input"><i class="ti ti-wallet" aria-hidden="true" style="font-size:15px;margin-right:4px"></i>總資金</label>
+  <input type="number" id="fund-input" value="100" min="1" step="1" oninput="onFundChange()" />
+  <span>萬元</span>
+  <span id="fund-hint" style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)">各部位金額將同步換算</span>
+</div>
+
 <div id="out" class="pending">
 
 <p class="section-label"><i class="ti ti-radar" aria-hidden="true"></i>市場狀態判定</p>
 <div id="regime-banner" class="regime-banner regime-range">
   <div id="regime-dot" class="regime-dot" style="background:#BA7517"></div>
   <span id="regime-name" class="regime-name">—</span>
+  <span id="regime-trigger"></span>
   <span id="regime-sub" class="regime-sub">請先選擇所有參數</span>
 </div>
 
 <p class="section-label"><i class="ti ti-chart-bar" aria-hidden="true"></i>資產配置對比</p>
 <div class="card-base">
   <div class="legend-row">
-    <span><span class="legend-swatch" style="background:#B4B2A9;opacity:.5"></span>基準配置 Base</span>
-    <span><span class="legend-swatch" style="background:#378ADD"></span>目標配置 Target</span>
-    <span style="margin-left:auto;color:var(--color-text-tertiary);font-size:12px">總資金 100 萬</span>
+    <span><span class="legend-swatch" style="background:#B4B2A9"></span>基準 Base</span>
+    <span><span class="legend-swatch" style="background:#378ADD"></span>目標 Target（依部位顏色）</span>
+    <span style="margin-left:auto;color:var(--color-text-tertiary);font-size:12px" id="fund-display">總資金 100 萬</span>
   </div>
   <div id="bars"></div>
 </div>
@@ -123,7 +146,18 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
   </div>
 </div>
 
-<p class="section-label" style="margin-top:14px"><i class="ti ti-shield-lock" aria-hidden="true"></i>部位操作硬規則</p>
+<div id="rebalance-section" style="display:none;margin-bottom:12px">
+  <p class="section-label" style="margin-top:2px"><i class="ti ti-refresh" aria-hidden="true"></i>再平衡檢查（盤整期）</p>
+  <div class="card-base" style="margin-bottom:0">
+    <p style="font-size:12px;color:var(--color-text-secondary);margin:0 0 10px">各部位與基準偏離超過 <strong>5%</strong> 時建議執行再平衡。請輸入目前實際持倉比例：</p>
+    <table class="rebalance-table">
+      <thead><tr><th>部位</th><th>基準 %</th><th>目前持倉 %</th><th>偏離</th><th>建議</th></tr></thead>
+      <tbody id="rebal-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<p class="section-label"><i class="ti ti-shield-lock" aria-hidden="true"></i>部位操作硬規則</p>
 <div class="card-base" style="margin-bottom:0">
   <div class="rules-grid" id="rules-grid"></div>
   <div id="warn-area"></div>
@@ -134,6 +168,7 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
 
 <script>
 const S={trend:null,vix:null,rate:null};
+let FUND=100;
 const BASE={beta:30,global:20,defense:20,alpha:10,hedge:10,cash:10};
 const WEIGHTS={
   bull:  {beta:35,global:25,defense:10,alpha:20,hedge:5,cash:5},
@@ -144,7 +179,6 @@ const WEIGHTS={
 };
 const LABELS={beta:'內核 Beta',global:'外核 Global',defense:'防禦 Vol-Abs',alpha:'衛星 Alpha',hedge:'避險 Hedge',cash:'現金 Option'};
 const COLORS={beta:'#378ADD',global:'#7F77DD',defense:'#1D9E75',alpha:'#D85A30',hedge:'#D4537E',cash:'#888780'};
-
 const REGIME_META={
   bull:  {label:'成長牛市 Risk-on', sub:'風險偏好高，進攻模式', bannerCls:'regime-bull',  dotColor:'#639922'},
   bear:  {label:'緊縮熊市 Risk-off',sub:'啟動防禦，收縮戰線', bannerCls:'regime-bear',  dotColor:'#E24B4A'},
@@ -152,7 +186,6 @@ const REGIME_META={
   rateup:{label:'利率上升 Rate Up', sub:'升息衝擊，現金優先', bannerCls:'regime-rateup',dotColor:'#888780'},
   ratedn:{label:'利率下降 Rate Down',sub:'降息利多，擴大敞口',bannerCls:'regime-ratedn',dotColor:'#888780'}
 };
-
 const ACTIONS={
   bull:[
     {icon:'ti-arrow-up',text:'<strong>內核</strong> 加碼至 35%，擴大市場敞口'},
@@ -169,9 +202,9 @@ const ACTIONS={
     {icon:'ti-minus',text:'<strong>外核</strong> 縮至 15%，減少全球波動敞口'}
   ],
   range:[
-    {icon:'ti-equals',text:'維持<strong>基準配置</strong>，各部位無需調整'},
-    {icon:'ti-eye',text:'觀測 VIX 與季線方向，等待突破訊號'},
-    {icon:'ti-coins',text:'衛星可小區間操作，持續累積現金'}
+    {icon:'ti-equals',text:'各部位維持基準比例，不主動調整'},
+    {icon:'ti-refresh',text:'執行<strong>再平衡檢查</strong>，偏離 > 5% 時進行修正'},
+    {icon:'ti-coins',text:'衛星可小區間操作，持續累積現金備用'}
   ],
   rateup:[
     {icon:'ti-arrow-up',text:'<strong>現金</strong> 大幅拉升至 20%，抵禦利率衝擊'},
@@ -186,15 +219,13 @@ const ACTIONS={
     {icon:'ti-arrow-down',text:'<strong>現金</strong> 壓縮至 5%，全面擴大部署'}
   ]
 };
-
 const MEMOS={
   bull:'市場動能強勁，VIX 低位且大盤創高。積極擴大風險敞口，衛星部位追蹤高貝塔機會。現金保留 5% 即可，持續追蹤 VIX 是否升破 20。',
   bear:'啟動防禦機制，收縮戰線。衛星大幅減半，防禦與現金合計 40%。不追殺下跌，等待 VIX 降溫後逐步恢復風險部位。',
-  range:'方向不明，維持均衡基準。不賭方向，以現金備用靈活應對突破訊號。大盤創高且 VIX < 20 切換牛市；跌破季線或 VIX > 30 啟動熊市防禦。',
+  range:'方向不明，維持均衡基準。此時最重要的工作是定期再平衡，確認各部位未偏離基準超過 5%。不賭方向，以現金備用靈活應對突破訊號。',
   rateup:'升息衝擊優先處置。現金拉至最高，迴避長天期資產與高估值股票。等待央行政策明朗化後重新評估配置方向。',
   ratedn:'降息週期開啟，長線多頭訊號。積極加碼內核與長天期債券，衛星部位同步擴張。現金壓縮至最低，把握利率下行帶動的資產重估。'
 };
-
 const RULES_BASE=[
   {name:'內核 Beta',ok:['只再平衡'],no:['不主動交易']},
   {name:'外核 Global',ok:['長期持有'],no:['不主動交易']},
@@ -203,6 +234,17 @@ const RULES_BASE=[
   {name:'避險 Hedge',ok:['逆週期使用'],no:['不長期重壓']},
   {name:'現金 Option',ok:['永遠存在','崩盤最大火力'],no:[]}
 ];
+
+const REBAL_KEYS=Object.keys(BASE);
+let rebalInputs={};
+REBAL_KEYS.forEach(k=>{ rebalInputs[k]=BASE[k]; });
+
+function onFundChange(){
+  const v=parseFloat(document.getElementById('fund-input').value);
+  FUND=isNaN(v)||v<=0?100:v;
+  document.getElementById('fund-display').textContent=`總資金 ${FUND} 萬`;
+  if(S.trend&&S.vix&&S.rate) render();
+}
 
 function pick(el,grp,val,cls){
   document.querySelectorAll(`[data-grp="${grp}"]`).forEach(b=>{
@@ -225,6 +267,16 @@ function getRegime(){
   return 'range';
 }
 
+function getBearTrigger(){
+  const both=S.trend==='below'&&S.vix==='high';
+  const vixOnly=S.trend!=='below'&&S.vix==='high';
+  const trendOnly=S.trend==='below'&&S.vix!=='high';
+  if(both) return {label:'跌破季線 + VIX > 30',cls:'trigger-both'};
+  if(vixOnly) return {label:'VIX > 30 觸發',cls:'trigger-vix'};
+  if(trendOnly) return {label:'跌破季線觸發',cls:'trigger-trend'};
+  return null;
+}
+
 function render(){
   const regime=getRegime();
   const meta=REGIME_META[regime];
@@ -236,6 +288,14 @@ function render(){
   document.getElementById('regime-name').textContent=meta.label;
   document.getElementById('regime-sub').textContent=meta.sub;
 
+  const triggerEl=document.getElementById('regime-trigger');
+  if(regime==='bear'){
+    const t=getBearTrigger();
+    triggerEl.innerHTML=t?`<span class="trigger-tag ${t.cls}">${t.label}</span>`:'';
+  } else {
+    triggerEl.innerHTML='';
+  }
+
   const bars=document.getElementById('bars');
   bars.innerHTML='';
   const keys=Object.keys(BASE);
@@ -245,13 +305,15 @@ function render(){
     const bPct=Math.round(b/maxVal*100),tPct=Math.round(t/maxVal*100);
     const dc=diff>0?'delta-up':diff<0?'delta-dn':'delta-ne';
     const ds=diff>0?`+${diff}%`:diff<0?`${diff}%`:'±0';
+    const amt=(FUND*t/100).toFixed(1);
     bars.innerHTML+=`<div class="bar-row">
       <span class="bar-label">${LABELS[k]}</span>
       <div class="bar-track">
-        <div class="bar-base-fill" style="width:${bPct}%;background:${COLORS[k]}"></div>
+        <div class="bar-base-fill" style="width:${bPct}%"></div>
         <div class="bar-target-fill" style="width:${tPct}%;background:${COLORS[k]}"></div>
       </div>
       <span class="bar-val">${t}%</span>
+      <span class="bar-amt">${amt}萬</span>
       <span class="delta-badge ${dc}">${ds}</span>
     </div>`;
   });
@@ -263,6 +325,14 @@ function render(){
   });
 
   document.getElementById('memo').textContent=MEMOS[regime];
+
+  const rebalSec=document.getElementById('rebalance-section');
+  if(regime==='range'){
+    rebalSec.style.display='block';
+    renderRebalTable();
+  } else {
+    rebalSec.style.display='none';
+  }
 
   const rg=document.getElementById('rules-grid');
   rg.innerHTML='';
@@ -279,5 +349,33 @@ function render(){
   } else if(S.vix==='high'){
     wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px" aria-hidden="true"></i>警報：VIX > 30 屬於極度恐慌。現金部位保留充足備用，僅在市場出現明確企穩訊號時執行分批佈局，嚴禁一次性重壓。</div>`;
   }
+}
+
+function renderRebalTable(){
+  const tbody=document.getElementById('rebal-body');
+  tbody.innerHTML='';
+  REBAL_KEYS.forEach(k=>{
+    const base=BASE[k];
+    const cur=rebalInputs[k];
+    const diff=cur-base;
+    const absDiff=Math.abs(diff);
+    const warn=absDiff>=5;
+    const direction=diff>0?'偏高，建議減碼':diff<0?'偏低，建議加碼':'維持';
+    tbody.innerHTML+=`<tr>
+      <td>${LABELS[k]}</td>
+      <td>${base}%</td>
+      <td><input type="number" min="0" max="100" step="1" value="${cur}"
+        style="width:58px;font-size:12px;padding:3px 6px;border-radius:4px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans)"
+        oninput="updateRebal('${k}',this.value)" /></td>
+      <td class="${warn?'rebal-warn':'rebal-ok'}">${diff>0?'+':''}${diff}%</td>
+      <td class="${warn?'rebal-warn':'rebal-ok'}">${warn?'⚠ '+direction:'維持'}</td>
+    </tr>`;
+  });
+}
+
+function updateRebal(k,val){
+  const v=parseFloat(val);
+  rebalInputs[k]=isNaN(v)?BASE[k]:v;
+  renderRebalTable();
 }
 </script>
