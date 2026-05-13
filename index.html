@@ -1,0 +1,252 @@
+
+<style>
+h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.sim-wrap{padding:1.5rem 0;font-family:var(--font-sans)}
+.section-label{font-size:12px;color:var(--color-text-secondary);letter-spacing:.05em;margin:0 0 10px;font-weight:500}
+.param-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem}
+.param-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px}
+.param-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:0 0 10px;display:flex;align-items:center;gap:6px}
+.param-title i{font-size:16px}
+.btn-group{display:flex;flex-direction:column;gap:6px}
+.opt-btn{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 12px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;text-align:left;transition:background .15s,border-color .15s,color .15s;font-family:var(--font-sans)}
+.opt-btn:hover{background:var(--color-background-secondary);border-color:var(--color-border-primary)}
+.opt-btn.active-trend{background:#E6F1FB;border-color:#378ADD;color:#0C447C}
+.opt-btn.active-vix-low{background:#EAF3DE;border-color:#639922;color:#3B6D11}
+.opt-btn.active-vix-med{background:#FAEEDA;border-color:#BA7517;color:#854F0B}
+.opt-btn.active-vix-high{background:#FCEBEB;border-color:#E24B4A;color:#A32D2D}
+.opt-btn.active-rate{background:#EEEDFE;border-color:#7F77DD;color:#3C3489}
+.regime-banner{border-radius:var(--border-radius-lg);padding:16px 20px;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px}
+.regime-bull{background:#EAF3DE;border:0.5px solid #639922}
+.regime-bear{background:#FCEBEB;border:0.5px solid #E24B4A}
+.regime-range{background:#FAEEDA;border:0.5px solid #BA7517}
+.regime-rateup{background:#2C2C2A;border:0.5px solid #888780}
+.regime-ratedown{background:#2C2C2A;border:0.5px solid #888780}
+.regime-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.regime-dot-bull{background:#639922}
+.regime-dot-bear{background:#E24B4A}
+.regime-dot-range{background:#BA7517}
+.regime-dot-dark{background:#B4B2A9}
+.regime-name{font-size:16px;font-weight:500}
+.regime-bull .regime-name{color:#27500A}
+.regime-bear .regime-name{color:#A32D2D}
+.regime-range .regime-name{color:#854F0B}
+.regime-rateup .regime-name,.regime-ratedown .regime-name{color:#D3D1C7}
+.regime-sub{font-size:13px;margin-left:auto}
+.regime-bull .regime-sub{color:#3B6D11}
+.regime-bear .regime-sub{color:#993535}
+.regime-range .regime-sub{color:#854F0B}
+.regime-rateup .regime-sub,.regime-ratedown .regime-sub{color:#888780}
+.output-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem}
+.card-base{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 18px}
+.chart-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:0 0 14px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.bar-label{font-size:12px;color:var(--color-text-secondary);width:80px;flex-shrink:0}
+.bar-track{flex:1;height:18px;background:var(--color-background-secondary);border-radius:4px;overflow:hidden;position:relative}
+.bar-base-fill{height:100%;opacity:.35;border-radius:4px}
+.bar-target-fill{position:absolute;top:3px;height:12px;border-radius:3px;transition:width .4s ease}
+.bar-val{font-size:12px;font-weight:500;color:var(--color-text-primary);width:32px;text-align:right;flex-shrink:0}
+.delta-badge{font-size:11px;font-weight:500;padding:2px 6px;border-radius:4px;flex-shrink:0;width:42px;text-align:center}
+.delta-up{background:#EAF3DE;color:#27500A}
+.delta-dn{background:#FCEBEB;color:#A32D2D}
+.delta-ne{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.action-list{list-style:none;padding:0;margin:0}
+.action-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.action-item:last-child{border-bottom:none}
+.action-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.action-text{font-size:13px;color:var(--color-text-primary);line-height:1.5}
+.action-text strong{font-weight:500}
+.memo-box{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;margin-top:12px;font-size:13px;color:var(--color-text-secondary);line-height:1.7;border-left:3px solid var(--color-border-secondary)}
+.legend-row{display:flex;gap:16px;margin-bottom:10px;font-size:12px;color:var(--color-text-secondary);align-items:center}
+.legend-swatch{width:12px;height:6px;border-radius:2px;display:inline-block}
+.pending-state{opacity:.45;pointer-events:none}
+</style>
+<h2 class="sr-only">動態資產配置模擬器：選擇三個市場參數，系統自動判定市場狀態並輸出資產配置建議。</h2>
+<div class="sim-wrap">
+
+<p class="section-label"><i class="ti ti-sliders" aria-hidden="true"></i> 第一步：輸入市場觀測參數</p>
+<div class="param-grid">
+  <div class="param-card">
+    <p class="param-title"><i class="ti ti-trending-up" aria-hidden="true"></i>大盤趨勢</p>
+    <div class="btn-group" id="grp-trend">
+      <button class="opt-btn" data-grp="trend" data-val="above" onclick="pick(this,'trend','above','active-trend')">季線上方創高</button>
+      <button class="opt-btn" data-grp="trend" data-val="flat" onclick="pick(this,'trend','flat','active-trend')">季線附近盤整</button>
+      <button class="opt-btn" data-grp="trend" data-val="below" onclick="pick(this,'trend','below','active-trend')">跌破季線下彎</button>
+    </div>
+  </div>
+  <div class="param-card">
+    <p class="param-title"><i class="ti ti-activity" aria-hidden="true"></i>恐慌指數 VIX</p>
+    <div class="btn-group" id="grp-vix">
+      <button class="opt-btn" data-grp="vix" data-val="low" onclick="pick(this,'vix','low','active-vix-low')">低恐慌（&lt; 20）</button>
+      <button class="opt-btn" data-grp="vix" data-val="medium" onclick="pick(this,'vix','medium','active-vix-med')">中恐慌（20–30）</button>
+      <button class="opt-btn" data-grp="vix" data-val="high" onclick="pick(this,'vix','high','active-vix-high')">高恐慌（&gt; 30）</button>
+    </div>
+  </div>
+  <div class="param-card">
+    <p class="param-title"><i class="ti ti-percentage" aria-hidden="true"></i>利率動向</p>
+    <div class="btn-group" id="grp-rate">
+      <button class="opt-btn" data-grp="rate" data-val="stable" onclick="pick(this,'rate','stable','active-rate')">穩定</button>
+      <button class="opt-btn" data-grp="rate" data-val="rising" onclick="pick(this,'rate','rising','active-rate')">快速升息</button>
+      <button class="opt-btn" data-grp="rate" data-val="falling" onclick="pick(this,'rate','falling','active-rate')">快速降息</button>
+    </div>
+  </div>
+</div>
+
+<div id="output-section" class="pending-state">
+
+<p class="section-label"><i class="ti ti-radar" aria-hidden="true"></i> 市場狀態判定</p>
+<div id="regime-banner" class="regime-banner regime-range">
+  <div id="regime-dot" class="regime-dot regime-dot-range"></div>
+  <span id="regime-name" class="regime-name">—</span>
+  <span id="regime-sub" class="regime-sub">請先選擇所有參數</span>
+</div>
+
+<p class="section-label"><i class="ti ti-chart-bar" aria-hidden="true"></i> 資產配置對比</p>
+<div class="card-base" style="margin-bottom:12px">
+  <div class="legend-row">
+    <span><span class="legend-swatch" style="background:#B4B2A9;opacity:.5"></span> 基準配置（Base）</span>
+    <span><span class="legend-swatch" style="background:#378ADD"></span> 目標配置（Target）</span>
+    <span style="margin-left:auto;color:var(--color-text-tertiary)">總資金 100 萬</span>
+  </div>
+  <div id="bars-container"></div>
+</div>
+
+<div class="output-grid">
+  <div class="card-base">
+    <p class="chart-title"><i class="ti ti-list-check" aria-hidden="true" style="font-size:14px;margin-right:4px"></i>執行清單</p>
+    <ul class="action-list" id="action-list"></ul>
+  </div>
+  <div class="card-base">
+    <p class="chart-title"><i class="ti ti-message-2" aria-hidden="true" style="font-size:14px;margin-right:4px"></i>經理人備忘</p>
+    <div class="memo-box" id="memo-box"></div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+const state={trend:null,vix:null,rate:null};
+const BASE={beta:30,global:20,defense:20,alpha:10,hedge:10,cash:10};
+const WEIGHTS={
+  bull:  {beta:35,global:25,defense:10,alpha:20,hedge:5,cash:5},
+  bear:  {beta:25,global:15,defense:25,alpha:5,hedge:15,cash:15},
+  range: {beta:30,global:20,defense:20,alpha:10,hedge:10,cash:10},
+  rateup:{beta:25,global:20,defense:25,alpha:5,hedge:5,cash:20},
+  ratedn:{beta:35,global:20,defense:10,alpha:15,hedge:15,cash:5}
+};
+const LABELS={beta:'內核 Beta',global:'外核 Global',defense:'防禦 Vol-Abs',alpha:'衛星 Alpha',hedge:'避險 Hedge',cash:'現金 Option'};
+const COLORS={beta:'#378ADD',global:'#7F77DD',defense:'#1D9E75',alpha:'#D85A30',hedge:'#D4537E',cash:'#888780'};
+
+function pick(el,grp,val,cls){
+  document.querySelectorAll(`[data-grp="${grp}"]`).forEach(b=>{
+    b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate');
+  });
+  el.classList.add(cls);
+  state[grp]=val;
+  if(state.trend&&state.vix&&state.rate){
+    document.getElementById('output-section').classList.remove('pending-state');
+    render();
+  }
+}
+
+function getRegime(){
+  const {trend,vix,rate}=state;
+  if(rate==='rising') return 'rateup';
+  if(rate==='falling') return 'ratedn';
+  if(trend==='below'&&(vix==='medium'||vix==='high')) return 'bear';
+  if(trend==='above'&&vix==='low') return 'bull';
+  return 'range';
+}
+
+const REGIME_META={
+  bull: {label:'🟢 成長牛市 Risk-on',sub:'風險偏好高，加碼股票與衛星部位',bannerCls:'regime-bull',dotCls:'regime-dot-bull'},
+  bear: {label:'🔴 緊縮熊市 Risk-off',sub:'市場恐慌，啟動防禦模式',bannerCls:'regime-bear',dotCls:'regime-dot-bear'},
+  range:{label:'🟡 盤整震盪 Range',sub:'方向不明，維持基準均衡配置',bannerCls:'regime-range',dotCls:'regime-dot-range'},
+  rateup:{label:'⚫ 利率上升 Rate Up',sub:'升息衝擊，大幅提升現金備用',bannerCls:'regime-rateup',dotCls:'regime-dot-dark'},
+  ratedn:{label:'⚫ 利率下降 Rate Down',sub:'降息利多，擴大風險資產敞口',bannerCls:'regime-ratedown',dotCls:'regime-dot-dark'}
+};
+
+const ACTIONS={
+  bull:[
+    {icon:'ti-arrow-up',text:'<strong>內核 Beta</strong> 加碼至 35%，擴大市場敞口'},
+    {icon:'ti-arrow-up',text:'<strong>外核 Global</strong> 加碼至 25%，增持全球股票'},
+    {icon:'ti-arrow-up',text:'<strong>衛星 Alpha</strong> 加碼至 20%，追蹤高貝塔機會'},
+    {icon:'ti-arrow-down',text:'<strong>防禦 Vol-Abs</strong> 減碼至 10%，壓低保守配置'},
+    {icon:'ti-arrow-down',text:'<strong>現金 Option</strong> 減碼至 5%，充分部署資金'}
+  ],
+  bear:[
+    {icon:'ti-arrow-down',text:'<strong>衛星 Alpha</strong> 大幅減碼至 5%，降低高風險敞口'},
+    {icon:'ti-arrow-up',text:'<strong>防禦 Vol-Abs</strong> 拉升至 25%，強化緩衝'},
+    {icon:'ti-arrow-up',text:'<strong>避險 Hedge</strong> 拉升至 15%，對沖系統性風險'},
+    {icon:'ti-arrow-up',text:'<strong>現金 Option</strong> 拉升至 15%，保留反彈火力'},
+    {icon:'ti-minus',text:'<strong>外核 Global</strong> 縮至 15%，減少全球波動敞口'}
+  ],
+  range:[
+    {icon:'ti-equals',text:'維持<strong>基準配置</strong>，各部位無需調整'},
+    {icon:'ti-eye',text:'持續觀測 VIX 與季線方向，等待突破訊號'},
+    {icon:'ti-alert-circle',text:'避免追高殺低，以現金備用等待機會'}
+  ],
+  rateup:[
+    {icon:'ti-arrow-up',text:'<strong>現金 Option</strong> 大幅拉升至 20%，抵禦利率衝擊'},
+    {icon:'ti-arrow-up',text:'<strong>防禦 Vol-Abs</strong> 提升至 25%，持有短天期债券'},
+    {icon:'ti-arrow-down',text:'<strong>衛星 Alpha</strong> 壓縮至 5%，避開高估值標的'},
+    {icon:'ti-arrow-down',text:'<strong>內核 Beta</strong> 縮至 25%，減少利率敏感部位'},
+    {icon:'ti-arrow-down',text:'<strong>避險 Hedge</strong> 縮至 5%，集中火力在現金'}
+  ],
+  ratedn:[
+    {icon:'ti-arrow-up',text:'<strong>內核 Beta</strong> 加碼至 35%，利率下行利多'},
+    {icon:'ti-arrow-up',text:'<strong>衛星 Alpha</strong> 加碼至 15%，把握成長機會'},
+    {icon:'ti-arrow-up',text:'<strong>避險 Hedge</strong> 加碼至 15%，持有長天期債券'},
+    {icon:'ti-arrow-down',text:'<strong>防禦 Vol-Abs</strong> 減碼至 10%，降低防禦比重'},
+    {icon:'ti-arrow-down',text:'<strong>現金 Option</strong> 壓縮至 5%，全面擴大部署'}
+  ]
+};
+
+const MEMOS={
+  bull:'市場動能強勁，VIX 低位且大盤創高。建議積極擴大風險敞口，衛星部位加碼追蹤高貝塔機會。現金保留 5% 即可，全速部署。持續追蹤 VIX 是否升破 20，一旦出現警訊立即回歸均衡配置。',
+  bear:'啟動防禦機制。衛星部位大幅減半，防禦與現金合計拉升至 30% 以上。保留火力，不追殺下跌。等待 VIX 降溫回到 20 以下，確認大盤穩定後再逐步恢復風險部位。',
+  range:'方向不明，維持均衡基準配置。此階段避免主動賭方向，以現金備用靈活應對突破訊號。若 VIX 下破 20 同時大盤創高，切換至牛市模式；若大盤跌破季線，立即啟動熊市防禦。',
+  rateup:'升息衝擊優先處置。現金比重拉至最高，迴避利率敏感的長天期資產與高估值股票。此階段不追漲、不加碼，等待央行政策明朗化後再重新評估配置方向。',
+  ratedn:'降息週期開啟，長線多頭訊號。積極加碼內核 Beta 與長天期債券，衛星部位同步擴張。現金壓縮至最低，把握利率下行帶動的資產重估機會。'
+};
+
+function render(){
+  const regime=getRegime();
+  const meta=REGIME_META[regime];
+  const target=WEIGHTS[regime];
+
+  const banner=document.getElementById('regime-banner');
+  banner.className=`regime-banner ${meta.bannerCls}`;
+  document.getElementById('regime-dot').className=`regime-dot ${meta.dotCls}`;
+  document.getElementById('regime-name').textContent=meta.label;
+  document.getElementById('regime-sub').textContent=meta.sub;
+
+  const bars=document.getElementById('bars-container');
+  bars.innerHTML='';
+  const keys=Object.keys(BASE);
+  const maxVal=Math.max(...keys.map(k=>Math.max(BASE[k],target[k])));
+  keys.forEach(k=>{
+    const b=BASE[k],t=target[k],diff=t-b;
+    const bPct=Math.round(b/maxVal*100),tPct=Math.round(t/maxVal*100);
+    const deltaCls=diff>0?'delta-up':diff<0?'delta-dn':'delta-ne';
+    const deltaStr=diff>0?`+${diff}%`:diff<0?`${diff}%`:'±0';
+    bars.innerHTML+=`<div class="bar-row">
+      <span class="bar-label">${LABELS[k]}</span>
+      <div class="bar-track">
+        <div class="bar-base-fill" style="width:${bPct}%;background:${COLORS[k]}"></div>
+        <div class="bar-target-fill" style="width:${tPct}%;background:${COLORS[k]}"></div>
+      </div>
+      <span class="bar-val">${t}%</span>
+      <span class="delta-badge ${deltaCls}">${deltaStr}</span>
+    </div>`;
+  });
+
+  const al=document.getElementById('action-list');
+  al.innerHTML='';
+  ACTIONS[regime].forEach(a=>{
+    al.innerHTML+=`<li class="action-item"><i class="ti ${a.icon} action-icon" aria-hidden="true"></i><span class="action-text">${a.text}</span></li>`;
+  });
+
+  document.getElementById('memo-box').textContent=MEMOS[regime];
+}
+</script>
