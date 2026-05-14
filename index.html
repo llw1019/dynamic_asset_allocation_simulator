@@ -17,10 +17,11 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
 .num-input-row{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--color-border-tertiary);flex-wrap:wrap}
 .num-input-row label{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}
 .num-input-row input{width:68px;font-size:12px;padding:4px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans)}
-.num-badge{font-size:11px;font-weight:500;padding:2px 7px;border-radius:4px;margin-top:2px}
+.num-badge{font-size:11px;font-weight:500;padding:2px 7px;border-radius:4px;margin-top:2px;display:inline-block}
 .nb-low{background:#EAF3DE;color:#3B6D11}
 .nb-med{background:#FAEEDA;color:#854F0B}
 .nb-high{background:#FCEBEB;color:#A32D2D}
+.nb-extreme{background:#A32D2D;color:#fff}
 .nb-above{background:#E6F1FB;color:#0C447C}
 .nb-flat{background:#EEEDFE;color:#3C3489}
 .nb-below{background:#FCEBEB;color:#A32D2D}
@@ -51,6 +52,7 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
 .trigger-vix{background:#F7C1C1;color:#791F1F}
 .trigger-trend{background:#F0997B;color:#4A1B0C}
 .trigger-both{background:#E24B4A;color:#fff}
+.trigger-extreme{background:#7A0000;color:#fff}
 .card-base{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 18px;margin-bottom:12px}
 .chart-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:0 0 12px;display:flex;align-items:center;gap:5px}
 .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
@@ -77,6 +79,9 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
 .rebalance-table tr:last-child td{border-bottom:none}
 .rebal-ok{color:#3B6D11}
 .rebal-warn{color:#854F0B;font-weight:500}
+.rebal-total-ok{color:var(--color-text-secondary);font-weight:500}
+.rebal-total-warn{color:#A32D2D;font-weight:500}
+.rebal-total-row td{border-top:1px solid var(--color-border-secondary);background:var(--color-background-secondary);font-weight:500}
 .rules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .rule-item{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
 .rule-name{font-size:12px;font-weight:500;color:var(--color-text-primary);margin:0 0 4px}
@@ -84,6 +89,7 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
 .rule-line.ok{color:#3B6D11}
 .rule-line.no{color:#A32D2D}
 .warn-box{border-radius:var(--border-radius-md);padding:10px 14px;font-size:12px;line-height:1.6;margin-top:10px;background:#FCEBEB;color:#791F1F;border:0.5px solid #F09595}
+.warn-box-extreme{background:#3D0000;color:#FFB3B3;border:0.5px solid #A32D2D}
 .legend-row{display:flex;gap:16px;margin-bottom:10px;font-size:12px;color:var(--color-text-secondary);align-items:center}
 .legend-swatch{width:12px;height:5px;border-radius:2px;display:inline-block;margin-right:3px}
 .pending{opacity:.4;pointer-events:none}
@@ -91,13 +97,12 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
 .rate-hint{font-size:11px;color:var(--color-text-tertiary);margin-top:5px;line-height:1.4}
 </style>
 
-<h2 class="sr-only">動態資產配置模擬器 v5</h2>
+<h2 class="sr-only">動態資產配置模擬器 v6</h2>
 <div class="sim-wrap">
 
 <p class="section-label"><i class="ti ti-sliders" aria-hidden="true"></i>第一步：輸入市場觀測參數</p>
 <div class="param-grid">
 
-  <!-- 大盤趨勢 -->
   <div class="param-card">
     <p class="param-title"><i class="ti ti-trending-up" aria-hidden="true"></i>大盤趨勢</p>
     <div class="btn-group">
@@ -111,10 +116,9 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
       <label for="ma60-input">60MA</label>
       <input type="number" id="ma60-input" placeholder="點數" min="0" step="1" oninput="onIndexInput()"/>
     </div>
-    <span id="trend-badge" class="num-badge" style="display:none;margin-top:6px"></span>
+    <span id="trend-badge" class="num-badge" style="display:none"></span>
   </div>
 
-  <!-- VIX -->
   <div class="param-card">
     <p class="param-title"><i class="ti ti-activity" aria-hidden="true"></i>恐慌指數 VIX</p>
     <div class="btn-group">
@@ -123,13 +127,12 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
       <button class="opt-btn" data-grp="vix" data-val="high"   onclick="pick(this,'vix','high','active-vix-high')">高恐慌（&gt; 30）</button>
     </div>
     <div class="num-input-row">
-      <label for="vix-input">VIX 數值</label>
+      <label for="vix-input">VIX 數值 (^VIX)</label>
       <input type="number" id="vix-input" placeholder="—" min="5" max="90" step="0.1" oninput="onVixInput()"/>
     </div>
-    <span id="vix-badge" class="num-badge" style="display:none;margin-top:6px"></span>
+    <span id="vix-badge" class="num-badge" style="display:none"></span>
   </div>
 
-  <!-- 利率 -->
   <div class="param-card">
     <p class="param-title"><i class="ti ti-percentage" aria-hidden="true"></i>利率動向</p>
     <div class="btn-group">
@@ -143,21 +146,19 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
       <label for="rate-prev">一個月前 %</label>
       <input type="number" id="rate-prev" placeholder="4.05" min="0" max="20" step="0.01" oninput="onRateInput()"/>
     </div>
-    <span id="rate-badge" class="num-badge" style="display:none;margin-top:6px"></span>
-    <p class="rate-hint">美債 10Y（^TNX / US10Y），填小數點後兩位</p>
+    <span id="rate-badge" class="num-badge" style="display:none"></span>
+    <p class="rate-hint">美債 10Y（^TNX / US10Y）</p>
   </div>
 
 </div>
 
-<!-- 總資金 -->
 <div class="fund-row">
   <label for="fund-input"><i class="ti ti-wallet" aria-hidden="true" style="font-size:15px;margin-right:4px"></i>總資金</label>
   <input type="number" id="fund-input" value="100" min="1" step="1" oninput="onFundChange()"/>
   <span style="font-size:12px;color:var(--color-text-tertiary)">萬元</span>
-  <span id="fund-label" style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)">各部位金額將同步換算</span>
+  <span id="fund-display" style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)">各部位金額將同步換算</span>
 </div>
 
-<!-- 輸出區 -->
 <div id="out" class="pending">
 
   <p class="section-label"><i class="ti ti-radar" aria-hidden="true"></i>市場狀態判定</p>
@@ -173,7 +174,7 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
     <div class="legend-row">
       <span><span class="legend-swatch" style="background:#B4B2A9"></span>基準 Base</span>
       <span><span class="legend-swatch" style="background:#378ADD"></span>目標 Target（依部位顏色）</span>
-      <span style="margin-left:auto;color:var(--color-text-tertiary);font-size:12px" id="fund-display">總資金 100 萬</span>
+      <span style="margin-left:auto;color:var(--color-text-tertiary);font-size:12px" id="fund-label">總資金 100 萬</span>
     </div>
     <div id="bars"></div>
   </div>
@@ -197,6 +198,12 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
     <table class="rebalance-table">
       <thead><tr><th>部位</th><th>目標 %</th><th>目前持倉 %</th><th>金額 (萬)</th><th>偏離</th><th>建議</th></tr></thead>
       <tbody id="rebal-body"></tbody>
+      <tfoot><tr class="rebal-total-row">
+        <td colspan="2">合計</td>
+        <td id="rebal-total-pct" class="rebal-total-ok">100%</td>
+        <td id="rebal-total-amt" style="color:var(--color-text-secondary)"></td>
+        <td colspan="2" id="rebal-total-msg" class="rebal-total-ok"></td>
+      </tr></tfoot>
     </table>
   </div>
 
@@ -210,7 +217,7 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
 </div>
 
 <script>
-const S={trend:null,vix:null,rate:null};
+const S={trend:null,vix:null,rate:null,vixVal:null};
 let FUND=100;
 let currentTarget=null;
 
@@ -284,17 +291,44 @@ const REBAL_KEYS=Object.keys(BASE);
 const rebalInputs={};
 REBAL_KEYS.forEach(k=>{rebalInputs[k]=BASE[k];});
 
-/* ── 工具：自動切換按鈕 ── */
+/* ── Regime 判定（含 VIX > 35 極端覆蓋）── */
+function getRegime(){
+  const {trend,vix,rate}=S;
+  const vixVal=S.vixVal;
+  // 極端恐慌：VIX > 35 無條件覆蓋為熊市
+  if(vixVal!==null&&vixVal>35) return 'bear';
+  // 正常優先級
+  if(rate==='rising')  return 'rateup';
+  if(rate==='falling') return 'ratedn';
+  if(trend==='below'||vix==='high') return 'bear';
+  if(trend==='above'&&vix==='low')  return 'bull';
+  return 'range';
+}
+
+function getBearTrigger(){
+  const vixVal=S.vixVal;
+  if(vixVal!==null&&vixVal>35)
+    return {label:`極端恐慌 VIX ${vixVal.toFixed(1)}，強制防禦`,cls:'trigger-extreme'};
+  const both =S.trend==='below'&&S.vix==='high';
+  const vOnly=S.trend!=='below'&&S.vix==='high';
+  const tOnly=S.trend==='below'&&S.vix!=='high';
+  if(both)  return {label:'跌破季線 + VIX > 30',cls:'trigger-both'};
+  if(vOnly) return {label:'VIX > 30 觸發',      cls:'trigger-vix'};
+  if(tOnly) return {label:'跌破季線觸發',         cls:'trigger-trend'};
+  return null;
+}
+
+/* ── 自動切換按鈕 ── */
 function autoSelect(grp,val){
   if(S[grp]===val) return;
-  const clsMap={
-    trend:{above:'active-trend',flat:'active-trend',below:'active-trend'},
-    vix:{low:'active-vix-low',medium:'active-vix-med',high:'active-vix-high'},
-    rate:{stable:'active-rate',rising:'active-rate',falling:'active-rate'}
-  };
   document.querySelectorAll(`[data-grp="${grp}"]`).forEach(b=>{
     b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate');
   });
+  const clsMap={
+    trend:{above:'active-trend',flat:'active-trend',below:'active-trend'},
+    vix:  {low:'active-vix-low',medium:'active-vix-med',high:'active-vix-high'},
+    rate: {stable:'active-rate',rising:'active-rate',falling:'active-rate'}
+  };
   const btn=document.querySelector(`[data-grp="${grp}"][data-val="${val}"]`);
   if(btn) btn.classList.add(clsMap[grp][val]);
   S[grp]=val;
@@ -308,7 +342,7 @@ function tryRender(){
   }
 }
 
-/* ── 大盤趨勢數值輸入 ── */
+/* ── 數值輸入 ── */
 function onIndexInput(){
   const idx=parseFloat(document.getElementById('taiex-input').value);
   const ma =parseFloat(document.getElementById('ma60-input').value);
@@ -316,31 +350,27 @@ function onIndexInput(){
   if(isNaN(idx)||isNaN(ma)||idx<=0||ma<=0){badge.style.display='none';return;}
   const pct=(idx-ma)/ma*100;
   let val,label,cls;
-  if(pct>2)     {val='above';label=`季線上方 +${pct.toFixed(1)}%`;cls='nb-above';}
-  else if(pct<-2){val='below';label=`跌破季線 ${pct.toFixed(1)}%`;  cls='nb-below';}
+  if(pct>2)      {val='above';label=`季線上方 +${pct.toFixed(1)}%`;cls='nb-above';}
+  else if(pct<-2){val='below';label=`跌破季線 ${pct.toFixed(1)}%`; cls='nb-below';}
   else           {val='flat'; label=`季線附近 ${pct>=0?'+':''}${pct.toFixed(1)}%`;cls='nb-flat';}
-  badge.textContent=label;
-  badge.className=`num-badge ${cls}`;
-  badge.style.display='inline-block';
+  badge.textContent=label; badge.className=`num-badge ${cls}`; badge.style.display='inline-block';
   autoSelect('trend',val);
 }
 
-/* ── VIX 數值輸入 ── */
 function onVixInput(){
   const v=parseFloat(document.getElementById('vix-input').value);
   const badge=document.getElementById('vix-badge');
-  if(isNaN(v)||v<=0){badge.style.display='none';return;}
+  if(isNaN(v)||v<=0){badge.style.display='none';S.vixVal=null;return;}
+  S.vixVal=v;
   let val,label,cls;
-  if(v<20)     {val='low';   label=`低恐慌 ${v.toFixed(1)}`;cls='nb-low';}
-  else if(v<30){val='medium';label=`中恐慌 ${v.toFixed(1)}`;cls='nb-med';}
-  else         {val='high';  label=`高恐慌 ${v.toFixed(1)}`;cls='nb-high';}
-  badge.textContent=label;
-  badge.className=`num-badge ${cls}`;
-  badge.style.display='inline-block';
+  if(v>35)       {val='high';  label=`極端恐慌 ${v.toFixed(1)} ⚠`;cls='nb-extreme';}
+  else if(v>=30) {val='high';  label=`高恐慌 ${v.toFixed(1)}`;     cls='nb-high';}
+  else if(v>=20) {val='medium';label=`中恐慌 ${v.toFixed(1)}`;     cls='nb-med';}
+  else           {val='low';   label=`低恐慌 ${v.toFixed(1)}`;     cls='nb-low';}
+  badge.textContent=label; badge.className=`num-badge ${cls}`; badge.style.display='inline-block';
   autoSelect('vix',val);
 }
 
-/* ── 利率數值輸入 ── */
 function onRateInput(){
   const now =parseFloat(document.getElementById('rate-now').value);
   const prev=parseFloat(document.getElementById('rate-prev').value);
@@ -348,51 +378,28 @@ function onRateInput(){
   if(isNaN(now)||isNaN(prev)){badge.style.display='none';return;}
   const diff=now-prev;
   let val,label,cls;
-  if(diff>0.25)      {val='rising'; label=`升息 +${diff.toFixed(2)}%`;cls='nb-rising';}
-  else if(diff<-0.25){val='falling';label=`降息 ${diff.toFixed(2)}%`; cls='nb-falling';}
-  else               {val='stable'; label=`穩定 ${diff>=0?'+':''}${diff.toFixed(2)}%`;cls='nb-stable';}
-  badge.textContent=label;
-  badge.className=`num-badge ${cls}`;
-  badge.style.display='inline-block';
+  if(diff>0.25)       {val='rising'; label=`升息 +${diff.toFixed(2)}%`;cls='nb-rising';}
+  else if(diff<-0.25) {val='falling';label=`降息 ${diff.toFixed(2)}%`; cls='nb-falling';}
+  else                {val='stable'; label=`穩定 ${diff>=0?'+':''}${diff.toFixed(2)}%`;cls='nb-stable';}
+  badge.textContent=label; badge.className=`num-badge ${cls}`; badge.style.display='inline-block';
   autoSelect('rate',val);
 }
 
-/* ── 總資金 ── */
 function onFundChange(){
   const v=parseFloat(document.getElementById('fund-input').value);
   FUND=isNaN(v)||v<=0?100:v;
-  document.getElementById('fund-display').textContent=`總資金 ${FUND} 萬`;
+  document.getElementById('fund-label').textContent=`總資金 ${FUND} 萬`;
   if(S.trend&&S.vix&&S.rate) render();
 }
 
-/* ── 手動選擇按鈕 ── */
 function pick(el,grp,val,cls){
   document.querySelectorAll(`[data-grp="${grp}"]`).forEach(b=>{
     b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate');
   });
   el.classList.add(cls);
   S[grp]=val;
+  if(grp==='vix'){S.vixVal=null;} // 手動選擇時清除數值覆蓋
   tryRender();
-}
-
-/* ── Regime 判定 ── */
-function getRegime(){
-  const {trend,vix,rate}=S;
-  if(rate==='rising')  return 'rateup';
-  if(rate==='falling') return 'ratedn';
-  if(trend==='below'||vix==='high') return 'bear';
-  if(trend==='above'&&vix==='low')  return 'bull';
-  return 'range';
-}
-
-function getBearTrigger(){
-  const both =S.trend==='below'&&S.vix==='high';
-  const vOnly=S.trend!=='below'&&S.vix==='high';
-  const tOnly=S.trend==='below'&&S.vix!=='high';
-  if(both)  return {label:'跌破季線 + VIX > 30',cls:'trigger-both'};
-  if(vOnly) return {label:'VIX > 30 觸發',      cls:'trigger-vix'};
-  if(tOnly) return {label:'跌破季線觸發',         cls:'trigger-trend'};
-  return null;
 }
 
 /* ── 主渲染 ── */
@@ -454,23 +461,31 @@ function render(){
 
   const wa=document.getElementById('warn-area');
   wa.innerHTML='';
-  if(regime==='bear'){
+  const vixVal=S.vixVal;
+  if(regime==='bear'&&vixVal!==null&&vixVal>35){
+    wa.innerHTML=`<div class="warn-box warn-box-extreme"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>極端恐慌覆蓋：VIX ${vixVal.toFixed(1)} 超過 35，無論利率狀態如何，強制進入熊市防禦模式。停止一切加碼行為，現金與防禦合計目標 40%。</div>`;
+  } else if(regime==='bear'){
     wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>硬規則：衛星標的出現跳空缺口或單日跌幅 > 3%，禁止動用現金加碼。必須等待 VIX 回落至 25 以下再評估進場時機。</div>`;
-  }else if(S.vix==='high'){
-    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>警報：VIX > 30 屬於極度恐慌。現金部位保留充足備用，僅在市場出現明確企穩訊號時執行分批佈局，嚴禁一次性重壓。</div>`;
+  } else if(S.vix==='high'){
+    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>警報：VIX > 30 屬於高恐慌。現金部位保留充足備用，僅在市場出現明確企穩訊號時執行分批佈局，嚴禁一次性重壓。</div>`;
   }
 }
 
+/* ── 再平衡表格（含總計行）── */
 function renderRebalTable(){
   const tbody=document.getElementById('rebal-body');
   tbody.innerHTML='';
   const ref=currentTarget||BASE;
+  let totalPct=0;
+  let totalAmt=0;
   REBAL_KEYS.forEach(k=>{
     const tgt=ref[k];
     const cur=rebalInputs[k];
     const diff=+(cur-tgt).toFixed(1);
     const warn=Math.abs(diff)>=5;
-    const amt=(FUND*cur/100).toFixed(1);
+    const amt=+(FUND*cur/100).toFixed(1);
+    totalPct+=cur;
+    totalAmt+=amt;
     const advice=diff>0?'偏高，建議減碼':diff<0?'偏低，建議加碼':'維持';
     tbody.innerHTML+=`<tr>
       <td>${LABELS[k]}</td>
@@ -483,11 +498,22 @@ function renderRebalTable(){
       <td class="${warn?'rebal-warn':'rebal-ok'}">${warn?'⚠ '+advice:'—'}</td>
     </tr>`;
   });
+
+  // 總計行
+  const over=totalPct>100, under=totalPct<100;
+  const totalPctEl=document.getElementById('rebal-total-pct');
+  const totalMsgEl=document.getElementById('rebal-total-msg');
+  totalPctEl.textContent=`${totalPct.toFixed(1)}%`;
+  totalPctEl.className=over||under?'rebal-total-warn':'rebal-total-ok';
+  document.getElementById('rebal-total-amt').textContent=`${totalAmt.toFixed(1)}`;
+  if(over)       {totalMsgEl.textContent='⚠ 超過 100%，請檢查持倉';totalMsgEl.className='rebal-total-warn';}
+  else if(under) {totalMsgEl.textContent=`尚有 ${(100-totalPct).toFixed(1)}% 未配置`;totalMsgEl.className='rebal-total-warn';}
+  else           {totalMsgEl.textContent='配置完整';totalMsgEl.className='rebal-total-ok';}
 }
 
 function updateRebal(k,val){
   const v=parseFloat(val);
-  rebalInputs[k]=isNaN(v)?BASE[k]:v;
+  rebalInputs[k]=isNaN(v)?0:v;
   renderRebalTable();
 }
 </script>
