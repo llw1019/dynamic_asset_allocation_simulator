@@ -1,0 +1,26 @@
+{
+  "name": "動態資產配置",
+  "short_name": "DAA",
+  "description": "動態資產配置模擬器 v10",
+  "start_url": "/dynamic_asset_allocation_simulator/",
+  "scope": "/dynamic_asset_allocation_simulator/",
+  "display": "standalone",
+  "background_color": "#1B2232",
+  "theme_color": "#378ADD",
+  "orientation": "portrait-primary",
+  "lang": "zh-TW",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>動態資產配置模擬器 v9</title>
+<title>動態資產配置模擬器 v10</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#378ADD"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="動態資產配置"/>
+<link rel="icon" href="icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="icon.svg"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -91,7 +98,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .bar-base-fill{position:absolute;top:0;left:0;height:100%;background:#B4B2A9;opacity:.5;border-radius:3px}
 .bar-target-fill{position:absolute;top:4px;height:12px;border-radius:2px;transition:width .4s ease}
 .bar-val{font-size:12px;font-weight:500;color:var(--color-text-primary);width:28px;text-align:right;flex-shrink:0}
-.bar-amt{font-size:11px;color:var(--color-text-secondary);width:44px;text-align:right;flex-shrink:0}
+.bar-amt{font-size:11px;color:var(--color-text-secondary);width:90px;text-align:right;flex-shrink:0}
 .delta-badge{font-size:11px;font-weight:500;padding:2px 6px;border-radius:4px;flex-shrink:0;width:40px;text-align:center}
 .delta-up{background:#EAF3DE;color:#27500A}.delta-dn{background:#FCEBEB;color:#A32D2D}
 .delta-ne{background:var(--color-background-secondary);color:var(--color-text-secondary)}
@@ -153,7 +160,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 </style>
 </head>
 <body>
-<h1><i class="ti ti-chart-pie"></i> 動態資產配置模擬器 v9</h1>
+<h1><i class="ti ti-chart-pie"></i> 動態資產配置模擬器 v10</h1>
 
 <p class="section-label"><i class="ti ti-sliders"></i>第一步：輸入市場觀測參數</p>
 <div class="param-grid">
@@ -361,7 +368,7 @@ const holdings={};
 REBAL_KEYS.forEach(k=>{holdings[k]=k==='cash'?[{amt:''}]:[{code:'',avgPrice:'',curPrice:'',shares:''}];});
 
 // LocalStorage
-const LS_KEY='daa_sim_v9';
+const LS_KEY='daa_sim_v10';
 function lsSave(){
   try{
     localStorage.setItem(LS_KEY,JSON.stringify({
@@ -531,6 +538,8 @@ function render(){
     const dc=diff>0?'delta-up':diff<0?'delta-dn':'delta-ne';
     const ds=diff>0?`+${diff}%`:diff<0?`${diff}%`:'±0';
     const amt=(FUND*t/100).toFixed(2);
+    const hold=getHoldingTotal(k);
+    const holdStr=hold>0?hold.toFixed(2):'—';
     const isFixed=FIXED_KEYS.includes(k);
     barsEl.innerHTML+=`
       <div class="bar-row" onclick="togglePanel('${k}')">
@@ -539,7 +548,7 @@ function render(){
           <div class="bar-base-fill" style="width:${bPct}%"></div>
           <div class="bar-target-fill" style="width:${tPct}%;background:${COLORS[k]}"></div>
         </div>
-        <span class="bar-val">${t}%</span><span class="bar-amt">${amt}萬</span>
+        <span class="bar-val">${t}%</span><span class="bar-amt">${holdStr} / ${amt}萬</span>
         <span class="delta-badge ${dc}">${ds}</span>
         <i class="ti ti-chevron-down expand-icon" id="icon-${k}"></i>
       </div>
@@ -767,7 +776,7 @@ function renderRebalTable(){
 }
 
 function exportJSON(){
-  const data={version:'v9',exportDate:new Date().toISOString(),
+  const data={version:'v10',exportDate:new Date().toISOString(),
     params:{trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,
       taiex:document.getElementById('taiex-input').value,
       ma60:document.getElementById('ma60-input').value,
@@ -826,6 +835,9 @@ function importJSON(input){
 function showIOMsg(msg){const el=document.getElementById('io-msg');if(!el)return;el.textContent=msg;setTimeout(()=>{el.textContent='';},4000);}
 
 lsLoad();
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
 </script>
 </body>
 </html>
