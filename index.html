@@ -26,6 +26,16 @@
   --color-border-tertiary:#f5f5f4;
   --border-radius-lg:12px;
   --border-radius-md:8px;
+  --color-success-bg:#EAF3DE;
+  --color-success-text:#27500A;
+  --color-danger-bg:#FCEBEB;
+  --color-danger-text:#A32D2D;
+  --color-warning-bg:#FAEEDA;
+  --color-warning-text:#854F0B;
+  --color-nature-fixed-bg:#E6F1FB;
+  --color-nature-fixed-text:#0C447C;
+  --color-nature-dyn-bg:#FAEEDA;
+  --color-nature-dyn-text:#854F0B;
 }
 @media(prefers-color-scheme:dark){
   :root{
@@ -37,6 +47,16 @@
     --color-border-primary:#44403c;
     --color-border-secondary:#292524;
     --color-border-tertiary:#292524;
+    --color-success-bg:#1a2e0a;
+    --color-success-text:#9dcc6b;
+    --color-danger-bg:#2e1010;
+    --color-danger-text:#f09595;
+    --color-warning-bg:#2e2008;
+    --color-warning-text:#e0a84a;
+    --color-nature-fixed-bg:#1a2a3d;
+    --color-nature-fixed-text:#7bb8e8;
+    --color-nature-dyn-bg:#2e2008;
+    --color-nature-dyn-text:#e0a84a;
   }
 }
 body{font-family:var(--font-sans);background:var(--color-background-secondary);color:var(--color-text-primary);padding:24px;max-width:900px;margin:0 auto}
@@ -91,16 +111,16 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .chart-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:0 0 12px;display:flex;align-items:center;gap:5px}
 .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;cursor:pointer;border-radius:6px;padding:2px 4px;transition:background .12s}
 .bar-row:hover{background:var(--color-background-secondary)}
-.bar-label{font-size:12px;color:var(--color-text-secondary);width:100px;flex-shrink:0;display:flex;align-items:center;gap:4px}
+.bar-label{font-size:12px;color:var(--color-text-secondary);width:110px;flex-shrink:0;display:flex;align-items:center;gap:4px}
 .bar-nature{font-size:10px;padding:1px 5px;border-radius:3px;flex-shrink:0}
-.bar-nature-fixed{background:#E6F1FB;color:#0C447C}.bar-nature-dyn{background:#FAEEDA;color:#854F0B}
+.bar-nature-fixed{background:var(--color-nature-fixed-bg);color:var(--color-nature-fixed-text)}.bar-nature-dyn{background:var(--color-nature-dyn-bg);color:var(--color-nature-dyn-text)}
 .bar-track{flex:1;height:20px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;position:relative}
 .bar-base-fill{position:absolute;top:0;left:0;height:100%;background:#B4B2A9;opacity:.5;border-radius:3px}
 .bar-target-fill{position:absolute;top:4px;height:12px;border-radius:2px;transition:width .4s ease}
 .bar-val{font-size:12px;font-weight:500;color:var(--color-text-primary);width:28px;text-align:right;flex-shrink:0}
 .bar-amt{font-size:11px;color:var(--color-text-secondary);width:90px;text-align:right;flex-shrink:0}
 .delta-badge{font-size:11px;font-weight:500;padding:2px 6px;border-radius:4px;flex-shrink:0;width:40px;text-align:center}
-.delta-up{background:#EAF3DE;color:#27500A}.delta-dn{background:#FCEBEB;color:#A32D2D}
+.delta-up{background:var(--color-success-bg);color:var(--color-success-text)}.delta-dn{background:var(--color-danger-bg);color:var(--color-danger-text)}
 .delta-ne{background:var(--color-background-secondary);color:var(--color-text-secondary)}
 .expand-icon{font-size:11px;color:var(--color-text-tertiary);flex-shrink:0;transition:transform .2s}
 .holding-panel{background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin:0 4px 8px;padding:10px 12px;display:none}
@@ -113,10 +133,10 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .holding-row input{font-size:12px;padding:3px 7px;border-radius:4px;border:0.5px solid var(--color-border-primary);background:var(--color-background-primary);color:var(--color-text-primary);font-family:var(--font-sans)}
 .inp-code{width:80px}.inp-amt{width:80px}.inp-avg{width:65px}.inp-cur{width:65px}.inp-shares{width:65px}
 .holding-pnl{font-size:11px;font-weight:500;padding:1px 6px;border-radius:3px;white-space:nowrap}
-.pnl-pos{background:#EAF3DE;color:#27500A}.pnl-neg{background:#FCEBEB;color:#A32D2D}.pnl-stop{background:#A32D2D;color:#fff}
+.pnl-pos{background:var(--color-success-bg);color:var(--color-success-text)}.pnl-neg{background:var(--color-danger-bg);color:var(--color-danger-text)}.pnl-stop{background:#A32D2D;color:#fff}
 .holding-mv{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}
 .hwm-bar{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--color-text-tertiary);margin-top:2px;margin-bottom:8px;padding:0 16px}
-.hwm-update-btn{font-size:11px;padding:2px 8px;border-radius:4px;border:0.5px solid #639922;background:#EAF3DE;color:#27500A;cursor:pointer;font-family:var(--font-sans)}
+.hwm-update-btn{font-size:11px;padding:2px 8px;border-radius:4px;border:0.5px solid var(--color-success-text);background:var(--color-success-bg);color:var(--color-success-text);cursor:pointer;font-family:var(--font-sans)}
 .holding-row label{font-size:11px;color:var(--color-text-tertiary);white-space:nowrap}
 .holding-add-btn{font-size:11px;color:var(--color-text-secondary);background:none;border:0.5px dashed var(--color-border-primary);border-radius:4px;padding:3px 10px;cursor:pointer;font-family:var(--font-sans);margin-top:4px}
 .holding-add-btn:hover{border-color:var(--color-text-secondary)}
@@ -126,8 +146,8 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .rebalance-table th{font-weight:500;color:var(--color-text-secondary);text-align:left;padding:4px 8px 6px;border-bottom:0.5px solid var(--color-border-secondary)}
 .rebalance-table td{padding:6px 8px;border-bottom:0.5px solid var(--color-border-secondary);color:var(--color-text-primary)}
 .rebalance-table tr:last-child td{border-bottom:none}
-.rebal-ok{color:#3B6D11}.rebal-warn{color:#854F0B;font-weight:500}
-.rebal-total-ok{color:var(--color-text-secondary);font-weight:500}.rebal-total-warn{color:#A32D2D;font-weight:500}
+.rebal-ok{color:var(--color-success-text)}.rebal-warn{color:var(--color-warning-text);font-weight:500}
+.rebal-total-ok{color:var(--color-text-secondary);font-weight:500}.rebal-total-warn{color:var(--color-danger-text);font-weight:500}
 .rebal-total-row td{border-top:1px solid var(--color-border-primary);background:var(--color-background-secondary);font-weight:500}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .action-list{list-style:none;padding:0;margin:0}
@@ -136,13 +156,18 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .action-item i{font-size:15px;flex-shrink:0;margin-top:1px;color:var(--color-text-secondary)}
 .action-item strong{font-weight:500}
 .memo-text{font-size:13px;color:var(--color-text-secondary);line-height:1.7;margin:0;white-space:pre-line}
+.memo-hint{margin-top:10px;padding:8px 12px;border-radius:var(--border-radius-md);font-size:12px;line-height:1.6;background:var(--color-background-secondary);border-left:3px solid var(--color-border-primary);color:var(--color-text-secondary)}
+.memo-hint-warn{border-left-color:#E24B4A}
+.holding-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.holding-dot-on{background:var(--color-success-text);opacity:.7}
+.holding-dot-off{background:transparent}
 .rules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 @media(max-width:500px){.rules-grid{grid-template-columns:1fr 1fr}}
 .rule-item{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
 .rule-name{font-size:12px;font-weight:500;color:var(--color-text-primary);margin:0 0 4px}
 .rule-line{font-size:11px;line-height:1.5;margin:0}
-.rule-line.ok{color:#3B6D11}.rule-line.no{color:#A32D2D}
-.warn-box{border-radius:var(--border-radius-md);padding:10px 14px;font-size:12px;line-height:1.6;margin-top:10px;background:#FCEBEB;color:#791F1F;border:0.5px solid #F09595}
+.rule-line.ok{color:var(--color-success-text)}.rule-line.no{color:var(--color-danger-text)}
+.warn-box{border-radius:var(--border-radius-md);padding:10px 14px;font-size:12px;line-height:1.6;margin-top:10px;background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid #F09595}
 .warn-box-extreme{background:#3D0000;color:#FFB3B3;border:0.5px solid #A32D2D}
 .legend-row{display:flex;gap:16px;margin-bottom:10px;font-size:12px;color:var(--color-text-secondary);align-items:center;flex-wrap:wrap}
 .legend-swatch{width:12px;height:5px;border-radius:2px;display:inline-block;margin-right:3px}
@@ -154,9 +179,11 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .io-file{display:none}
 .drawdown-bar{margin-top:10px;padding:10px 14px;border-radius:var(--border-radius-md);font-size:12px;line-height:1.6;display:flex;align-items:center;gap:4px}
 .dd-ok{background:var(--color-background-secondary);color:var(--color-text-secondary)}
-.dd-warn{background:#FAEEDA;color:#854F0B;border:0.5px solid #BA7517}
-.dd-danger{background:#FCEBEB;color:#791F1F;border:0.5px solid #F09595}
+.dd-warn{background:var(--color-warning-bg);color:var(--color-warning-text);border:0.5px solid #BA7517}
+.dd-danger{background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid #F09595}
 .rebal-freq-note{font-size:11px;color:var(--color-text-tertiary);margin-bottom:8px;display:flex;align-items:center;gap:5px;line-height:1.6;padding:8px 12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md)}
+@media(max-width:500px){.rebalance-table .col-tgt-pct,.rebalance-table .col-hold-pct{display:none}}
+@media(max-width:400px){.bar-row{flex-wrap:wrap}.bar-track{flex:1 0 150px}.bar-amt{margin-left:auto}}
 </style>
 </head>
 <body>
@@ -223,6 +250,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 <div class="io-bar">
   <button class="io-btn" onclick="exportJSON()"><i class="ti ti-download"></i>匯出設定</button>
   <button class="io-btn" onclick="document.getElementById('import-file').click()"><i class="ti ti-upload"></i>匯入設定</button>
+  <button class="io-btn" onclick="resetAll()"><i class="ti ti-trash"></i>重置</button>
   <input type="file" id="import-file" class="io-file" accept=".json" onchange="importJSON(this)"/>
   <span id="io-msg" style="font-size:11px;color:var(--color-text-tertiary)"></span>
 </div>
@@ -245,6 +273,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
       <span><span class="legend-swatch" style="background:#B4B2A9"></span>基準 Base</span>
       <span><span class="legend-swatch" style="background:#378ADD"></span>目標 Target</span>
       <span><span class="bar-nature bar-nature-fixed" style="font-size:10px;padding:1px 5px;border-radius:3px;display:inline-block">固定</span> 核心永不調整</span>
+      <span style="font-size:11px;color:var(--color-text-tertiary)">金額：持倉 / 目標</span>
       <span style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)" id="fund-label">高水位 100 萬</span>
     </div>
     <div id="bars"></div>
@@ -271,13 +300,13 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
   </div>
   <div class="card-base" style="margin-bottom:12px">
     <table class="rebalance-table">
-      <thead><tr><th>部位</th><th>目標%</th><th>目標金額(萬)</th><th>持倉金額(萬)</th><th>持倉%</th><th>偏離</th><th>建議</th></tr></thead>
+      <thead><tr><th>部位</th><th class="col-tgt-pct">目標%</th><th>目標金額(萬)</th><th>持倉金額(萬)</th><th class="col-hold-pct">持倉%</th><th>偏離</th><th>建議</th></tr></thead>
       <tbody id="rebal-body"></tbody>
       <tfoot><tr class="rebal-total-row">
-        <td>合計</td><td></td>
+        <td>合計</td><td class="col-tgt-pct"></td>
         <td id="rebal-tgt-total"></td>
         <td id="rebal-holding-total" class="rebal-total-ok"></td>
-        <td id="rebal-total-pct" class="rebal-total-ok"></td>
+        <td id="rebal-total-pct" class="rebal-total-ok col-hold-pct"></td>
         <td colspan="2" id="rebal-total-msg" class="rebal-total-ok"></td>
       </tr></tfoot>
     </table>
@@ -540,15 +569,16 @@ function render(){
     const amt=(FUND*t/100).toFixed(2);
     const hold=getHoldingTotal(k);
     const holdStr=hold>0?hold.toFixed(2):'—';
+    const dotCls=hold>0?'holding-dot-on':'holding-dot-off';
     const isFixed=FIXED_KEYS.includes(k);
     barsEl.innerHTML+=`
       <div class="bar-row" onclick="togglePanel('${k}')">
-        <span class="bar-label"><span class="bar-nature ${isFixed?'bar-nature-fixed':'bar-nature-dyn'}">${isFixed?'固':'動'}</span>${LABELS[k]}</span>
+        <span class="bar-label"><span class="holding-dot ${dotCls}" id="dot-${k}"></span><span class="bar-nature ${isFixed?'bar-nature-fixed':'bar-nature-dyn'}">${isFixed?'固':'動'}</span>${LABELS[k]}</span>
         <div class="bar-track">
           <div class="bar-base-fill" style="width:${bPct}%"></div>
           <div class="bar-target-fill" style="width:${tPct}%;background:${COLORS[k]}"></div>
         </div>
-        <span class="bar-val">${t}%</span><span class="bar-amt">${holdStr} / ${amt}萬</span>
+        <span class="bar-val">${t}%</span><span class="bar-amt" id="bar-amt-${k}">${holdStr} / ${amt}萬</span>
         <span class="delta-badge ${dc}">${ds}</span>
         <i class="ti ti-chevron-down expand-icon" id="icon-${k}"></i>
       </div>
@@ -563,7 +593,13 @@ function render(){
   const al=document.getElementById('actions');al.innerHTML='';
   ACTIONS[regime].forEach(a=>{al.innerHTML+=`<li class="action-item"><i class="ti ${a.icon}"></i><span>${a.text}</span></li>`;});
   refreshStopLoss(al);
-  document.getElementById('memo').textContent=getMemo(regime);
+  const memoEl=document.getElementById('memo');
+  const memoText=getMemo(regime);
+  const memoParts=memoText.split('\n\n');
+  if(memoParts.length>1){
+    const isWarn=memoParts[1].startsWith('⚠');
+    memoEl.innerHTML=memoParts[0]+'<div class="memo-hint'+(isWarn?' memo-hint-warn':'')+'">'+memoParts.slice(1).join('<br>')+'</div>';
+  }else{memoEl.textContent=memoText;}
   renderRebalTable();
 
   const rg=document.getElementById('rules-grid');rg.innerHTML='';
@@ -675,6 +711,17 @@ function updatePanelTotal(k){
   const el=document.getElementById('htotal-'+k);if(!el)return;
   const total=getHoldingTotal(k);
   el.textContent=total.toFixed(2)+' 萬';
+  updateBarAmt(k);
+}
+function updateBarAmt(k){
+  const el=document.getElementById('bar-amt-'+k);if(!el)return;
+  const ref=currentTarget||BASE;
+  const amt=(FUND*ref[k]/100).toFixed(2);
+  const hold=getHoldingTotal(k);
+  const holdStr=hold>0?hold.toFixed(2):'—';
+  el.textContent=holdStr+' / '+amt+'萬';
+  const dot=document.getElementById('dot-'+k);
+  if(dot){dot.className='holding-dot '+(hold>0?'holding-dot-on':'holding-dot-off');}
 }
 function addHolding(k){
   holdings[k].push(k==='cash'?{amt:''}:{code:'',avgPrice:'',curPrice:'',shares:''});
@@ -748,9 +795,9 @@ function renderRebalTable(){
     const advice=diffPct>0?'偏高，建議減碼':diffPct<0?'偏低，建議加碼':'維持';
     const note=threshold<5?`(門檻${threshold}%)`:'';
     tbody.innerHTML+=`<tr>
-      <td>${LABELS[k]}</td><td>${tgtPct}%</td><td>${tgtAmt.toFixed(2)}</td>
+      <td>${LABELS[k]}</td><td class="col-tgt-pct">${tgtPct}%</td><td>${tgtAmt.toFixed(2)}</td>
       <td style="cursor:pointer;color:${COLORS[k]};font-weight:500" onclick="togglePanel('${k}')">${holdAmt>0?holdAmt.toFixed(2):'— 點擊輸入'}</td>
-      <td>${holdAmt>0?holdPct+'%':'—'}</td>
+      <td class="col-hold-pct">${holdAmt>0?holdPct+'%':'—'}</td>
       <td class="${warn?'rebal-warn':'rebal-ok'}">${holdAmt>0?(diffPct>0?'+':'')+diffPct+'%':'—'}</td>
       <td class="${warn?'rebal-warn':'rebal-ok'}">${holdAmt>0?(warn?'⚠ '+advice+note:'—'):'—'}</td>
     </tr>`;
@@ -833,6 +880,11 @@ function importJSON(input){
   input.value='';
 }
 function showIOMsg(msg){const el=document.getElementById('io-msg');if(!el)return;el.textContent=msg;setTimeout(()=>{el.textContent='';},4000);}
+function resetAll(){
+  if(!confirm('確定要重置所有設定與持倉資料？此操作無法復原。'))return;
+  localStorage.removeItem(LS_KEY);
+  location.reload();
+}
 
 lsLoad();
 if('serviceWorker' in navigator){
