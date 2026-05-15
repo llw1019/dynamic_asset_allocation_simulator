@@ -419,7 +419,7 @@ function getBearTrigger(){
   return null;
 }
 
-function autoSelect(grp,val){if(S[grp]===val){lsSave();return;}setBtn(grp,val);tryRender();}
+function autoSelect(grp,val){if(S[grp]!==val)setBtn(grp,val);tryRender();}
 function tryRender(){
   if(S.trend&&S.vix&&S.rate){document.getElementById('out').classList.remove('pending');render();}
   lsSave();
@@ -427,7 +427,12 @@ function tryRender(){
 function pick(el,grp,val,cls){
   document.querySelectorAll(`[data-grp="${grp}"]`).forEach(b=>b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate'));
   el.classList.add(cls);S[grp]=val;
-  if(grp==='vix'){S.vixVal=null;document.getElementById('vix-input').value='';document.getElementById('vix-badge').style.display='none';document.getElementById('hysteresis-status').style.display='none';}
+  if(grp==='vix'){
+    S.vixVal=null;document.getElementById('vix-input').value='';document.getElementById('vix-badge').style.display='none';
+    if(val==='low'&&inExtremeBear){inExtremeBear=false;document.getElementById('hysteresis-status').style.display='none';}
+    else if(val==='medium'&&inExtremeBear){/* medium(20-30) ambiguous; keep lock, user should use numeric input to confirm <25 */document.getElementById('hysteresis-status').style.display='none';}
+    else document.getElementById('hysteresis-status').style.display='none';
+  }
   tryRender();
 }
 
@@ -506,7 +511,7 @@ function render(){
     const bPct=Math.round(b/maxVal*100),tPct=Math.round(t/maxVal*100);
     const dc=diff>0?'delta-up':diff<0?'delta-dn':'delta-ne';
     const ds=diff>0?`+${diff}%`:diff<0?`${diff}%`:'±0';
-    const amt=(FUND*t/100).toFixed(1);
+    const amt=(FUND*t/100).toFixed(2);
     const isFixed=FIXED_KEYS.includes(k);
     barsEl.innerHTML+=`
       <div class="bar-row" onclick="togglePanel('${k}')">
@@ -641,7 +646,7 @@ function rebuildRows(k){
 function updatePanelTotal(k){
   const el=document.getElementById('htotal-'+k);if(!el)return;
   const total=getHoldingTotal(k);
-  el.textContent=total.toFixed(1)+' 萬';
+  el.textContent=total.toFixed(2)+' 萬';
 }
 function addHolding(k){
   holdings[k].push(k==='cash'?{amt:''}:{code:'',avgPrice:'',curPrice:'',shares:''});
@@ -673,20 +678,22 @@ function refreshStopLoss(al){
     if(!isNaN(avg)&&!isNaN(cur)&&avg>0){const pnl=((cur-avg)/avg)*100;if(pnl<=-8){const code=(r.code||'未命名').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));al.innerHTML+=`<li class="action-item stop-loss-item"><i class="ti ti-alert-triangle" style="color:#A32D2D"></i><span style="color:#A32D2D"><strong>停損警示：${code}</strong> 虧損 ${pnl.toFixed(1)}%，已觸及 -8% 停損線</span></li>`;}}
   });
 }
+function r2(v){return Math.round(v*100)/100;}
 function checkHWM(){
-  const total=REBAL_KEYS.reduce((s,k)=>s+getHoldingTotal(k),0);
-  const cost=REBAL_KEYS.reduce((s,k)=>s+getHoldingCost(k),0);
+  const total=r2(REBAL_KEYS.reduce((s,k)=>s+getHoldingTotal(k),0));
+  const cost=r2(REBAL_KEYS.reduce((s,k)=>s+getHoldingCost(k),0));
+  const fund=r2(FUND);
   const suggested=Math.max(total,cost);
   const bar=document.getElementById('hwm-bar');if(!bar)return;
-  if(FUND<=0&&(total>0||cost>0)){
+  if(fund<=0&&(total>0||cost>0)){
     bar.style.display='flex';
-    bar.innerHTML='<i class="ti ti-info-circle" style="color:#378ADD"></i> 尚未設定高水位 <button class="hwm-update-btn" onclick="updateHWM('+suggested.toFixed(1)+')">設為 '+suggested.toFixed(1)+' 萬</button>';
-  }else if(total>FUND&&FUND>0){
+    bar.innerHTML='<i class="ti ti-info-circle" style="color:#378ADD"></i> 尚未設定高水位 <button class="hwm-update-btn" onclick="updateHWM('+suggested.toFixed(2)+')">設為 '+suggested.toFixed(2)+' 萬</button>';
+  }else if(total>fund&&fund>0){
     bar.style.display='flex';
-    bar.innerHTML='<i class="ti ti-trophy" style="color:#639922"></i> 持倉市值 '+total.toFixed(1)+' 萬已超過高水位 '+FUND+' 萬 <button class="hwm-update-btn" onclick="updateHWM('+suggested.toFixed(1)+')">更新高水位</button>';
-  }else if(cost>FUND+0.05&&FUND>0&&cost>0){
+    bar.innerHTML='<i class="ti ti-trophy" style="color:#639922"></i> 持倉市值 '+total.toFixed(2)+' 萬已超過高水位 '+fund.toFixed(2)+' 萬 <button class="hwm-update-btn" onclick="updateHWM('+suggested.toFixed(2)+')">更新高水位</button>';
+  }else if(cost>fund&&fund>0&&cost>0){
     bar.style.display='flex';
-    bar.innerHTML='<i class="ti ti-alert-circle" style="color:#BA7517"></i> 高水位 '+FUND+' 萬低於持倉成本 '+cost.toFixed(1)+' 萬，回撤計算可能失真 <button class="hwm-update-btn" onclick="updateHWM('+cost.toFixed(1)+')">修正為 '+cost.toFixed(1)+' 萬</button>';
+    bar.innerHTML='<i class="ti ti-alert-circle" style="color:#BA7517"></i> 高水位 '+fund.toFixed(2)+' 萬低於持倉成本 '+cost.toFixed(2)+' 萬，回撤計算可能失真 <button class="hwm-update-btn" onclick="updateHWM('+cost.toFixed(2)+')">修正為 '+cost.toFixed(2)+' 萬</button>';
   }else{bar.style.display='none';}
   refreshStopLoss();
 }
@@ -703,8 +710,8 @@ function renderRebalTable(){
   const ref=currentTarget||BASE;
   let totalTgt=0,totalHolding=0;
   REBAL_KEYS.forEach(k=>{
-    const tgtPct=ref[k],tgtAmt=+(FUND*tgtPct/100).toFixed(1);
-    const holdAmt=+getHoldingTotal(k).toFixed(1);
+    const tgtPct=ref[k],tgtAmt=+(FUND*tgtPct/100).toFixed(2);
+    const holdAmt=+getHoldingTotal(k).toFixed(2);
     const holdPct=FUND>0?+(holdAmt/FUND*100).toFixed(1):0;
     const diffPct=+(holdPct-tgtPct).toFixed(1);
     const threshold=REBAL_THRESHOLD[k];
@@ -713,20 +720,20 @@ function renderRebalTable(){
     const advice=diffPct>0?'偏高，建議減碼':diffPct<0?'偏低，建議加碼':'維持';
     const note=threshold<5?`(門檻${threshold}%)`:'';
     tbody.innerHTML+=`<tr>
-      <td>${LABELS[k]}</td><td>${tgtPct}%</td><td>${tgtAmt}</td>
-      <td style="cursor:pointer;color:${COLORS[k]};font-weight:500" onclick="togglePanel('${k}')">${holdAmt>0?holdAmt:'— 點擊輸入'}</td>
+      <td>${LABELS[k]}</td><td>${tgtPct}%</td><td>${tgtAmt.toFixed(2)}</td>
+      <td style="cursor:pointer;color:${COLORS[k]};font-weight:500" onclick="togglePanel('${k}')">${holdAmt>0?holdAmt.toFixed(2):'— 點擊輸入'}</td>
       <td>${holdAmt>0?holdPct+'%':'—'}</td>
       <td class="${warn?'rebal-warn':'rebal-ok'}">${holdAmt>0?(diffPct>0?'+':'')+diffPct+'%':'—'}</td>
       <td class="${warn?'rebal-warn':'rebal-ok'}">${holdAmt>0?(warn?'⚠ '+advice+note:'—'):'—'}</td>
     </tr>`;
   });
-  document.getElementById('rebal-tgt-total').textContent=totalTgt.toFixed(1)+' 萬';
-  document.getElementById('rebal-holding-total').textContent=totalHolding.toFixed(1)+' 萬';
+  document.getElementById('rebal-tgt-total').textContent=totalTgt.toFixed(2)+' 萬';
+  document.getElementById('rebal-holding-total').textContent=totalHolding.toFixed(2)+' 萬';
   document.getElementById('rebal-total-pct').textContent=(totalHolding>0&&FUND>0)?+(totalHolding/FUND*100).toFixed(1)+'%':'—';
   const tmEl=document.getElementById('rebal-total-msg');
-  const diff=+(totalHolding-FUND).toFixed(1);
+  const diff=+(totalHolding-FUND).toFixed(2);
   if(totalHolding===0||FUND<=0){tmEl.textContent=FUND<=0?'請先設定高水位':'尚未輸入持倉';tmEl.className='rebal-total-ok';}
-  else if(diff>0.5){tmEl.textContent=`⚠ 超過高水位 ${diff} 萬`;tmEl.className='rebal-total-warn';}
+  else if(diff>0.5){tmEl.textContent=`⚠ 超過高水位 ${diff.toFixed(2)} 萬`;tmEl.className='rebal-total-warn';}
   else{tmEl.textContent='';tmEl.className='rebal-total-ok';}
   const ddEl=document.getElementById('drawdown-area');
   if(ddEl&&totalHolding>0&&FUND>0){
@@ -734,7 +741,7 @@ function renderRebalTable(){
     if(dd>=8){ddEl.className='drawdown-bar dd-danger';ddEl.innerHTML='<i class="ti ti-alert-triangle" style="font-size:13px"></i> 組合回撤 '+dd+'%（門檻 8%）— 建議立即檢視衛星與高風險部位，考慮減碼';}
     else if(dd>=5){ddEl.className='drawdown-bar dd-warn';ddEl.innerHTML='<i class="ti ti-alert-circle" style="font-size:13px"></i> 組合回撤 '+dd+'% — 接近門檻，請留意';}
     else if(dd>0){ddEl.className='drawdown-bar dd-ok';ddEl.textContent='組合回撤 '+dd+'%，在安全範圍內';}
-    else{ddEl.className='drawdown-bar dd-ok';ddEl.textContent=totalHolding>FUND?'持倉超過基準 +'+(-dd)+'%':'持倉與基準一致';}
+    else{ddEl.className='drawdown-bar dd-ok';ddEl.textContent=totalHolding>r2(FUND)?'持倉超過基準 +'+(-dd)+'%':'持倉與基準一致';}
     ddEl.style.display='flex';
   }else if(ddEl){ddEl.style.display='none';}
   checkHWM();
