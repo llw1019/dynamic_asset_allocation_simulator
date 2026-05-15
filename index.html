@@ -47,9 +47,9 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .opt-btn.active-vix-med{background:#FAEEDA;border-color:#BA7517;color:#854F0B}
 .opt-btn.active-vix-high{background:#FCEBEB;border-color:#E24B4A;color:#A32D2D}
 .opt-btn.active-rate{background:#EEEDFE;border-color:#7F77DD;color:#3C3489}
-.num-input-row{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--color-border-secondary);flex-wrap:wrap}
+.num-input-row{display:flex;flex-direction:column;gap:4px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--color-border-secondary)}
 .num-input-row label{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}
-.num-input-row input{width:68px;font-size:12px;padding:4px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans)}
+.num-input-row input{width:100%;font-size:12px;padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans);box-sizing:border-box}
 .num-badge{font-size:11px;font-weight:500;padding:2px 7px;border-radius:4px;margin-top:4px;display:inline-block}
 .nb-low{background:#EAF3DE;color:#3B6D11}.nb-med{background:#FAEEDA;color:#854F0B}
 .nb-high{background:#FCEBEB;color:#A32D2D}.nb-extreme{background:#A32D2D;color:#fff}
@@ -136,6 +136,15 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .legend-swatch{width:12px;height:5px;border-radius:2px;display:inline-block;margin-right:3px}
 .rebal-section-note{font-size:11px;color:var(--color-text-tertiary);margin-left:auto}
 .pending{opacity:.4;pointer-events:none}
+.io-bar{display:flex;gap:8px;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center}
+.io-btn{font-size:12px;padding:6px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans);display:flex;align-items:center;gap:5px;transition:border-color .15s}
+.io-btn:hover{border-color:var(--color-text-secondary)}
+.io-file{display:none}
+.drawdown-bar{margin-top:10px;padding:10px 14px;border-radius:var(--border-radius-md);font-size:12px;line-height:1.6;display:flex;align-items:center;gap:4px}
+.dd-ok{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.dd-warn{background:#FAEEDA;color:#854F0B;border:0.5px solid #BA7517}
+.dd-danger{background:#FCEBEB;color:#791F1F;border:0.5px solid #F09595}
+.rebal-freq-note{font-size:11px;color:var(--color-text-tertiary);margin-bottom:8px;display:flex;align-items:center;gap:5px;line-height:1.6;padding:8px 12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md)}
 </style>
 </head>
 <body>
@@ -198,6 +207,13 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 </div>
 <div class="ls-notice"><span class="ls-dot ls-dot-ok" id="ls-dot"></span><span id="ls-msg">本機儲存已啟用，下次開啟自動載入</span></div>
 
+<div class="io-bar">
+  <button class="io-btn" onclick="exportJSON()"><i class="ti ti-download"></i>匯出設定</button>
+  <button class="io-btn" onclick="document.getElementById('import-file').click()"><i class="ti ti-upload"></i>匯入設定</button>
+  <input type="file" id="import-file" class="io-file" accept=".json" onchange="importJSON(this)"/>
+  <span id="io-msg" style="font-size:11px;color:var(--color-text-tertiary)"></span>
+</div>
+
 <div id="out" class="pending">
   <p class="section-label"><i class="ti ti-radar"></i>市場狀態判定</p>
   <div id="regime-banner" class="regime-banner regime-range">
@@ -236,6 +252,10 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
     <i class="ti ti-refresh"></i>再平衡檢查
     <span class="rebal-section-note">衛星/避險偏離 ≥ 3%、其餘 ≥ 5% 時建議調整</span>
   </p>
+  <div class="rebal-freq-note">
+    <i class="ti ti-calendar-event" style="font-size:13px"></i>
+    建議每季（3 個月）定期檢查一次再平衡，避免過度頻繁操作。極端市場（VIX &gt; 30）時可縮短為每月檢查。
+  </div>
   <div class="card-base" style="margin-bottom:12px">
     <table class="rebalance-table">
       <thead><tr><th>部位</th><th>目標%</th><th>目標金額(萬)</th><th>持倉金額(萬)</th><th>持倉%</th><th>偏離</th><th>建議</th></tr></thead>
@@ -248,6 +268,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
         <td colspan="2" id="rebal-total-msg" class="rebal-total-ok"></td>
       </tr></tfoot>
     </table>
+    <div id="drawdown-area" class="drawdown-bar dd-ok" style="display:none"></div>
   </div>
 
   <p class="section-label"><i class="ti ti-shield-lock"></i>部位操作硬規則</p>
@@ -620,7 +641,75 @@ function renderRebalTable(){
   if(totalHolding===0){tmEl.textContent='尚未輸入持倉';tmEl.className='rebal-total-ok';}
   else if(diff>0.5){tmEl.textContent=`⚠ 超過總資金 ${diff} 萬`;tmEl.className='rebal-total-warn';}
   else{tmEl.textContent='';tmEl.className='rebal-total-ok';}
+  const ddEl=document.getElementById('drawdown-area');
+  if(ddEl&&totalHolding>0){
+    const dd=+(((FUND-totalHolding)/FUND)*100).toFixed(1);
+    if(dd>=8){ddEl.className='drawdown-bar dd-danger';ddEl.innerHTML='<i class="ti ti-alert-triangle" style="font-size:13px"></i> 組合回撤 '+dd+'%（門檻 8%）— 建議立即檢視衛星與高風險部位，考慮減碼';}
+    else if(dd>=5){ddEl.className='drawdown-bar dd-warn';ddEl.innerHTML='<i class="ti ti-alert-circle" style="font-size:13px"></i> 組合回撤 '+dd+'% — 接近門檻，請留意';}
+    else if(dd>0){ddEl.className='drawdown-bar dd-ok';ddEl.textContent='組合回撤 '+dd+'%，在安全範圍內';}
+    else{ddEl.className='drawdown-bar dd-ok';ddEl.textContent=totalHolding>FUND?'持倉超過基準 +'+(-dd)+'%':'持倉與基準一致';}
+    ddEl.style.display='flex';
+  }else if(ddEl){ddEl.style.display='none';}
 }
+
+function exportJSON(){
+  const data={version:'v9',exportDate:new Date().toISOString(),
+    params:{trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,
+      taiex:document.getElementById('taiex-input').value,
+      ma60:document.getElementById('ma60-input').value,
+      vixInput:document.getElementById('vix-input').value,
+      rateNow:document.getElementById('rate-now').value,
+      ratePrev:document.getElementById('rate-prev').value},
+    fund:FUND,inExtremeBear:inExtremeBear,
+    holdings:JSON.parse(JSON.stringify(holdings))};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date();
+  const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  a.href=url;a.download='DAA_'+ds+'.json';a.click();
+  URL.revokeObjectURL(url);
+  showIOMsg('\u2705 \u5df2\u532f\u51fa '+a.download);
+}
+function importJSON(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      if(typeof data!=='object'||!data.params||!data.holdings)throw new Error('\u683c\u5f0f\u4e0d\u7b26');
+      S.trend=null;S.vix=null;S.rate=null;S.vixVal=null;
+      document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate'));
+      if(typeof data.fund==='number'&&isFinite(data.fund)&&data.fund>0){FUND=data.fund;document.getElementById('fund-input').value=data.fund;document.getElementById('fund-label').textContent='\u7e3d\u8cc7\u91d1 '+FUND+' \u842c';}
+      if(typeof data.inExtremeBear==='boolean')inExtremeBear=data.inExtremeBear;
+      const p=data.params;
+      if(p.taiex)document.getElementById('taiex-input').value=String(p.taiex);
+      if(p.ma60)document.getElementById('ma60-input').value=String(p.ma60);
+      if(p.vixInput)document.getElementById('vix-input').value=String(p.vixInput);
+      if(p.rateNow)document.getElementById('rate-now').value=String(p.rateNow);
+      if(p.ratePrev)document.getElementById('rate-prev').value=String(p.ratePrev);
+      if(data.holdings&&typeof data.holdings==='object'){
+        const vk=['above','flat','below','low','medium','high','stable','rising','falling'];
+        REBAL_KEYS.forEach(k=>{if(Array.isArray(data.holdings[k]))holdings[k]=data.holdings[k].map(h=>({code:String(h.code||''),amt:String(h.amt||'')}));});
+      }
+      if(p.taiex&&p.ma60)onIndexInput();
+      if(p.vixInput)onVixInput();
+      if(p.rateNow&&p.ratePrev)onRateInput();
+      const validT=['above','flat','below'],validV=['low','medium','high'],validR=['stable','rising','falling'];
+      if(p.trend&&validT.includes(p.trend)&&!S.trend)setBtn('trend',p.trend);
+      if(p.vix&&validV.includes(p.vix)&&!S.vix)setBtn('vix',p.vix);
+      if(p.rate&&validR.includes(p.rate)&&!S.rate)setBtn('rate',p.rate);
+      if(typeof p.vixVal==='number'&&isFinite(p.vixVal))S.vixVal=p.vixVal;
+      REBAL_KEYS.forEach(k=>{const panel=document.getElementById('panel-'+k);if(panel){delete panel.dataset.built;panel.classList.remove('open');}});
+      openPanel=null;
+      tryRender();
+      showIOMsg('\u2705 \u5df2\u532f\u5165 '+file.name);
+    }catch(err){showIOMsg('\u274c \u532f\u5165\u5931\u6557\uff1a'+err.message);}
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+function showIOMsg(msg){const el=document.getElementById('io-msg');if(!el)return;el.textContent=msg;setTimeout(()=>{el.textContent='';},4000);}
 
 lsLoad();
 </script>
