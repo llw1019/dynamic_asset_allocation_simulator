@@ -128,7 +128,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .action-item:last-child{border-bottom:none}
 .action-item i{font-size:15px;flex-shrink:0;margin-top:1px;color:var(--color-text-secondary)}
 .action-item strong{font-weight:500}
-.memo-text{font-size:13px;color:var(--color-text-secondary);line-height:1.7;margin:0}
+.memo-text{font-size:13px;color:var(--color-text-secondary);line-height:1.7;margin:0;white-space:pre-line}
 .rules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 @media(max-width:500px){.rules-grid{grid-template-columns:1fr 1fr}}
 .rule-item{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
@@ -286,7 +286,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 
 <script>
 const S={trend:null,vix:null,rate:null,vixVal:null};
-let FUND=100,currentTarget=null,inExtremeBear=false;
+let FUND=100,currentTarget=null,inExtremeBear=false,indexPct=null;
 
 const BASE={beta:30,global:20,defense:20,alpha:10,hedge:10,cash:10};
 const REGIME_WEIGHTS={
@@ -330,6 +330,24 @@ const MEMOS={
   bear:'啟動防禦機制，收縮戰線。衛星大幅減碼，防禦拉升至最高。內核外核絕對不動，不因恐慌賣出長期核心資產。等待 VIX 回落至 25 以下再評估恢復動態層。',
   range:'方向不明，維持均衡基準。重點是定期再平衡，確認各部位未偏離目標超過門檻。內核外核固定不動，衛星可小區間操作。'
 };
+function getMemo(regime){
+  const base=MEMOS[regime];
+  if(regime==='bear'){
+    if(inExtremeBear)return base+'\n\n⚠ 極端恐慌警示：目前處於極端恐慌，現金僅供避險使用，勿加碼任何風險資產。等待 VIX 回落至 25 以下再議布局。';
+    return base;
+  }
+  if(indexPct===null)return base;
+  const p=indexPct;
+  if(regime==='bull'){
+    if(p>10)return base+'\n\n⚠ 現金部署提示：指數偏離60MA達 +'+p.toFixed(1)+'%，風險報酬比偏差，現金暫緩動用。勿追高，等待指數回測均線或 VIX 升至 20 以上再評估布局。';
+    return base+'\n\n現金部署條件（目前距60MA '+(p>=0?'+':'')+p.toFixed(1)+'%）：優先用於 ① 指數回測60MA附近、② VIX 升至 20 以上、③ 恐慌性回撤後量縮止穩。持有現金是紀律，勿因 FOMO 追高。';
+  }
+  if(regime==='range'){
+    if(Math.abs(p)<=3)return base+'\n\n均線提示：指數貼近60MA（偏離 '+(p>=0?'+':'')+p.toFixed(1)+'%），現金分批布局的合理區間。留意60MA走勢，若均線走平或轉折下彎，降低進取心，優先維持均衡配置。';
+    if(p<-3)return base+'\n\n均線提示：指數在60MA以下 '+p.toFixed(1)+'%，趨勢確認前現金以觀望為主，以季再平衡為核心動作。';
+  }
+  return base;
+}
 const RULES_BASE=[
   {name:'內核 Beta',    ok:['永久核心，季再平衡'],        no:['絕對不主動調整']},
   {name:'外核 Global',  ok:['永久核心，季再平衡'],        no:['絕對不主動調整']},
@@ -440,8 +458,9 @@ function onIndexInput(){
   const idx=parseFloat(document.getElementById('taiex-input').value);
   const ma=parseFloat(document.getElementById('ma60-input').value);
   const badge=document.getElementById('trend-badge');
-  if(isNaN(idx)||isNaN(ma)||idx<=0||ma<=0){badge.style.display='none';return;}
+  if(isNaN(idx)||isNaN(ma)||idx<=0||ma<=0){indexPct=null;badge.style.display='none';return;}
   const pct=(idx-ma)/ma*100;
+  indexPct=pct;
   let val,label,cls;
   if(pct>2){val='above';label=`季線上方 +${pct.toFixed(1)}%`;cls='nb-above';}
   else if(pct<-2){val='below';label=`跌破季線 ${pct.toFixed(1)}%`;cls='nb-below';}
@@ -535,7 +554,7 @@ function render(){
   const al=document.getElementById('actions');al.innerHTML='';
   ACTIONS[regime].forEach(a=>{al.innerHTML+=`<li class="action-item"><i class="ti ${a.icon}"></i><span>${a.text}</span></li>`;});
   refreshStopLoss(al);
-  document.getElementById('memo').textContent=MEMOS[regime];
+  document.getElementById('memo').textContent=getMemo(regime);
   renderRebalTable();
 
   const rg=document.getElementById('rules-grid');rg.innerHTML='';
