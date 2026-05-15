@@ -1,116 +1,150 @@
-
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>動態資產配置模擬器 v9</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
 <style>
-h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
-.sim-wrap{padding:1.5rem 0;font-family:var(--font-sans)}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f5f5f4;
+  --color-text-primary:#1c1917;
+  --color-text-secondary:#57534e;
+  --color-text-tertiary:#a8a29e;
+  --color-border-primary:#d6d3d1;
+  --color-border-secondary:#e7e5e4;
+  --color-border-tertiary:#f5f5f4;
+  --border-radius-lg:12px;
+  --border-radius-md:8px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --color-background-primary:#1c1917;
+    --color-background-secondary:#292524;
+    --color-text-primary:#fafaf9;
+    --color-text-secondary:#a8a29e;
+    --color-text-tertiary:#57534e;
+    --color-border-primary:#44403c;
+    --color-border-secondary:#292524;
+    --color-border-tertiary:#292524;
+  }
+}
+body{font-family:var(--font-sans);background:var(--color-background-secondary);color:var(--color-text-primary);padding:24px;max-width:900px;margin:0 auto}
+h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-primary)}
 .section-label{font-size:12px;color:var(--color-text-secondary);letter-spacing:.05em;margin:0 0 10px;font-weight:500;display:flex;align-items:center;gap:5px}
 .param-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
-.param-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px}
+@media(max-width:640px){.param-grid{grid-template-columns:1fr}.two-col{grid-template-columns:1fr!important}}
+.param-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:14px 16px}
 .param-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:0 0 10px;display:flex;align-items:center;gap:6px}
 .btn-group{display:flex;flex-direction:column;gap:6px}
-.opt-btn{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 12px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;text-align:left;transition:background .15s,border-color .15s,color .15s;font-family:var(--font-sans)}
-.opt-btn:hover{border-color:var(--color-border-primary)}
+.opt-btn{background:var(--color-background-secondary);border:0.5px solid var(--color-border-primary);border-radius:var(--border-radius-md);padding:8px 12px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;text-align:left;transition:background .15s,border-color .15s,color .15s;font-family:var(--font-sans)}
+.opt-btn:hover{border-color:var(--color-text-secondary)}
 .opt-btn.active-trend{background:#E6F1FB;border-color:#378ADD;color:#0C447C}
 .opt-btn.active-vix-low{background:#EAF3DE;border-color:#639922;color:#3B6D11}
 .opt-btn.active-vix-med{background:#FAEEDA;border-color:#BA7517;color:#854F0B}
 .opt-btn.active-vix-high{background:#FCEBEB;border-color:#E24B4A;color:#A32D2D}
 .opt-btn.active-rate{background:#EEEDFE;border-color:#7F77DD;color:#3C3489}
-.num-input-row{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--color-border-tertiary);flex-wrap:wrap}
+.num-input-row{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--color-border-secondary);flex-wrap:wrap}
 .num-input-row label{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}
-.num-input-row input{width:68px;font-size:12px;padding:4px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans)}
+.num-input-row input{width:68px;font-size:12px;padding:4px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans)}
 .num-badge{font-size:11px;font-weight:500;padding:2px 7px;border-radius:4px;margin-top:4px;display:inline-block}
-.nb-low{background:#EAF3DE;color:#3B6D11}
-.nb-med{background:#FAEEDA;color:#854F0B}
-.nb-high{background:#FCEBEB;color:#A32D2D}
-.nb-extreme{background:#A32D2D;color:#fff}
-.nb-above{background:#E6F1FB;color:#0C447C}
-.nb-flat{background:#EEEDFE;color:#3C3489}
-.nb-below{background:#FCEBEB;color:#A32D2D}
-.nb-rising{background:#FCEBEB;color:#A32D2D}
-.nb-stable{background:#EAF3DE;color:#3B6D11}
-.nb-falling{background:#E6F1FB;color:#0C447C}
-.fund-row{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 16px}
+.nb-low{background:#EAF3DE;color:#3B6D11}.nb-med{background:#FAEEDA;color:#854F0B}
+.nb-high{background:#FCEBEB;color:#A32D2D}.nb-extreme{background:#A32D2D;color:#fff}
+.nb-above{background:#E6F1FB;color:#0C447C}.nb-flat{background:#EEEDFE;color:#3C3489}
+.nb-below{background:#FCEBEB;color:#A32D2D}.nb-rising{background:#FCEBEB;color:#A32D2D}
+.nb-stable{background:#EAF3DE;color:#3B6D11}.nb-falling{background:#E6F1FB;color:#0C447C}
+.fund-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:12px 16px;flex-wrap:wrap}
 .fund-row label{font-size:13px;color:var(--color-text-secondary);white-space:nowrap}
-.fund-row input{width:110px;font-size:13px;padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans)}
+.fund-row input{width:110px;font-size:13px;padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans)}
+.ls-notice{font-size:11px;color:var(--color-text-tertiary);display:flex;align-items:center;gap:4px;margin-bottom:1.2rem}
+.ls-dot{width:6px;height:6px;border-radius:50%;background:#B4B2A9;display:inline-block;flex-shrink:0}
+.ls-dot-ok{background:#639922}
 .regime-banner{border-radius:var(--border-radius-lg);padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .regime-bull{background:#EAF3DE;border:0.5px solid #639922}
 .regime-bear{background:#FCEBEB;border:0.5px solid #E24B4A}
 .regime-range{background:#FAEEDA;border:0.5px solid #BA7517}
 .regime-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
 .regime-name{font-size:15px;font-weight:500}
-.regime-bull .regime-name{color:#27500A}
-.regime-bear .regime-name{color:#A32D2D}
-.regime-range .regime-name{color:#854F0B}
+.regime-bull .regime-name{color:#27500A}.regime-bear .regime-name{color:#A32D2D}.regime-range .regime-name{color:#854F0B}
 .regime-sub{font-size:12px;margin-left:auto}
-.regime-bull .regime-sub{color:#3B6D11}
-.regime-bear .regime-sub{color:#993535}
-.regime-range .regime-sub{color:#854F0B}
-.modifier-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem}
+.regime-bull .regime-sub{color:#3B6D11}.regime-bear .regime-sub{color:#993535}.regime-range .regime-sub{color:#854F0B}
+.modifier-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.2rem}
 .mod-tag{font-size:11px;padding:3px 10px;border-radius:4px;font-weight:500}
-.mod-neutral{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)}
+.mod-neutral{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-primary)}
 .mod-rising{background:#FAEEDA;color:#854F0B;border:0.5px solid #BA7517}
 .mod-falling{background:#E6F1FB;color:#0C447C;border:0.5px solid #378ADD}
 .trigger-tag{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500}
-.trigger-vix{background:#F7C1C1;color:#791F1F}
-.trigger-trend{background:#F0997B;color:#4A1B0C}
-.trigger-both{background:#E24B4A;color:#fff}
-.trigger-extreme{background:#7A0000;color:#fff}
-.card-base{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 18px;margin-bottom:12px}
+.trigger-vix{background:#F7C1C1;color:#791F1F}.trigger-trend{background:#F0997B;color:#4A1B0C}
+.trigger-both{background:#E24B4A;color:#fff}.trigger-extreme{background:#7A0000;color:#fff}
+.hysteresis-tag{font-size:11px;padding:3px 10px;border-radius:4px;font-weight:500;background:#2C2C2A;color:#FFB3B3;border:0.5px solid #A32D2D}
+.card-base{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:16px 18px;margin-bottom:12px}
 .chart-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:0 0 12px;display:flex;align-items:center;gap:5px}
-.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
-.bar-label{font-size:12px;color:var(--color-text-secondary);width:76px;flex-shrink:0}
-.bar-nature{font-size:10px;padding:1px 5px;border-radius:3px;flex-shrink:0;width:28px;text-align:center}
-.bar-nature-fixed{background:#E6F1FB;color:#0C447C}
-.bar-nature-dyn{background:#FAEEDA;color:#854F0B}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;cursor:pointer;border-radius:6px;padding:2px 4px;transition:background .12s}
+.bar-row:hover{background:var(--color-background-secondary)}
+.bar-label{font-size:12px;color:var(--color-text-secondary);width:100px;flex-shrink:0;display:flex;align-items:center;gap:4px}
+.bar-nature{font-size:10px;padding:1px 5px;border-radius:3px;flex-shrink:0}
+.bar-nature-fixed{background:#E6F1FB;color:#0C447C}.bar-nature-dyn{background:#FAEEDA;color:#854F0B}
 .bar-track{flex:1;height:20px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;position:relative}
 .bar-base-fill{position:absolute;top:0;left:0;height:100%;background:#B4B2A9;opacity:.5;border-radius:3px}
 .bar-target-fill{position:absolute;top:4px;height:12px;border-radius:2px;transition:width .4s ease}
 .bar-val{font-size:12px;font-weight:500;color:var(--color-text-primary);width:28px;text-align:right;flex-shrink:0}
-.bar-amt{font-size:11px;color:var(--color-text-secondary);width:42px;text-align:right;flex-shrink:0}
+.bar-amt{font-size:11px;color:var(--color-text-secondary);width:44px;text-align:right;flex-shrink:0}
 .delta-badge{font-size:11px;font-weight:500;padding:2px 6px;border-radius:4px;flex-shrink:0;width:40px;text-align:center}
-.delta-up{background:#EAF3DE;color:#27500A}
-.delta-dn{background:#FCEBEB;color:#A32D2D}
+.delta-up{background:#EAF3DE;color:#27500A}.delta-dn{background:#FCEBEB;color:#A32D2D}
 .delta-ne{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.expand-icon{font-size:11px;color:var(--color-text-tertiary);flex-shrink:0;transition:transform .2s}
+.holding-panel{background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin:0 4px 8px;padding:10px 12px;display:none}
+.holding-panel.open{display:block}
+.holding-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.holding-title{font-size:11px;font-weight:500;color:var(--color-text-secondary)}
+.holding-total{font-size:11px;color:var(--color-text-secondary)}
+.holding-rows{display:flex;flex-direction:column;gap:5px}
+.holding-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.holding-row input{font-size:12px;padding:3px 7px;border-radius:4px;border:0.5px solid var(--color-border-primary);background:var(--color-background-primary);color:var(--color-text-primary);font-family:var(--font-sans)}
+.inp-code{width:80px}.inp-amt{width:80px}
+.holding-row label{font-size:11px;color:var(--color-text-tertiary);white-space:nowrap}
+.holding-add-btn{font-size:11px;color:var(--color-text-secondary);background:none;border:0.5px dashed var(--color-border-primary);border-radius:4px;padding:3px 10px;cursor:pointer;font-family:var(--font-sans);margin-top:4px}
+.holding-add-btn:hover{border-color:var(--color-text-secondary)}
+.holding-del-btn{font-size:13px;color:var(--color-text-tertiary);background:none;border:none;cursor:pointer;padding:0 2px;line-height:1}
+.holding-del-btn:hover{color:#E24B4A}
+.rebalance-table{width:100%;font-size:12px;border-collapse:collapse;margin-top:4px}
+.rebalance-table th{font-weight:500;color:var(--color-text-secondary);text-align:left;padding:4px 8px 6px;border-bottom:0.5px solid var(--color-border-secondary)}
+.rebalance-table td{padding:6px 8px;border-bottom:0.5px solid var(--color-border-secondary);color:var(--color-text-primary)}
+.rebalance-table tr:last-child td{border-bottom:none}
+.rebal-ok{color:#3B6D11}.rebal-warn{color:#854F0B;font-weight:500}
+.rebal-total-ok{color:var(--color-text-secondary);font-weight:500}.rebal-total-warn{color:#A32D2D;font-weight:500}
+.rebal-total-row td{border-top:1px solid var(--color-border-primary);background:var(--color-background-secondary);font-weight:500}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .action-list{list-style:none;padding:0;margin:0}
-.action-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px;color:var(--color-text-primary);line-height:1.5}
+.action-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--color-border-secondary);font-size:13px;color:var(--color-text-primary);line-height:1.5}
 .action-item:last-child{border-bottom:none}
 .action-item i{font-size:15px;flex-shrink:0;margin-top:1px;color:var(--color-text-secondary)}
 .action-item strong{font-weight:500}
 .memo-text{font-size:13px;color:var(--color-text-secondary);line-height:1.7;margin:0}
-.rebalance-table{width:100%;font-size:12px;border-collapse:collapse;margin-top:4px}
-.rebalance-table th{font-weight:500;color:var(--color-text-secondary);text-align:left;padding:4px 8px 6px;border-bottom:0.5px solid var(--color-border-tertiary)}
-.rebalance-table td{padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary)}
-.rebalance-table tr:last-child td{border-bottom:none}
-.rebal-ok{color:#3B6D11}
-.rebal-warn{color:#854F0B;font-weight:500}
-.rebal-total-ok{color:var(--color-text-secondary);font-weight:500}
-.rebal-total-warn{color:#A32D2D;font-weight:500}
-.rebal-total-row td{border-top:1px solid var(--color-border-secondary);background:var(--color-background-secondary);font-weight:500}
 .rules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:500px){.rules-grid{grid-template-columns:1fr 1fr}}
 .rule-item{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
 .rule-name{font-size:12px;font-weight:500;color:var(--color-text-primary);margin:0 0 4px}
 .rule-line{font-size:11px;line-height:1.5;margin:0}
-.rule-line.ok{color:#3B6D11}
-.rule-line.no{color:#A32D2D}
+.rule-line.ok{color:#3B6D11}.rule-line.no{color:#A32D2D}
 .warn-box{border-radius:var(--border-radius-md);padding:10px 14px;font-size:12px;line-height:1.6;margin-top:10px;background:#FCEBEB;color:#791F1F;border:0.5px solid #F09595}
 .warn-box-extreme{background:#3D0000;color:#FFB3B3;border:0.5px solid #A32D2D}
-.legend-row{display:flex;gap:16px;margin-bottom:10px;font-size:12px;color:var(--color-text-secondary);align-items:center}
+.legend-row{display:flex;gap:16px;margin-bottom:10px;font-size:12px;color:var(--color-text-secondary);align-items:center;flex-wrap:wrap}
 .legend-swatch{width:12px;height:5px;border-radius:2px;display:inline-block;margin-right:3px}
-.pending{opacity:.4;pointer-events:none}
 .rebal-section-note{font-size:11px;color:var(--color-text-tertiary);margin-left:auto}
-.rate-hint{font-size:11px;color:var(--color-text-tertiary);margin-top:5px;line-height:1.4}
-.ls-notice{font-size:11px;color:var(--color-text-tertiary);display:flex;align-items:center;gap:4px;margin-top:6px}
-.ls-dot{width:6px;height:6px;border-radius:50%;background:#B4B2A9;display:inline-block}
-.ls-dot-ok{background:#639922}
+.pending{opacity:.4;pointer-events:none}
 </style>
+</head>
+<body>
+<h1><i class="ti ti-chart-pie"></i> 動態資產配置模擬器 v9</h1>
 
-<h2 class="sr-only">動態資產配置模擬器 v7</h2>
-<div class="sim-wrap">
-
-<p class="section-label"><i class="ti ti-sliders" aria-hidden="true"></i>第一步：輸入市場觀測參數</p>
+<p class="section-label"><i class="ti ti-sliders"></i>第一步：輸入市場觀測參數</p>
 <div class="param-grid">
   <div class="param-card">
-    <p class="param-title"><i class="ti ti-trending-up" aria-hidden="true"></i>大盤趨勢</p>
+    <p class="param-title"><i class="ti ti-trending-up"></i>大盤趨勢</p>
     <div class="btn-group">
       <button class="opt-btn" data-grp="trend" data-val="above" onclick="pick(this,'trend','above','active-trend')">季線上方創高</button>
       <button class="opt-btn" data-grp="trend" data-val="flat"  onclick="pick(this,'trend','flat','active-trend')">季線附近盤整</button>
@@ -124,9 +158,8 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
     </div>
     <span id="trend-badge" class="num-badge" style="display:none"></span>
   </div>
-
   <div class="param-card">
-    <p class="param-title"><i class="ti ti-activity" aria-hidden="true"></i>恐慌指數 VIX</p>
+    <p class="param-title"><i class="ti ti-activity"></i>恐慌指數 VIX</p>
     <div class="btn-group">
       <button class="opt-btn" data-grp="vix" data-val="low"    onclick="pick(this,'vix','low','active-vix-low')">低恐慌（&lt; 20）</button>
       <button class="opt-btn" data-grp="vix" data-val="medium" onclick="pick(this,'vix','medium','active-vix-med')">中恐慌（20–30）</button>
@@ -137,10 +170,10 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
       <input type="number" id="vix-input" placeholder="—" min="5" max="90" step="0.1" oninput="onVixInput()"/>
     </div>
     <span id="vix-badge" class="num-badge" style="display:none"></span>
+    <div id="hysteresis-status" style="margin-top:6px;display:none"></div>
   </div>
-
   <div class="param-card">
-    <p class="param-title"><i class="ti ti-percentage" aria-hidden="true"></i>利率動向（Modifier）</p>
+    <p class="param-title"><i class="ti ti-percentage"></i>利率動向（Modifier）</p>
     <div class="btn-group">
       <button class="opt-btn" data-grp="rate" data-val="stable"  onclick="pick(this,'rate','stable','active-rate')">穩定</button>
       <button class="opt-btn" data-grp="rate" data-val="rising"  onclick="pick(this,'rate','rising','active-rate')">快速升息</button>
@@ -153,21 +186,20 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
       <input type="number" id="rate-prev" placeholder="4.05" min="0" max="20" step="0.01" oninput="onRateInput()"/>
     </div>
     <span id="rate-badge" class="num-badge" style="display:none"></span>
-    <p class="rate-hint">美債 10Y（^TNX / US10Y）</p>
+    <p style="font-size:11px;color:var(--color-text-tertiary);margin-top:5px">美債 10Y（^TNX / US10Y）</p>
   </div>
 </div>
 
 <div class="fund-row">
-  <label><i class="ti ti-wallet" aria-hidden="true" style="font-size:15px;margin-right:4px"></i>總資金</label>
-  <input type="number" id="fund-input" value="100" min="1" step="1" oninput="onFundChange()"/>
+  <label><i class="ti ti-wallet" style="font-size:15px;margin-right:4px"></i>總資金</label>
+  <input type="number" id="fund-input" value="100" min="1" step="0.1" oninput="onFundChange()"/>
   <span style="font-size:12px;color:var(--color-text-tertiary)">萬元</span>
   <span id="fund-display" style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)">各部位金額將同步換算</span>
 </div>
-<div class="ls-notice"><span class="ls-dot" id="ls-dot"></span><span id="ls-msg">LocalStorage 偵測中...</span></div>
+<div class="ls-notice"><span class="ls-dot ls-dot-ok" id="ls-dot"></span><span id="ls-msg">本機儲存已啟用，下次開啟自動載入</span></div>
 
 <div id="out" class="pending">
-
-  <p class="section-label" style="margin-top:1.2rem"><i class="ti ti-radar" aria-hidden="true"></i>市場狀態判定</p>
+  <p class="section-label"><i class="ti ti-radar"></i>市場狀態判定</p>
   <div id="regime-banner" class="regime-banner regime-range">
     <div id="regime-dot" class="regime-dot" style="background:#BA7517"></div>
     <span id="regime-name" class="regime-name">—</span>
@@ -176,12 +208,14 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
   </div>
   <div class="modifier-row" id="modifier-row"></div>
 
-  <p class="section-label"><i class="ti ti-chart-bar" aria-hidden="true"></i>資產配置對比</p>
+  <p class="section-label"><i class="ti ti-chart-bar"></i>資產配置對比
+    <span style="font-size:11px;color:var(--color-text-tertiary);margin-left:4px">點擊部位可展開持股輸入</span>
+  </p>
   <div class="card-base">
     <div class="legend-row">
       <span><span class="legend-swatch" style="background:#B4B2A9"></span>基準 Base</span>
       <span><span class="legend-swatch" style="background:#378ADD"></span>目標 Target</span>
-      <span style="font-size:11px;color:var(--color-text-tertiary)"><span style="background:#E6F1FB;color:#0C447C;padding:1px 5px;border-radius:3px;font-size:10px">固定</span> 核心層永不調整</span>
+      <span><span class="bar-nature bar-nature-fixed" style="font-size:10px;padding:1px 5px;border-radius:3px;display:inline-block">固定</span> 核心永不調整</span>
       <span style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)" id="fund-label">總資金 100 萬</span>
     </div>
     <div id="bars"></div>
@@ -189,310 +223,241 @@ h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow
 
   <div class="two-col">
     <div class="card-base" style="margin-bottom:0">
-      <p class="chart-title"><i class="ti ti-list-check" aria-hidden="true"></i>執行清單</p>
+      <p class="chart-title"><i class="ti ti-list-check"></i>執行清單</p>
       <ul class="action-list" id="actions"></ul>
     </div>
     <div class="card-base" style="margin-bottom:0">
-      <p class="chart-title"><i class="ti ti-message-2" aria-hidden="true"></i>經理人備忘</p>
+      <p class="chart-title"><i class="ti ti-message-2"></i>經理人備忘</p>
       <p class="memo-text" id="memo"></p>
     </div>
   </div>
 
   <p class="section-label" style="margin-top:2px">
-    <i class="ti ti-refresh" aria-hidden="true"></i>再平衡檢查
-    <span class="rebal-section-note">對比目標配置，偏離 ≥ 5% 時建議調整</span>
+    <i class="ti ti-refresh"></i>再平衡檢查
+    <span class="rebal-section-note">衛星/避險偏離 ≥ 3%、其餘 ≥ 5% 時建議調整</span>
   </p>
   <div class="card-base" style="margin-bottom:12px">
     <table class="rebalance-table">
-      <thead><tr><th>部位</th><th>目標 %</th><th>目前持倉 %</th><th>金額 (萬)</th><th>偏離</th><th>建議</th></tr></thead>
+      <thead><tr><th>部位</th><th>目標%</th><th>目標金額(萬)</th><th>持倉金額(萬)</th><th>持倉%</th><th>偏離</th><th>建議</th></tr></thead>
       <tbody id="rebal-body"></tbody>
       <tfoot><tr class="rebal-total-row">
-        <td colspan="2">合計</td>
-        <td id="rebal-total-pct" class="rebal-total-ok">100%</td>
-        <td id="rebal-total-amt" style="color:var(--color-text-secondary)"></td>
+        <td>合計</td><td></td>
+        <td id="rebal-tgt-total"></td>
+        <td id="rebal-holding-total" class="rebal-total-ok"></td>
+        <td id="rebal-total-pct" class="rebal-total-ok"></td>
         <td colspan="2" id="rebal-total-msg" class="rebal-total-ok"></td>
       </tr></tfoot>
     </table>
   </div>
 
-  <p class="section-label"><i class="ti ti-shield-lock" aria-hidden="true"></i>部位操作硬規則</p>
+  <p class="section-label"><i class="ti ti-shield-lock"></i>部位操作硬規則</p>
   <div class="card-base" style="margin-bottom:0">
     <div class="rules-grid" id="rules-grid"></div>
     <div id="warn-area"></div>
   </div>
 </div>
-</div>
 
 <script>
-// ── 狀態 ──
 const S={trend:null,vix:null,rate:null,vixVal:null};
-let FUND=100;
-let currentTarget=null;
+let FUND=100,currentTarget=null,inExtremeBear=false;
 
-// ── 基準 ──
 const BASE={beta:30,global:20,defense:20,alpha:10,hedge:10,cash:10};
-
-// ── 主 Regime 配置（內核/外核固定，只動防禦/衛星/避險/現金）──
 const REGIME_WEIGHTS={
   bull: {beta:30,global:20,defense:15,alpha:15,hedge:5, cash:15},
   bear: {beta:30,global:20,defense:25,alpha:5, hedge:10,cash:10},
   range:{beta:30,global:20,defense:20,alpha:10,hedge:10,cash:10}
 };
-
-// ── 利率 Modifier（疊加在主 Regime 上）──
-const RATE_MODIFIER={
-  rising: {hedge:-5,cash:+5},
-  falling:{hedge:+5,cash:-5},
-  stable: {}
-};
-
-const LABELS={beta:'內核',global:'外核',defense:'防禦',alpha:'衛星',hedge:'避險',cash:'現金'};
-const COLORS={beta:'#378ADD',global:'#7F77DD',defense:'#1D9E75',alpha:'#D85A30',hedge:'#D4537E',cash:'#888780'};
-const FIXED_KEYS=['beta','global']; // 核心層，永不調整
-
+const RATE_MODIFIER={rising:{hedge:-5,cash:+5},falling:{hedge:+5,cash:-5},stable:{}};
+const REBAL_THRESHOLD={beta:5,global:5,defense:5,alpha:3,hedge:3,cash:5};
+const LABELS={beta:'內核 Beta',global:'外核 Global',defense:'防禦 Vol-Abs',alpha:'衛星 Alpha',hedge:'避險 Hedge',cash:'現金 Option'};
+const COLORS={beta:'#378ADD',global:'#7F77DD',defense:'#1D9E75',alpha:'#D85A30',hedge:'#D4537E',cash:'#C8C6C0'};
+const FIXED_KEYS=['beta','global'];
 const REGIME_META={
   bull: {label:'成長牛市 Risk-on', sub:'進攻模式，動態層擴張', bannerCls:'regime-bull',  dotColor:'#639922'},
   bear: {label:'緊縮熊市 Risk-off',sub:'防禦模式，收縮戰線',   bannerCls:'regime-bear',  dotColor:'#E24B4A'},
   range:{label:'盤整震盪 Range',   sub:'均衡模式，執行再平衡', bannerCls:'regime-range', dotColor:'#BA7517'}
 };
-
 const ACTIONS={
   bull:[
-    {icon:'ti-arrow-up',  text:'<strong>衛星</strong> 加碼至 15%，追蹤高貝塔機會'},
-    {icon:'ti-arrow-up',  text:'<strong>現金</strong> 維持 15%，保留機動性'},
-    {icon:'ti-arrow-down',text:'<strong>防禦</strong> 減碼至 15%，適度釋放保守配置'},
-    {icon:'ti-arrow-down',text:'<strong>避險</strong> 減碼至 5%，降低對沖成本'},
-    {icon:'ti-lock',      text:'<strong>內核 / 外核</strong> 固定不動，僅執行再平衡'}
+    {icon:'ti-arrow-up',  text:'<strong>衛星 Alpha</strong> 加碼至 15%，追蹤高貝塔機會'},
+    {icon:'ti-arrow-up',  text:'<strong>現金 Option</strong> 維持 15%，保留機動性'},
+    {icon:'ti-arrow-down',text:'<strong>防禦 Vol-Abs</strong> 減碼至 15%，釋放保守配置'},
+    {icon:'ti-arrow-down',text:'<strong>避險 Hedge</strong> 減碼至 5%，降低對沖成本'},
+    {icon:'ti-lock',      text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，僅執行再平衡'}
   ],
   bear:[
-    {icon:'ti-arrow-down',text:'<strong>衛星</strong> 大幅減碼至 5%，降低高風險敞口'},
-    {icon:'ti-arrow-up',  text:'<strong>防禦</strong> 拉升至 25%，強化緩衝'},
-    {icon:'ti-arrow-up',  text:'<strong>避險</strong> 維持 10%，逆週期對沖'},
-    {icon:'ti-arrow-up',  text:'<strong>現金</strong> 維持 10%，保留反彈火力'},
-    {icon:'ti-lock',      text:'<strong>內核 / 外核</strong> 固定不動，不因恐慌賣出'}
+    {icon:'ti-arrow-down',text:'<strong>衛星 Alpha</strong> 大幅減碼至 5%，降低高風險敞口'},
+    {icon:'ti-arrow-up',  text:'<strong>防禦 Vol-Abs</strong> 拉升至 25%，強化緩衝'},
+    {icon:'ti-arrow-up',  text:'<strong>避險 Hedge</strong> 維持 10%，逆週期對沖'},
+    {icon:'ti-arrow-up',  text:'<strong>現金 Option</strong> 維持 10%，保留反彈火力'},
+    {icon:'ti-lock',      text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，不因恐慌賣出'}
   ],
   range:[
     {icon:'ti-equals', text:'動態層維持基準比例，不主動調整'},
-    {icon:'ti-refresh',text:'執行<strong>再平衡檢查</strong>，偏離 ≥ 5% 時進行修正'},
-    {icon:'ti-lock',   text:'<strong>內核 / 外核</strong> 固定不動，僅執行季再平衡'}
+    {icon:'ti-refresh',text:'執行<strong>再平衡檢查</strong>，偏離超過門檻時進行修正'},
+    {icon:'ti-lock',   text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，僅執行季再平衡'}
   ]
 };
-
 const MEMOS={
-  bull:'市場動能強勁，VIX 低位且大盤創高。衛星加碼追蹤高貝塔機會，現金保留 15% 維持機動性。內核外核固定不動，不因牛市衝動追加核心部位。',
-  bear:'啟動防禦機制，收縮戰線。衛星大幅減碼，防禦拉升至最高。內核外核絕對不動，不因恐慌賣出長期核心資產。等待 VIX 降溫後逐步恢復衛星部位。',
-  range:'方向不明，維持均衡基準。重點是定期再平衡，確認各部位未偏離目標超過 5%。內核外核固定不動，衛星可小區間操作。'
+  bull:'市場動能強勁，VIX 低位且大盤創高。衛星加碼追蹤高貝塔機會，現金保留 15% 維持機動性。內核外核固定不動，不因牛市追加核心部位。',
+  bear:'啟動防禦機制，收縮戰線。衛星大幅減碼，防禦拉升至最高。內核外核絕對不動，不因恐慌賣出長期核心資產。等待 VIX 回落至 25 以下再評估恢復動態層。',
+  range:'方向不明，維持均衡基準。重點是定期再平衡，確認各部位未偏離目標超過門檻。內核外核固定不動，衛星可小區間操作。'
 };
-
 const RULES_BASE=[
-  {name:'內核',ok:['永久核心，季再平衡'],no:['絕對不主動調整']},
-  {name:'外核',ok:['永久核心，季再平衡'],no:['絕對不主動調整']},
-  {name:'防禦',ok:['熊市加碼','過熱減碼'],no:[]},
-  {name:'衛星',ok:['唯一主動操作層','可停利換股'],no:['單筆虧損 > 8% 停損']},
-  {name:'避險',ok:['逆週期使用'],no:['不長期重壓']},
-  {name:'現金',ok:['永遠存在','崩盤最大火力'],no:[]}
+  {name:'內核 Beta',    ok:['永久核心，季再平衡'],        no:['絕對不主動調整']},
+  {name:'外核 Global',  ok:['永久核心，季再平衡'],        no:['絕對不主動調整']},
+  {name:'防禦 Vol-Abs', ok:['熊市加碼','過熱減碼'],       no:[]},
+  {name:'衛星 Alpha',   ok:['唯一主動操作層','可停利換股'],no:['單筆虧損 > 8% 停損']},
+  {name:'避險 Hedge',   ok:['逆週期使用'],                no:['不長期重壓']},
+  {name:'現金 Option',  ok:['永遠存在','崩盤最大火力'],   no:[]}
 ];
-
 const REBAL_KEYS=Object.keys(BASE);
-const rebalInputs={};
-REBAL_KEYS.forEach(k=>{rebalInputs[k]=BASE[k];});
+const holdings={};
+REBAL_KEYS.forEach(k=>{holdings[k]=[{code:'',amt:''}];});
 
-// ── LocalStorage ──
-const LS_KEY='daa_sim_v7';
-let lsAvailable=false;
-
-function lsTest(){
-  try{
-    localStorage.setItem('__ls_test__','1');
-    localStorage.removeItem('__ls_test__');
-    lsAvailable=true;
-    document.getElementById('ls-dot').className='ls-dot ls-dot-ok';
-    document.getElementById('ls-msg').textContent='參數已啟用本機儲存，下次開啟自動載入';
-  }catch(e){
-    document.getElementById('ls-msg').textContent='本機儲存不可用（claude.ai 限制），參數不會保留';
-  }
-}
-
+// LocalStorage
+const LS_KEY='daa_sim_v9';
 function lsSave(){
-  if(!lsAvailable) return;
   try{
-    const data={
-      trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,
-      fund:FUND,
+    localStorage.setItem(LS_KEY,JSON.stringify({
+      trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,inExtremeBear,fund:FUND,
       taiex:document.getElementById('taiex-input').value,
       ma60:document.getElementById('ma60-input').value,
       vixInput:document.getElementById('vix-input').value,
       rateNow:document.getElementById('rate-now').value,
       ratePrev:document.getElementById('rate-prev').value,
-      rebalInputs:{...rebalInputs}
-    };
-    localStorage.setItem(LS_KEY,JSON.stringify(data));
+      holdings:JSON.parse(JSON.stringify(holdings))
+    }));
   }catch(e){}
 }
-
 function lsLoad(){
-  if(!lsAvailable) return;
   try{
-    const raw=localStorage.getItem(LS_KEY);
-    if(!raw) return;
+    const raw=localStorage.getItem(LS_KEY);if(!raw)return;
     const d=JSON.parse(raw);
     if(d.fund){FUND=d.fund;document.getElementById('fund-input').value=d.fund;document.getElementById('fund-label').textContent=`總資金 ${FUND} 萬`;}
-    if(d.taiex) document.getElementById('taiex-input').value=d.taiex;
-    if(d.ma60)  document.getElementById('ma60-input').value=d.ma60;
-    if(d.vixInput) document.getElementById('vix-input').value=d.vixInput;
-    if(d.rateNow)  document.getElementById('rate-now').value=d.rateNow;
-    if(d.ratePrev) document.getElementById('rate-prev').value=d.ratePrev;
-    if(d.rebalInputs) Object.assign(rebalInputs,d.rebalInputs);
-    // 觸發數值重新計算
-    if(d.taiex&&d.ma60) onIndexInput();
-    if(d.vixInput) onVixInput();
-    if(d.rateNow&&d.ratePrev) onRateInput();
-    // 若數值輸入沒觸發到，手動還原按鈕狀態
-    if(d.trend&&!S.trend) setBtn('trend',d.trend);
-    if(d.vix&&!S.vix)     setBtn('vix',d.vix);
-    if(d.rate&&!S.rate)   setBtn('rate',d.rate);
-    if(d.vixVal) S.vixVal=d.vixVal;
+    if(d.inExtremeBear!==undefined)inExtremeBear=d.inExtremeBear;
+    if(d.taiex)document.getElementById('taiex-input').value=d.taiex;
+    if(d.ma60) document.getElementById('ma60-input').value=d.ma60;
+    if(d.vixInput)document.getElementById('vix-input').value=d.vixInput;
+    if(d.rateNow) document.getElementById('rate-now').value=d.rateNow;
+    if(d.ratePrev)document.getElementById('rate-prev').value=d.ratePrev;
+    if(d.holdings)Object.assign(holdings,d.holdings);
+    if(d.taiex&&d.ma60)onIndexInput();
+    if(d.vixInput)onVixInput();
+    if(d.rateNow&&d.ratePrev)onRateInput();
+    if(d.trend&&!S.trend)setBtn('trend',d.trend);
+    if(d.vix&&!S.vix)    setBtn('vix',d.vix);
+    if(d.rate&&!S.rate)  setBtn('rate',d.rate);
+    if(d.vixVal)S.vixVal=d.vixVal;
     tryRender();
   }catch(e){}
 }
-
 function setBtn(grp,val){
-  const clsMap={
-    trend:{above:'active-trend',flat:'active-trend',below:'active-trend'},
-    vix:  {low:'active-vix-low',medium:'active-vix-med',high:'active-vix-high'},
-    rate: {stable:'active-rate',rising:'active-rate',falling:'active-rate'}
-  };
+  const m={trend:{above:'active-trend',flat:'active-trend',below:'active-trend'},
+    vix:{low:'active-vix-low',medium:'active-vix-med',high:'active-vix-high'},
+    rate:{stable:'active-rate',rising:'active-rate',falling:'active-rate'}};
   document.querySelectorAll(`[data-grp="${grp}"]`).forEach(b=>b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate'));
   const btn=document.querySelector(`[data-grp="${grp}"][data-val="${val}"]`);
-  if(btn) btn.classList.add(clsMap[grp][val]);
+  if(btn)btn.classList.add(m[grp][val]);
   S[grp]=val;
 }
 
-// ── Regime 判定 ──
+// Regime
 function getRegime(){
-  const {trend,vix}=S;
-  const vixVal=S.vixVal;
-  if(vixVal!==null&&vixVal>35) return 'bear';
-  if(trend==='below'||vix==='high') return 'bear';
-  if(trend==='above'&&vix==='low')  return 'bull';
-  return 'range';
+  const{trend,vix}=S,v=S.vixVal;
+  if(v!==null){
+    if(!inExtremeBear&&v>35)inExtremeBear=true;
+    else if(inExtremeBear&&v<25)inExtremeBear=false;
+  }
+  if(inExtremeBear)return'bear';
+  if(trend==='below'||vix==='high')return'bear';
+  if(trend==='above'&&vix==='low')return'bull';
+  return'range';
 }
-
-// ── 計算目標（主 Regime + 利率 Modifier）──
 function calcTarget(regime){
   const base={...REGIME_WEIGHTS[regime]};
   const mod=RATE_MODIFIER[S.rate]||{};
-  Object.entries(mod).forEach(([k,delta])=>{
-    if(base[k]!==undefined){
-      base[k]=Math.max(0,base[k]+delta);
-    }
-  });
-  // 確保總和為 100
+  Object.entries(mod).forEach(([k,d])=>{if(base[k]!==undefined)base[k]=Math.max(0,base[k]+d);});
   const sum=Object.values(base).reduce((a,b)=>a+b,0);
-  if(sum!==100){
-    // 用現金做補償
-    base.cash=Math.max(0,base.cash+(100-sum));
-  }
+  if(sum!==100)base.cash=Math.max(0,base.cash+(100-sum));
   return base;
 }
-
 function getBearTrigger(){
-  const vixVal=S.vixVal;
-  if(vixVal!==null&&vixVal>35)
-    return {label:`極端恐慌 VIX ${vixVal.toFixed(1)}`,cls:'trigger-extreme'};
-  const both=S.trend==='below'&&S.vix==='high';
-  const vOnly=S.trend!=='below'&&S.vix==='high';
-  const tOnly=S.trend==='below'&&S.vix!=='high';
-  if(both)  return {label:'跌破季線 + VIX > 30',cls:'trigger-both'};
-  if(vOnly) return {label:'VIX > 30 觸發',      cls:'trigger-vix'};
-  if(tOnly) return {label:'跌破季線觸發',         cls:'trigger-trend'};
+  const v=S.vixVal;
+  if(inExtremeBear&&v!==null&&v>25)return{label:`極端恐慌 VIX ${v.toFixed(1)}，需 < 25 才解除`,cls:'trigger-extreme'};
+  if(inExtremeBear)return{label:'極端恐慌 Hysteresis 鎖定中',cls:'trigger-extreme'};
+  if(S.trend==='below'&&S.vix==='high')return{label:'跌破季線 + VIX > 30',cls:'trigger-both'};
+  if(S.trend!=='below'&&S.vix==='high')return{label:'VIX > 30 觸發',cls:'trigger-vix'};
+  if(S.trend==='below'&&S.vix!=='high')return{label:'跌破季線觸發',cls:'trigger-trend'};
   return null;
 }
 
-// ── 自動切換按鈕 ──
-function autoSelect(grp,val){
-  if(S[grp]===val) return;
-  setBtn(grp,val);
+function autoSelect(grp,val){if(S[grp]===val)return;setBtn(grp,val);tryRender();}
+function tryRender(){
+  if(S.trend&&S.vix&&S.rate){document.getElementById('out').classList.remove('pending');render();}
+  lsSave();
+}
+function pick(el,grp,val,cls){
+  document.querySelectorAll(`[data-grp="${grp}"]`).forEach(b=>b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate'));
+  el.classList.add(cls);S[grp]=val;
+  if(grp==='vix'){S.vixVal=null;document.getElementById('vix-input').value='';document.getElementById('vix-badge').style.display='none';document.getElementById('hysteresis-status').style.display='none';}
   tryRender();
 }
 
-function tryRender(){
-  if(S.trend&&S.vix&&S.rate){
-    document.getElementById('out').classList.remove('pending');
-    render();
-  }
-  lsSave();
-}
-
-// ── 數值輸入 ──
 function onIndexInput(){
   const idx=parseFloat(document.getElementById('taiex-input').value);
-  const ma =parseFloat(document.getElementById('ma60-input').value);
+  const ma=parseFloat(document.getElementById('ma60-input').value);
   const badge=document.getElementById('trend-badge');
   if(isNaN(idx)||isNaN(ma)||idx<=0||ma<=0){badge.style.display='none';return;}
   const pct=(idx-ma)/ma*100;
   let val,label,cls;
-  if(pct>2)      {val='above';label=`季線上方 +${pct.toFixed(1)}%`;cls='nb-above';}
-  else if(pct<-2){val='below';label=`跌破季線 ${pct.toFixed(1)}%`; cls='nb-below';}
-  else           {val='flat'; label=`季線附近 ${pct>=0?'+':''}${pct.toFixed(1)}%`;cls='nb-flat';}
+  if(pct>2){val='above';label=`季線上方 +${pct.toFixed(1)}%`;cls='nb-above';}
+  else if(pct<-2){val='below';label=`跌破季線 ${pct.toFixed(1)}%`;cls='nb-below';}
+  else{val='flat';label=`季線附近 ${pct>=0?'+':''}${pct.toFixed(1)}%`;cls='nb-flat';}
   badge.textContent=label;badge.className=`num-badge ${cls}`;badge.style.display='inline-block';
   autoSelect('trend',val);
 }
-
 function onVixInput(){
   const v=parseFloat(document.getElementById('vix-input').value);
   const badge=document.getElementById('vix-badge');
-  if(isNaN(v)||v<=0){badge.style.display='none';S.vixVal=null;lsSave();return;}
+  const hsEl=document.getElementById('hysteresis-status');
+  if(isNaN(v)||v<=0){badge.style.display='none';hsEl.style.display='none';S.vixVal=null;lsSave();return;}
   S.vixVal=v;
+  if(!inExtremeBear&&v>35)inExtremeBear=true;
+  else if(inExtremeBear&&v<25)inExtremeBear=false;
+  if(inExtremeBear){hsEl.style.display='block';hsEl.innerHTML=`<span class="hysteresis-tag">極端熊市鎖定中，需 VIX &lt; 25 才解除</span>`;}
+  else hsEl.style.display='none';
   let val,label,cls;
-  if(v>35)      {val='high';  label=`極端恐慌 ${v.toFixed(1)} ⚠`;cls='nb-extreme';}
-  else if(v>=30){val='high';  label=`高恐慌 ${v.toFixed(1)}`;     cls='nb-high';}
-  else if(v>=20){val='medium';label=`中恐慌 ${v.toFixed(1)}`;     cls='nb-med';}
-  else          {val='low';   label=`低恐慌 ${v.toFixed(1)}`;     cls='nb-low';}
+  if(v>35){val='high';label=`極端恐慌 ${v.toFixed(1)} ⚠`;cls='nb-extreme';}
+  else if(v>=30){val='high';label=`高恐慌 ${v.toFixed(1)}`;cls='nb-high';}
+  else if(v>=20){val='medium';label=`中恐慌 ${v.toFixed(1)}`;cls='nb-med';}
+  else{val='low';label=`低恐慌 ${v.toFixed(1)}`;cls='nb-low';}
   badge.textContent=label;badge.className=`num-badge ${cls}`;badge.style.display='inline-block';
   autoSelect('vix',val);
 }
-
 function onRateInput(){
-  const now =parseFloat(document.getElementById('rate-now').value);
+  const now=parseFloat(document.getElementById('rate-now').value);
   const prev=parseFloat(document.getElementById('rate-prev').value);
   const badge=document.getElementById('rate-badge');
   if(isNaN(now)||isNaN(prev)){badge.style.display='none';return;}
   const diff=now-prev;
   let val,label,cls;
-  if(diff>0.25)      {val='rising'; label=`升息 +${diff.toFixed(2)}%`;cls='nb-rising';}
-  else if(diff<-0.25){val='falling';label=`降息 ${diff.toFixed(2)}%`; cls='nb-falling';}
-  else               {val='stable'; label=`穩定 ${diff>=0?'+':''}${diff.toFixed(2)}%`;cls='nb-stable';}
+  if(diff>0.25){val='rising';label=`升息 +${diff.toFixed(2)}%`;cls='nb-rising';}
+  else if(diff<-0.25){val='falling';label=`降息 ${diff.toFixed(2)}%`;cls='nb-falling';}
+  else{val='stable';label=`穩定 ${diff>=0?'+':''}${diff.toFixed(2)}%`;cls='nb-stable';}
   badge.textContent=label;badge.className=`num-badge ${cls}`;badge.style.display='inline-block';
   autoSelect('rate',val);
 }
-
 function onFundChange(){
   const v=parseFloat(document.getElementById('fund-input').value);
   FUND=isNaN(v)||v<=0?100:v;
   document.getElementById('fund-label').textContent=`總資金 ${FUND} 萬`;
-  if(S.trend&&S.vix&&S.rate) render();
-  lsSave();
+  if(S.trend&&S.vix&&S.rate)render();lsSave();
 }
 
-function pick(el,grp,val,cls){
-  document.querySelectorAll(`[data-grp="${grp}"]`).forEach(b=>{
-    b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate');
-  });
-  el.classList.add(cls);
-  S[grp]=val;
-  if(grp==='vix'){S.vixVal=null;document.getElementById('vix-input').value='';document.getElementById('vix-badge').style.display='none';}
-  tryRender();
-}
-
-// ── 主渲染 ──
 function render(){
-  const regime=getRegime();
-  const target=calcTarget(regime);
+  const regime=getRegime(),target=calcTarget(regime),meta=REGIME_META[regime];
   currentTarget=target;
-  const meta=REGIME_META[regime];
-
-  // Banner
   const banner=document.getElementById('regime-banner');
   banner.className=`regime-banner ${meta.bannerCls}`;
   document.getElementById('regime-dot').style.background=meta.dotColor;
@@ -501,21 +466,12 @@ function render(){
   const trigEl=document.getElementById('regime-trigger');
   if(regime==='bear'){const t=getBearTrigger();trigEl.innerHTML=t?`<span class="trigger-tag ${t.cls}">${t.label}</span>`:'`';}
   else trigEl.innerHTML='';
-
-  // Modifier tags
   const modRow=document.getElementById('modifier-row');
-  const rate=S.rate;
-  if(rate==='rising'){
-    modRow.innerHTML=`<span class="mod-tag mod-rising"><i class="ti ti-arrow-up" style="font-size:10px"></i> 升息 Modifier：避險 −5%，現金 +5%</span>`;
-  }else if(rate==='falling'){
-    modRow.innerHTML=`<span class="mod-tag mod-falling"><i class="ti ti-arrow-down" style="font-size:10px"></i> 降息 Modifier：避險 +5%，現金 −5%</span>`;
-  }else{
-    modRow.innerHTML=`<span class="mod-tag mod-neutral">利率穩定，無修正因子</span>`;
-  }
+  if(S.rate==='rising')modRow.innerHTML=`<span class="mod-tag mod-rising">↑ 升息 Modifier：避險 −5%，現金 +5%</span>`;
+  else if(S.rate==='falling')modRow.innerHTML=`<span class="mod-tag mod-falling">↓ 降息 Modifier：避險 +5%，現金 −5%</span>`;
+  else modRow.innerHTML=`<span class="mod-tag mod-neutral">利率穩定，無修正因子</span>`;
 
-  // 長條圖
-  const bars=document.getElementById('bars');
-  bars.innerHTML='';
+  const barsEl=document.getElementById('bars');barsEl.innerHTML='';
   const keys=Object.keys(BASE);
   const maxVal=Math.max(...keys.map(k=>Math.max(BASE[k],target[k])));
   keys.forEach(k=>{
@@ -525,92 +481,148 @@ function render(){
     const ds=diff>0?`+${diff}%`:diff<0?`${diff}%`:'±0';
     const amt=(FUND*t/100).toFixed(1);
     const isFixed=FIXED_KEYS.includes(k);
-    const natureCls=isFixed?'bar-nature-fixed':'bar-nature-dyn';
-    const natureLabel=isFixed?'固定':'動態';
-    bars.innerHTML+=`<div class="bar-row">
-      <span class="bar-label">${LABELS[k]}</span>
-      <span class="bar-nature ${natureCls}">${natureLabel}</span>
-      <div class="bar-track">
-        <div class="bar-base-fill" style="width:${bPct}%"></div>
-        <div class="bar-target-fill" style="width:${tPct}%;background:${COLORS[k]}"></div>
+    barsEl.innerHTML+=`
+      <div class="bar-row" onclick="togglePanel('${k}')">
+        <span class="bar-label"><span class="bar-nature ${isFixed?'bar-nature-fixed':'bar-nature-dyn'}">${isFixed?'固':'動'}</span>${LABELS[k]}</span>
+        <div class="bar-track">
+          <div class="bar-base-fill" style="width:${bPct}%"></div>
+          <div class="bar-target-fill" style="width:${tPct}%;background:${COLORS[k]}"></div>
+        </div>
+        <span class="bar-val">${t}%</span><span class="bar-amt">${amt}萬</span>
+        <span class="delta-badge ${dc}">${ds}</span>
+        <i class="ti ti-chevron-down expand-icon" id="icon-${k}"></i>
       </div>
-      <span class="bar-val">${t}%</span>
-      <span class="bar-amt">${amt}萬</span>
-      <span class="delta-badge ${dc}">${ds}</span>
-    </div>`;
+      <div class="holding-panel" id="panel-${k}"></div>`;
   });
 
-  // 執行清單
-  const al=document.getElementById('actions');
-  al.innerHTML='';
-  ACTIONS[regime].forEach(a=>{al.innerHTML+=`<li class="action-item"><i class="ti ${a.icon}" aria-hidden="true"></i><span>${a.text}</span></li>`;});
+  const al=document.getElementById('actions');al.innerHTML='';
+  ACTIONS[regime].forEach(a=>{al.innerHTML+=`<li class="action-item"><i class="ti ${a.icon}"></i><span>${a.text}</span></li>`;});
   document.getElementById('memo').textContent=MEMOS[regime];
-
   renderRebalTable();
 
-  // 硬規則
-  const rg=document.getElementById('rules-grid');
-  rg.innerHTML='';
+  const rg=document.getElementById('rules-grid');rg.innerHTML='';
   RULES_BASE.forEach(r=>{
     const ok=r.ok.map(l=>`<p class="rule-line ok"><i class="ti ti-check" style="font-size:11px"></i> ${l}</p>`).join('');
     const no=r.no.map(l=>`<p class="rule-line no"><i class="ti ti-x" style="font-size:11px"></i> ${l}</p>`).join('');
     rg.innerHTML+=`<div class="rule-item"><p class="rule-name">${r.name}</p>${ok}${no}</div>`;
   });
 
-  // 警示
-  const wa=document.getElementById('warn-area');
-  wa.innerHTML='';
-  const vixVal=S.vixVal;
-  if(regime==='bear'&&vixVal!==null&&vixVal>35){
-    wa.innerHTML=`<div class="warn-box warn-box-extreme"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>極端恐慌覆蓋：VIX ${vixVal.toFixed(1)} 超過 35，強制進入熊市防禦。停止一切加碼，等待 VIX 回落至 30 以下再評估。</div>`;
-  }else if(regime==='bear'){
+  const wa=document.getElementById('warn-area');wa.innerHTML='';
+  const vv=S.vixVal;
+  if(inExtremeBear&&vv!==null&&vv>25)
+    wa.innerHTML=`<div class="warn-box warn-box-extreme"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>極端恐慌 Hysteresis 鎖定：VIX ${vv.toFixed(1)}。停止一切加碼，等待 VIX 回落至 25 以下才解除熊市防禦。</div>`;
+  else if(regime==='bear')
     wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>硬規則：衛星標的出現跳空缺口或單日跌幅 > 3%，禁止動用現金加碼。等待 VIX 回落至 25 以下再評估進場。</div>`;
-  }else if(S.vix==='high'){
+  else if(S.vix==='high')
     wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>VIX > 30 高恐慌區間。現金保留充足備用，嚴禁一次性重壓。</div>`;
+}
+
+// 持股面板（修正 focus bug：用 DOM 事件綁定，不重建已存在的 input）
+let openPanel=null;
+function togglePanel(k){
+  const panel=document.getElementById('panel-'+k);if(!panel)return;
+  if(openPanel&&openPanel!==k){
+    const prev=document.getElementById('panel-'+openPanel);
+    if(prev){prev.classList.remove('open');const ic=document.getElementById('icon-'+openPanel);if(ic)ic.style.transform='';}
+  }
+  const isOpen=panel.classList.contains('open');
+  if(!isOpen){
+    panel.classList.add('open');
+    const ic=document.getElementById('icon-'+k);if(ic)ic.style.transform='rotate(180deg)';
+    openPanel=k;
+    if(!panel.dataset.built)buildPanel(k);
+    else updatePanelTotal(k);
+  }else{
+    panel.classList.remove('open');
+    const ic=document.getElementById('icon-'+k);if(ic)ic.style.transform='';
+    openPanel=null;
   }
 }
+function buildPanel(k){
+  const panel=document.getElementById('panel-'+k);if(!panel)return;
+  panel.dataset.built='1';
+  panel.innerHTML=`
+    <div class="holding-header">
+      <span class="holding-title">${LABELS[k]} 持股明細</span>
+      <span class="holding-total">小計：<strong id="htotal-${k}">0 萬</strong></span>
+    </div>
+    <div class="holding-rows" id="hrows-${k}"></div>
+    <button class="holding-add-btn" onclick="addHolding('${k}')">＋ 新增標的</button>`;
+  rebuildRows(k);updatePanelTotal(k);
+}
+function rebuildRows(k){
+  const container=document.getElementById('hrows-'+k);if(!container)return;
+  container.innerHTML='';
+  holdings[k].forEach((r,i)=>{
+    const row=document.createElement('div');row.className='holding-row';
+    const lblC=document.createElement('label');lblC.textContent='代號';
+    const inpC=document.createElement('input');
+    inpC.className='inp-code';inpC.type='text';inpC.placeholder='如 006208';inpC.value=r.code;
+    inpC.addEventListener('input',function(){holdings[k][i].code=this.value;updatePanelTotal(k);lsSave();});
+    const lblA=document.createElement('label');lblA.textContent='金額';
+    const inpA=document.createElement('input');
+    inpA.className='inp-amt';inpA.type='number';inpA.placeholder='萬元';inpA.min='0';inpA.step='0.1';inpA.value=r.amt;
+    inpA.addEventListener('input',function(){holdings[k][i].amt=this.value;updatePanelTotal(k);renderRebalTable();lsSave();});
+    const lblU=document.createElement('label');lblU.textContent='萬';
+    const del=document.createElement('button');del.className='holding-del-btn';del.textContent='×';
+    del.addEventListener('click',()=>delHolding(k,i));
+    row.append(lblC,inpC,lblA,inpA,lblU,del);container.appendChild(row);
+  });
+}
+function updatePanelTotal(k){
+  const el=document.getElementById('htotal-'+k);if(!el)return;
+  const total=holdings[k].reduce((s,r)=>{const v=parseFloat(r.amt);return s+(isNaN(v)?0:v);},0);
+  el.textContent=total.toFixed(1)+' 萬';
+}
+function addHolding(k){
+  holdings[k].push({code:'',amt:''});
+  const panel=document.getElementById('panel-'+k);
+  if(panel)delete panel.dataset.built;
+  buildPanel(k);lsSave();
+}
+function delHolding(k,i){
+  if(holdings[k].length===1)holdings[k][0]={code:'',amt:''};
+  else holdings[k].splice(i,1);
+  const panel=document.getElementById('panel-'+k);
+  if(panel)delete panel.dataset.built;
+  buildPanel(k);renderRebalTable();lsSave();
+}
+function getHoldingTotal(k){return holdings[k].reduce((s,r)=>{const v=parseFloat(r.amt);return s+(isNaN(v)?0:v);},0);}
 
 function renderRebalTable(){
-  const tbody=document.getElementById('rebal-body');
+  const tbody=document.getElementById('rebal-body');if(!tbody)return;
   tbody.innerHTML='';
   const ref=currentTarget||BASE;
-  let totalPct=0,totalAmt=0;
+  let totalTgt=0,totalHolding=0;
   REBAL_KEYS.forEach(k=>{
-    const tgt=ref[k],cur=rebalInputs[k];
-    const diff=+(cur-tgt).toFixed(1);
-    const warn=Math.abs(diff)>=5;
-    const amt=+(FUND*cur/100).toFixed(1);
-    totalPct+=cur;totalAmt+=amt;
-    const advice=diff>0?'偏高，建議減碼':diff<0?'偏低，建議加碼':'維持';
+    const tgtPct=ref[k],tgtAmt=+(FUND*tgtPct/100).toFixed(1);
+    const holdAmt=+getHoldingTotal(k).toFixed(1);
+    const holdPct=FUND>0?+(holdAmt/FUND*100).toFixed(1):0;
+    const diffPct=+(holdPct-tgtPct).toFixed(1);
+    const threshold=REBAL_THRESHOLD[k];
+    const warn=holdAmt>0&&Math.abs(diffPct)>=threshold;
+    totalTgt+=tgtAmt;totalHolding+=holdAmt;
+    const advice=diffPct>0?'偏高，建議減碼':diffPct<0?'偏低，建議加碼':'維持';
+    const note=threshold<5?`(門檻${threshold}%)`:'';
     tbody.innerHTML+=`<tr>
-      <td>${LABELS[k]}</td><td>${tgt}%</td>
-      <td><input type="number" min="0" max="100" step="1" value="${cur}"
-        style="width:56px;font-size:12px;padding:3px 6px;border-radius:4px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans)"
-        oninput="updateRebal('${k}',this.value)"/></td>
-      <td style="color:var(--color-text-secondary)">${amt}</td>
-      <td class="${warn?'rebal-warn':'rebal-ok'}">${diff>0?'+':''}${diff}%</td>
-      <td class="${warn?'rebal-warn':'rebal-ok'}">${warn?'⚠ '+advice:'—'}</td>
+      <td>${LABELS[k]}</td><td>${tgtPct}%</td><td>${tgtAmt}</td>
+      <td style="cursor:pointer;color:${COLORS[k]};font-weight:500" onclick="togglePanel('${k}')">${holdAmt>0?holdAmt:'— 點擊輸入'}</td>
+      <td>${holdAmt>0?holdPct+'%':'—'}</td>
+      <td class="${warn?'rebal-warn':'rebal-ok'}">${holdAmt>0?(diffPct>0?'+':'')+diffPct+'%':'—'}</td>
+      <td class="${warn?'rebal-warn':'rebal-ok'}">${holdAmt>0?(warn?'⚠ '+advice+note:'—'):'—'}</td>
     </tr>`;
   });
-  const over=totalPct>100,under=totalPct<100;
-  const tpEl=document.getElementById('rebal-total-pct');
-  tpEl.textContent=`${totalPct.toFixed(1)}%`;
-  tpEl.className=over||under?'rebal-total-warn':'rebal-total-ok';
-  document.getElementById('rebal-total-amt').textContent=totalAmt.toFixed(1);
+  document.getElementById('rebal-tgt-total').textContent=totalTgt.toFixed(1)+' 萬';
+  document.getElementById('rebal-holding-total').textContent=totalHolding.toFixed(1)+' 萬';
+  document.getElementById('rebal-total-pct').textContent=totalHolding>0?+(totalHolding/FUND*100).toFixed(1)+'%':'—';
   const tmEl=document.getElementById('rebal-total-msg');
-  if(over){tmEl.textContent='⚠ 超過 100%，請檢查';tmEl.className='rebal-total-warn';}
-  else if(under){tmEl.textContent=`尚有 ${(100-totalPct).toFixed(1)}% 未配置`;tmEl.className='rebal-total-warn';}
-  else{tmEl.textContent='配置完整';tmEl.className='rebal-total-ok';}
-  lsSave();
+  const diff=+(totalHolding-FUND).toFixed(1);
+  if(totalHolding===0){tmEl.textContent='尚未輸入持倉';tmEl.className='rebal-total-ok';}
+  else if(diff>0.5){tmEl.textContent=`⚠ 超過總資金 ${diff} 萬`;tmEl.className='rebal-total-warn';}
+  else{tmEl.textContent='';tmEl.className='rebal-total-ok';}
 }
 
-function updateRebal(k,val){
-  const v=parseFloat(val);
-  rebalInputs[k]=isNaN(v)?0:v;
-  renderRebalTable();
-}
-
-// ── 初始化 ──
-lsTest();
 lsLoad();
 </script>
+</body>
+</html>
