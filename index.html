@@ -307,7 +307,7 @@ const REGIME_META={
 const ACTIONS={
   bull:[
     {icon:'ti-arrow-up',  text:'<strong>衛星 Alpha</strong> 加碼至 15%，追蹤高貝塔機會'},
-    {icon:'ti-arrow-up',  text:'<strong>現金 Option</strong> 維持 15%，保留機動性'},
+    {icon:'ti-arrow-up',  text:'<strong>現金 Option</strong> 保留至 15%，維持機動性'},
     {icon:'ti-arrow-down',text:'<strong>防禦 Vol-Abs</strong> 減碼至 15%，釋放保守配置'},
     {icon:'ti-arrow-down',text:'<strong>避險 Hedge</strong> 減碼至 5%，降低對沖成本'},
     {icon:'ti-lock',      text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，僅執行再平衡'}
@@ -361,7 +361,7 @@ function lsLoad(){
   try{
     const raw=localStorage.getItem(LS_KEY);if(!raw)return;
     const d=JSON.parse(raw);
-    if(d.hwm){FUND=d.hwm;document.getElementById('fund-input').value=d.hwm;document.getElementById('fund-label').textContent=`高水位 ${FUND} 萬`;}
+    if(typeof d.hwm==='number'&&isFinite(d.hwm)){FUND=d.hwm;document.getElementById('fund-input').value=d.hwm;document.getElementById('fund-label').textContent=FUND>0?`高水位 ${FUND} 萬`:'高水位 — 萬';}
     if(d.inExtremeBear!==undefined)inExtremeBear=d.inExtremeBear;
     if(d.taiex)document.getElementById('taiex-input').value=d.taiex;
     if(d.ma60) document.getElementById('ma60-input').value=d.ma60;
@@ -477,7 +477,7 @@ function onRateInput(){
 }
 function onFundChange(){
   const v=parseFloat(document.getElementById('fund-input').value);
-  FUND=isNaN(v)||v<0?0:v;
+  FUND=isNaN(v)||v<=0?0:v;
   document.getElementById('fund-label').textContent=FUND>0?`高水位 ${FUND} 萬`:'高水位 — 萬';
   if(S.trend&&S.vix&&S.rate)render();lsSave();
 }
@@ -491,7 +491,7 @@ function render(){
   document.getElementById('regime-name').textContent=meta.label;
   document.getElementById('regime-sub').textContent=meta.sub;
   const trigEl=document.getElementById('regime-trigger');
-  if(regime==='bear'){const t=getBearTrigger();trigEl.innerHTML=t?`<span class="trigger-tag ${t.cls}">${t.label}</span>`:'`';}
+  if(regime==='bear'){const t=getBearTrigger();trigEl.innerHTML=t?`<span class="trigger-tag ${t.cls}">${t.label}</span>`:'';}
   else trigEl.innerHTML='';
   const modRow=document.getElementById('modifier-row');
   if(S.rate==='rising')modRow.innerHTML=`<span class="mod-tag mod-rising">↑ 升息 Modifier：避險 −5%，現金 +5%</span>`;
@@ -521,6 +521,11 @@ function render(){
       </div>
       <div class="holding-panel" id="panel-${k}"></div>`;
   });
+
+  if(openPanel){
+    const p=document.getElementById('panel-'+openPanel);
+    if(p){p.classList.add('open');buildPanel(openPanel);const ic=document.getElementById('icon-'+openPanel);if(ic)ic.style.transform='rotate(180deg)';}
+  }
 
   const al=document.getElementById('actions');al.innerHTML='';
   ACTIONS[regime].forEach(a=>{al.innerHTML+=`<li class="action-item"><i class="ti ${a.icon}"></i><span>${a.text}</span></li>`;});
@@ -665,7 +670,7 @@ function refreshStopLoss(al){
   al.querySelectorAll('.stop-loss-item').forEach(el=>el.remove());
   holdings.alpha.forEach(r=>{
     const avg=parseFloat(r.avgPrice),cur=parseFloat(r.curPrice);
-    if(!isNaN(avg)&&!isNaN(cur)&&avg>0){const pnl=((cur-avg)/avg)*100;if(pnl<=-8)al.innerHTML+=`<li class="action-item stop-loss-item"><i class="ti ti-alert-triangle" style="color:#A32D2D"></i><span style="color:#A32D2D"><strong>停損警示：${r.code||'未命名'}</strong> 虧損 ${pnl.toFixed(1)}%，已觸及 -8% 停損線</span></li>`;}
+    if(!isNaN(avg)&&!isNaN(cur)&&avg>0){const pnl=((cur-avg)/avg)*100;if(pnl<=-8){const code=(r.code||'未命名').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));al.innerHTML+=`<li class="action-item stop-loss-item"><i class="ti ti-alert-triangle" style="color:#A32D2D"></i><span style="color:#A32D2D"><strong>停損警示：${code}</strong> 虧損 ${pnl.toFixed(1)}%，已觸及 -8% 停損線</span></li>`;}}
   });
 }
 function checkHWM(){
@@ -772,8 +777,8 @@ function importJSON(input){
       if(p.rateNow)document.getElementById('rate-now').value=String(p.rateNow);
       if(p.ratePrev)document.getElementById('rate-prev').value=String(p.ratePrev);
       if(data.holdings&&typeof data.holdings==='object'){
-        const vk=['above','flat','below','low','medium','high','stable','rising','falling'];
-        REBAL_KEYS.forEach(k=>{if(Array.isArray(data.holdings[k])){if(k==='cash')holdings[k]=data.holdings[k].map(h=>({amt:String(h.amt||'')}));else holdings[k]=data.holdings[k].map(h=>({code:String(h.code||''),avgPrice:String(h.avgPrice||''),curPrice:String(h.curPrice||''),shares:String(h.shares||'')}));}});
+        const sanitize=(v)=>{const n=parseFloat(v);return isNaN(n)||n<0?'':String(n);};
+        REBAL_KEYS.forEach(k=>{if(Array.isArray(data.holdings[k])){if(k==='cash')holdings[k]=data.holdings[k].map(h=>({amt:sanitize(h.amt)}));else holdings[k]=data.holdings[k].map(h=>({code:String(h.code||'').slice(0,20),avgPrice:sanitize(h.avgPrice),curPrice:sanitize(h.curPrice),shares:sanitize(h.shares)}));}});
       }
       if(p.taiex&&p.ma60)onIndexInput();
       if(p.vixInput)onVixInput();
