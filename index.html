@@ -104,7 +104,12 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .holding-rows{display:flex;flex-direction:column;gap:5px}
 .holding-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .holding-row input{font-size:12px;padding:3px 7px;border-radius:4px;border:0.5px solid var(--color-border-primary);background:var(--color-background-primary);color:var(--color-text-primary);font-family:var(--font-sans)}
-.inp-code{width:80px}.inp-amt{width:80px}
+.inp-code{width:80px}.inp-amt{width:80px}.inp-avg{width:65px}.inp-cur{width:65px}.inp-shares{width:65px}
+.holding-pnl{font-size:11px;font-weight:500;padding:1px 6px;border-radius:3px;white-space:nowrap}
+.pnl-pos{background:#EAF3DE;color:#27500A}.pnl-neg{background:#FCEBEB;color:#A32D2D}.pnl-stop{background:#A32D2D;color:#fff}
+.holding-mv{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}
+.hwm-bar{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--color-text-tertiary);margin-top:2px;margin-bottom:8px;padding:0 16px}
+.hwm-update-btn{font-size:11px;padding:2px 8px;border-radius:4px;border:0.5px solid #639922;background:#EAF3DE;color:#27500A;cursor:pointer;font-family:var(--font-sans)}
 .holding-row label{font-size:11px;color:var(--color-text-tertiary);white-space:nowrap}
 .holding-add-btn{font-size:11px;color:var(--color-text-secondary);background:none;border:0.5px dashed var(--color-border-primary);border-radius:4px;padding:3px 10px;cursor:pointer;font-family:var(--font-sans);margin-top:4px}
 .holding-add-btn:hover{border-color:var(--color-text-secondary)}
@@ -200,11 +205,12 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 </div>
 
 <div class="fund-row">
-  <label><i class="ti ti-wallet" style="font-size:15px;margin-right:4px"></i>總資金</label>
+  <label><i class="ti ti-chart-line" style="font-size:15px;margin-right:4px"></i>資產高水位</label>
   <input type="number" id="fund-input" value="100" min="1" step="0.1" oninput="onFundChange()"/>
   <span style="font-size:12px;color:var(--color-text-tertiary)">萬元</span>
-  <span id="fund-display" style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)">各部位金額將同步換算</span>
+  <span id="fund-display" style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)">歷史最高市值，用於回撤與配置計算</span>
 </div>
+<div class="hwm-bar" id="hwm-bar" style="display:none"></div>
 <div class="ls-notice"><span class="ls-dot ls-dot-ok" id="ls-dot"></span><span id="ls-msg">本機儲存已啟用，下次開啟自動載入</span></div>
 
 <div class="io-bar">
@@ -232,7 +238,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
       <span><span class="legend-swatch" style="background:#B4B2A9"></span>基準 Base</span>
       <span><span class="legend-swatch" style="background:#378ADD"></span>目標 Target</span>
       <span><span class="bar-nature bar-nature-fixed" style="font-size:10px;padding:1px 5px;border-radius:3px;display:inline-block">固定</span> 核心永不調整</span>
-      <span style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)" id="fund-label">總資金 100 萬</span>
+      <span style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)" id="fund-label">高水位 100 萬</span>
     </div>
     <div id="bars"></div>
   </div>
@@ -309,12 +315,12 @@ const ACTIONS={
   bear:[
     {icon:'ti-arrow-down',text:'<strong>衛星 Alpha</strong> 大幅減碼至 5%，降低高風險敞口'},
     {icon:'ti-arrow-up',  text:'<strong>防禦 Vol-Abs</strong> 拉升至 25%，強化緩衝'},
-    {icon:'ti-arrow-up',  text:'<strong>避險 Hedge</strong> 維持 10%，逆週期對沖'},
-    {icon:'ti-arrow-up',  text:'<strong>現金 Option</strong> 維持 10%，保留反彈火力'},
+    {icon:'ti-equal',     text:'<strong>避險 Hedge</strong> 維持 10%，逆週期對沖'},
+    {icon:'ti-equal',     text:'<strong>現金 Option</strong> 維持 10%，保留反彈火力'},
     {icon:'ti-lock',      text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，不因恐慌賣出'}
   ],
   range:[
-    {icon:'ti-equals', text:'動態層維持基準比例，不主動調整'},
+    {icon:'ti-equal',  text:'動態層維持基準比例，不主動調整'},
     {icon:'ti-refresh',text:'執行<strong>再平衡檢查</strong>，偏離超過門檻時進行修正'},
     {icon:'ti-lock',   text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，僅執行季再平衡'}
   ]
@@ -334,14 +340,14 @@ const RULES_BASE=[
 ];
 const REBAL_KEYS=Object.keys(BASE);
 const holdings={};
-REBAL_KEYS.forEach(k=>{holdings[k]=[{code:'',amt:''}];});
+REBAL_KEYS.forEach(k=>{holdings[k]=k==='cash'?[{amt:''}]:[{code:'',avgPrice:'',curPrice:'',shares:''}];});
 
 // LocalStorage
 const LS_KEY='daa_sim_v9';
 function lsSave(){
   try{
     localStorage.setItem(LS_KEY,JSON.stringify({
-      trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,inExtremeBear,fund:FUND,
+      trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,inExtremeBear,hwm:FUND,
       taiex:document.getElementById('taiex-input').value,
       ma60:document.getElementById('ma60-input').value,
       vixInput:document.getElementById('vix-input').value,
@@ -355,14 +361,14 @@ function lsLoad(){
   try{
     const raw=localStorage.getItem(LS_KEY);if(!raw)return;
     const d=JSON.parse(raw);
-    if(d.fund){FUND=d.fund;document.getElementById('fund-input').value=d.fund;document.getElementById('fund-label').textContent=`總資金 ${FUND} 萬`;}
+    if(d.hwm){FUND=d.hwm;document.getElementById('fund-input').value=d.hwm;document.getElementById('fund-label').textContent=`高水位 ${FUND} 萬`;}
     if(d.inExtremeBear!==undefined)inExtremeBear=d.inExtremeBear;
     if(d.taiex)document.getElementById('taiex-input').value=d.taiex;
     if(d.ma60) document.getElementById('ma60-input').value=d.ma60;
     if(d.vixInput)document.getElementById('vix-input').value=d.vixInput;
     if(d.rateNow) document.getElementById('rate-now').value=d.rateNow;
     if(d.ratePrev)document.getElementById('rate-prev').value=d.ratePrev;
-    if(d.holdings)Object.assign(holdings,d.holdings);
+    if(d.holdings){REBAL_KEYS.forEach(k=>{if(Array.isArray(d.holdings[k])){if(k==='cash')holdings[k]=d.holdings[k].map(h=>({amt:String(h.amt||'')}));else holdings[k]=d.holdings[k].map(h=>('avgPrice' in h)?{code:String(h.code||''),avgPrice:String(h.avgPrice||''),curPrice:String(h.curPrice||''),shares:String(h.shares||'')}:{code:String(h.code||''),avgPrice:'',curPrice:'',shares:''});}});}
     if(d.taiex&&d.ma60)onIndexInput();
     if(d.vixInput)onVixInput();
     if(d.rateNow&&d.ratePrev)onRateInput();
@@ -413,7 +419,7 @@ function getBearTrigger(){
   return null;
 }
 
-function autoSelect(grp,val){if(S[grp]===val)return;setBtn(grp,val);tryRender();}
+function autoSelect(grp,val){if(S[grp]===val){lsSave();return;}setBtn(grp,val);tryRender();}
 function tryRender(){
   if(S.trend&&S.vix&&S.rate){document.getElementById('out').classList.remove('pending');render();}
   lsSave();
@@ -471,8 +477,8 @@ function onRateInput(){
 }
 function onFundChange(){
   const v=parseFloat(document.getElementById('fund-input').value);
-  FUND=isNaN(v)||v<=0?100:v;
-  document.getElementById('fund-label').textContent=`總資金 ${FUND} 萬`;
+  FUND=isNaN(v)||v<0?0:v;
+  document.getElementById('fund-label').textContent=FUND>0?`高水位 ${FUND} 萬`:'高水位 — 萬';
   if(S.trend&&S.vix&&S.rate)render();lsSave();
 }
 
@@ -518,6 +524,7 @@ function render(){
 
   const al=document.getElementById('actions');al.innerHTML='';
   ACTIONS[regime].forEach(a=>{al.innerHTML+=`<li class="action-item"><i class="ti ${a.icon}"></i><span>${a.text}</span></li>`;});
+  refreshStopLoss(al);
   document.getElementById('memo').textContent=MEMOS[regime];
   renderRebalTable();
 
@@ -562,53 +569,128 @@ function togglePanel(k){
 function buildPanel(k){
   const panel=document.getElementById('panel-'+k);if(!panel)return;
   panel.dataset.built='1';
+  const isCash=k==='cash';
   panel.innerHTML=`
     <div class="holding-header">
-      <span class="holding-title">${LABELS[k]} 持股明細</span>
-      <span class="holding-total">小計：<strong id="htotal-${k}">0 萬</strong></span>
+      <span class="holding-title">${LABELS[k]} ${isCash?'明細':'持股明細'}</span>
+      <span class="holding-total">現值：<strong id="htotal-${k}">0 萬</strong></span>
     </div>
     <div class="holding-rows" id="hrows-${k}"></div>
-    <button class="holding-add-btn" onclick="addHolding('${k}')">＋ 新增標的</button>`;
+    <button class="holding-add-btn" onclick="addHolding('${k}')">＋ ${isCash?'新增項目':'新增標的'}</button>`;
   rebuildRows(k);updatePanelTotal(k);
 }
 function rebuildRows(k){
   const container=document.getElementById('hrows-'+k);if(!container)return;
   container.innerHTML='';
+  const isCash=k==='cash';
   holdings[k].forEach((r,i)=>{
     const row=document.createElement('div');row.className='holding-row';
-    const lblC=document.createElement('label');lblC.textContent='代號';
-    const inpC=document.createElement('input');
-    inpC.className='inp-code';inpC.type='text';inpC.placeholder='如 006208';inpC.value=r.code;
-    inpC.addEventListener('input',function(){holdings[k][i].code=this.value;updatePanelTotal(k);lsSave();});
-    const lblA=document.createElement('label');lblA.textContent='金額';
-    const inpA=document.createElement('input');
-    inpA.className='inp-amt';inpA.type='number';inpA.placeholder='萬元';inpA.min='0';inpA.step='0.1';inpA.value=r.amt;
-    inpA.addEventListener('input',function(){holdings[k][i].amt=this.value;updatePanelTotal(k);renderRebalTable();lsSave();});
-    const lblU=document.createElement('label');lblU.textContent='萬';
-    const del=document.createElement('button');del.className='holding-del-btn';del.textContent='×';
-    del.addEventListener('click',()=>delHolding(k,i));
-    row.append(lblC,inpC,lblA,inpA,lblU,del);container.appendChild(row);
+    if(isCash){
+      const lblA=document.createElement('label');lblA.textContent='金額';
+      const inpA=document.createElement('input');
+      inpA.className='inp-amt';inpA.type='number';inpA.placeholder='萬元';inpA.min='0';inpA.step='0.1';inpA.value=r.amt||'';
+      inpA.addEventListener('input',function(){holdings[k][i].amt=this.value;updatePanelTotal(k);renderRebalTable();lsSave();});
+      const lblU=document.createElement('label');lblU.textContent='萬';
+      const del=document.createElement('button');del.className='holding-del-btn';del.textContent='×';
+      del.addEventListener('click',()=>delHolding(k,i));
+      row.append(lblA,inpA,lblU,del);
+    }else{
+      const lblC=document.createElement('label');lblC.textContent='代號';
+      const inpC=document.createElement('input');
+      inpC.className='inp-code';inpC.type='text';inpC.placeholder='如 006208';inpC.value=r.code||'';
+      inpC.addEventListener('input',function(){holdings[k][i].code=this.value;lsSave();});
+      const lblAvg=document.createElement('label');lblAvg.textContent='均價';
+      const inpAvg=document.createElement('input');
+      inpAvg.className='inp-avg';inpAvg.type='number';inpAvg.placeholder='元';inpAvg.min='0';inpAvg.step='0.01';inpAvg.value=r.avgPrice||'';
+      const mvEl=document.createElement('span');mvEl.className='holding-mv';
+      const badgeEl=document.createElement('span');badgeEl.className='holding-pnl';
+      function updateRowDisplay(){
+        const a=parseFloat(holdings[k][i].avgPrice),c=parseFloat(holdings[k][i].curPrice),s=parseFloat(holdings[k][i].shares);
+        if(!isNaN(c)&&!isNaN(s)&&s>0){mvEl.textContent=(c*s/10000).toFixed(2)+'萬';mvEl.style.display='';}
+        else{mvEl.textContent='';mvEl.style.display='none';}
+        if(!isNaN(a)&&!isNaN(c)&&a>0){
+          const pnl=((c-a)/a*100);
+          badgeEl.className='holding-pnl '+(pnl<=-8?'pnl-stop':pnl<0?'pnl-neg':'pnl-pos');
+          badgeEl.textContent=(pnl>=0?'+':'')+pnl.toFixed(1)+'%';
+          if(pnl<=-8&&k==='alpha')badgeEl.textContent+=' 停損';
+          badgeEl.style.display='';
+        }else{badgeEl.textContent='';badgeEl.style.display='none';}
+      }
+      inpAvg.addEventListener('input',function(){holdings[k][i].avgPrice=this.value;updateRowDisplay();updatePanelTotal(k);renderRebalTable();lsSave();});
+      const lblCur=document.createElement('label');lblCur.textContent='現價';
+      const inpCur=document.createElement('input');
+      inpCur.className='inp-cur';inpCur.type='number';inpCur.placeholder='元';inpCur.min='0';inpCur.step='0.01';inpCur.value=r.curPrice||'';
+      inpCur.addEventListener('input',function(){holdings[k][i].curPrice=this.value;updateRowDisplay();updatePanelTotal(k);renderRebalTable();lsSave();});
+      const lblSh=document.createElement('label');lblSh.textContent='股';
+      const inpSh=document.createElement('input');
+      inpSh.className='inp-shares';inpSh.type='number';inpSh.placeholder='股數';inpSh.min='0';inpSh.step='1';inpSh.value=r.shares||'';
+      inpSh.addEventListener('input',function(){holdings[k][i].shares=this.value;updateRowDisplay();updatePanelTotal(k);renderRebalTable();lsSave();});
+      const del=document.createElement('button');del.className='holding-del-btn';del.textContent='×';
+      del.addEventListener('click',()=>delHolding(k,i));
+      row.append(lblC,inpC,lblAvg,inpAvg,lblCur,inpCur,lblSh,inpSh,mvEl,badgeEl,del);
+      updateRowDisplay();
+    }
+    container.appendChild(row);
   });
 }
 function updatePanelTotal(k){
   const el=document.getElementById('htotal-'+k);if(!el)return;
-  const total=holdings[k].reduce((s,r)=>{const v=parseFloat(r.amt);return s+(isNaN(v)?0:v);},0);
+  const total=getHoldingTotal(k);
   el.textContent=total.toFixed(1)+' 萬';
 }
 function addHolding(k){
-  holdings[k].push({code:'',amt:''});
+  holdings[k].push(k==='cash'?{amt:''}:{code:'',avgPrice:'',curPrice:'',shares:''});
   const panel=document.getElementById('panel-'+k);
   if(panel)delete panel.dataset.built;
   buildPanel(k);lsSave();
 }
 function delHolding(k,i){
-  if(holdings[k].length===1)holdings[k][0]={code:'',amt:''};
+  if(holdings[k].length===1)holdings[k][0]=k==='cash'?{amt:''}:{code:'',avgPrice:'',curPrice:'',shares:''};
   else holdings[k].splice(i,1);
   const panel=document.getElementById('panel-'+k);
   if(panel)delete panel.dataset.built;
   buildPanel(k);renderRebalTable();lsSave();
 }
-function getHoldingTotal(k){return holdings[k].reduce((s,r)=>{const v=parseFloat(r.amt);return s+(isNaN(v)?0:v);},0);}
+function getHoldingTotal(k){
+  if(k==='cash')return holdings[k].reduce((s,r)=>{const v=parseFloat(r.amt);return s+(isNaN(v)?0:v);},0);
+  return holdings[k].reduce((s,r)=>{const p=parseFloat(r.curPrice),sh=parseFloat(r.shares);return s+(isNaN(p)||isNaN(sh)?0:p*sh/10000);},0);
+}
+function getHoldingCost(k){
+  if(k==='cash')return getHoldingTotal(k);
+  return holdings[k].reduce((s,r)=>{const a=parseFloat(r.avgPrice),sh=parseFloat(r.shares);return s+(isNaN(a)||isNaN(sh)?0:a*sh/10000);},0);
+}
+function refreshStopLoss(al){
+  if(!al)al=document.getElementById('actions');
+  if(!al)return;
+  al.querySelectorAll('.stop-loss-item').forEach(el=>el.remove());
+  holdings.alpha.forEach(r=>{
+    const avg=parseFloat(r.avgPrice),cur=parseFloat(r.curPrice);
+    if(!isNaN(avg)&&!isNaN(cur)&&avg>0){const pnl=((cur-avg)/avg)*100;if(pnl<=-8)al.innerHTML+=`<li class="action-item stop-loss-item"><i class="ti ti-alert-triangle" style="color:#A32D2D"></i><span style="color:#A32D2D"><strong>停損警示：${r.code||'未命名'}</strong> 虧損 ${pnl.toFixed(1)}%，已觸及 -8% 停損線</span></li>`;}
+  });
+}
+function checkHWM(){
+  const total=REBAL_KEYS.reduce((s,k)=>s+getHoldingTotal(k),0);
+  const cost=REBAL_KEYS.reduce((s,k)=>s+getHoldingCost(k),0);
+  const suggested=Math.max(total,cost);
+  const bar=document.getElementById('hwm-bar');if(!bar)return;
+  if(FUND<=0&&(total>0||cost>0)){
+    bar.style.display='flex';
+    bar.innerHTML='<i class="ti ti-info-circle" style="color:#378ADD"></i> 尚未設定高水位 <button class="hwm-update-btn" onclick="updateHWM('+suggested.toFixed(1)+')">設為 '+suggested.toFixed(1)+' 萬</button>';
+  }else if(total>FUND&&FUND>0){
+    bar.style.display='flex';
+    bar.innerHTML='<i class="ti ti-trophy" style="color:#639922"></i> 持倉市值 '+total.toFixed(1)+' 萬已超過高水位 '+FUND+' 萬 <button class="hwm-update-btn" onclick="updateHWM('+suggested.toFixed(1)+')">更新高水位</button>';
+  }else if(cost>FUND+0.05&&FUND>0&&cost>0){
+    bar.style.display='flex';
+    bar.innerHTML='<i class="ti ti-alert-circle" style="color:#BA7517"></i> 高水位 '+FUND+' 萬低於持倉成本 '+cost.toFixed(1)+' 萬，回撤計算可能失真 <button class="hwm-update-btn" onclick="updateHWM('+cost.toFixed(1)+')">修正為 '+cost.toFixed(1)+' 萬</button>';
+  }else{bar.style.display='none';}
+  refreshStopLoss();
+}
+function updateHWM(val){
+  FUND=val;document.getElementById('fund-input').value=val;
+  document.getElementById('fund-label').textContent='高水位 '+FUND+' 萬';
+  document.getElementById('hwm-bar').style.display='none';
+  if(S.trend&&S.vix&&S.rate)render();lsSave();
+}
 
 function renderRebalTable(){
   const tbody=document.getElementById('rebal-body');if(!tbody)return;
@@ -635,14 +717,14 @@ function renderRebalTable(){
   });
   document.getElementById('rebal-tgt-total').textContent=totalTgt.toFixed(1)+' 萬';
   document.getElementById('rebal-holding-total').textContent=totalHolding.toFixed(1)+' 萬';
-  document.getElementById('rebal-total-pct').textContent=totalHolding>0?+(totalHolding/FUND*100).toFixed(1)+'%':'—';
+  document.getElementById('rebal-total-pct').textContent=(totalHolding>0&&FUND>0)?+(totalHolding/FUND*100).toFixed(1)+'%':'—';
   const tmEl=document.getElementById('rebal-total-msg');
   const diff=+(totalHolding-FUND).toFixed(1);
-  if(totalHolding===0){tmEl.textContent='尚未輸入持倉';tmEl.className='rebal-total-ok';}
-  else if(diff>0.5){tmEl.textContent=`⚠ 超過總資金 ${diff} 萬`;tmEl.className='rebal-total-warn';}
+  if(totalHolding===0||FUND<=0){tmEl.textContent=FUND<=0?'請先設定高水位':'尚未輸入持倉';tmEl.className='rebal-total-ok';}
+  else if(diff>0.5){tmEl.textContent=`⚠ 超過高水位 ${diff} 萬`;tmEl.className='rebal-total-warn';}
   else{tmEl.textContent='';tmEl.className='rebal-total-ok';}
   const ddEl=document.getElementById('drawdown-area');
-  if(ddEl&&totalHolding>0){
+  if(ddEl&&totalHolding>0&&FUND>0){
     const dd=+(((FUND-totalHolding)/FUND)*100).toFixed(1);
     if(dd>=8){ddEl.className='drawdown-bar dd-danger';ddEl.innerHTML='<i class="ti ti-alert-triangle" style="font-size:13px"></i> 組合回撤 '+dd+'%（門檻 8%）— 建議立即檢視衛星與高風險部位，考慮減碼';}
     else if(dd>=5){ddEl.className='drawdown-bar dd-warn';ddEl.innerHTML='<i class="ti ti-alert-circle" style="font-size:13px"></i> 組合回撤 '+dd+'% — 接近門檻，請留意';}
@@ -650,6 +732,7 @@ function renderRebalTable(){
     else{ddEl.className='drawdown-bar dd-ok';ddEl.textContent=totalHolding>FUND?'持倉超過基準 +'+(-dd)+'%':'持倉與基準一致';}
     ddEl.style.display='flex';
   }else if(ddEl){ddEl.style.display='none';}
+  checkHWM();
 }
 
 function exportJSON(){
@@ -660,7 +743,7 @@ function exportJSON(){
       vixInput:document.getElementById('vix-input').value,
       rateNow:document.getElementById('rate-now').value,
       ratePrev:document.getElementById('rate-prev').value},
-    fund:FUND,inExtremeBear:inExtremeBear,
+    hwm:FUND,inExtremeBear:inExtremeBear,
     holdings:JSON.parse(JSON.stringify(holdings))};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
@@ -680,7 +763,7 @@ function importJSON(input){
       if(typeof data!=='object'||!data.params||!data.holdings)throw new Error('\u683c\u5f0f\u4e0d\u7b26');
       S.trend=null;S.vix=null;S.rate=null;S.vixVal=null;
       document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate'));
-      if(typeof data.fund==='number'&&isFinite(data.fund)&&data.fund>0){FUND=data.fund;document.getElementById('fund-input').value=data.fund;document.getElementById('fund-label').textContent='\u7e3d\u8cc7\u91d1 '+FUND+' \u842c';}
+      if(typeof data.hwm==='number'&&isFinite(data.hwm)&&data.hwm>0){FUND=data.hwm;document.getElementById('fund-input').value=data.hwm;document.getElementById('fund-label').textContent='高水位 '+FUND+' 萬';}
       if(typeof data.inExtremeBear==='boolean')inExtremeBear=data.inExtremeBear;
       const p=data.params;
       if(p.taiex)document.getElementById('taiex-input').value=String(p.taiex);
@@ -690,7 +773,7 @@ function importJSON(input){
       if(p.ratePrev)document.getElementById('rate-prev').value=String(p.ratePrev);
       if(data.holdings&&typeof data.holdings==='object'){
         const vk=['above','flat','below','low','medium','high','stable','rising','falling'];
-        REBAL_KEYS.forEach(k=>{if(Array.isArray(data.holdings[k]))holdings[k]=data.holdings[k].map(h=>({code:String(h.code||''),amt:String(h.amt||'')}));});
+        REBAL_KEYS.forEach(k=>{if(Array.isArray(data.holdings[k])){if(k==='cash')holdings[k]=data.holdings[k].map(h=>({amt:String(h.amt||'')}));else holdings[k]=data.holdings[k].map(h=>({code:String(h.code||''),avgPrice:String(h.avgPrice||''),curPrice:String(h.curPrice||''),shares:String(h.shares||'')}));}});
       }
       if(p.taiex&&p.ma60)onIndexInput();
       if(p.vixInput)onVixInput();
