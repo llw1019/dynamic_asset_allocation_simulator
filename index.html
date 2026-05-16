@@ -10,7 +10,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="動態資產配置"/>
 <link rel="icon" href="icon.svg" type="image/svg+xml"/>
-<link rel="apple-touch-icon" href="icon.svg"/>
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -792,7 +793,8 @@ function renderRebalTable(){
     const threshold=REBAL_THRESHOLD[k];
     const warn=holdAmt>0&&Math.abs(diffPct)>=threshold;
     totalTgt+=tgtAmt;totalHolding+=holdAmt;
-    const advice=diffPct>0?'偏高，建議減碼':diffPct<0?'偏低，建議加碼':'維持';
+    const diffAmt=Math.abs(+(tgtAmt-holdAmt).toFixed(2));
+    const advice=diffPct>0?`偏高，建議減碼 ≈ ${diffAmt} 萬`:(diffPct<0?`偏低，建議加碼 ≈ ${diffAmt} 萬`:'維持');
     const note=threshold<5?`(門檻${threshold}%)`:'';
     tbody.innerHTML+=`<tr>
       <td>${LABELS[k]}</td><td class="col-tgt-pct">${tgtPct}%</td><td>${tgtAmt.toFixed(2)}</td>

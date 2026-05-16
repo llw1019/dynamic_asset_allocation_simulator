@@ -1,9 +1,11 @@
-const CACHE = 'daa-v10.1';
+const CACHE = 'daa-v10.2';
 const ASSETS = [
   '/dynamic_asset_allocation_simulator/',
   '/dynamic_asset_allocation_simulator/index.html',
   '/dynamic_asset_allocation_simulator/manifest.json',
-  '/dynamic_asset_allocation_simulator/icon.svg'
+  '/dynamic_asset_allocation_simulator/icon.svg',
+  '/dynamic_asset_allocation_simulator/icon-192.png',
+  '/dynamic_asset_allocation_simulator/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
