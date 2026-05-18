@@ -186,6 +186,26 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .dd-warn{background:var(--color-warning-bg);color:var(--color-warning-text);border:0.5px solid #BA7517}
 .dd-danger{background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid #F09595}
 .rebal-freq-note{font-size:11px;color:var(--color-text-tertiary);margin-bottom:8px;display:flex;align-items:center;gap:5px;line-height:1.6;padding:8px 12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md)}
+.buy-score-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:12px}
+.buy-form{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.buy-field{display:flex;flex-direction:column;gap:4px}
+.buy-field.wide{grid-column:1/-1}
+.buy-field label{font-size:11px;color:var(--color-text-secondary)}
+.buy-field input,.buy-field select{width:100%;font-size:12px;padding:6px 9px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans)}
+.score-list{display:flex;flex-direction:column;gap:7px}
+.score-row{display:grid;grid-template-columns:96px 1fr 48px;gap:8px;align-items:center;font-size:12px;color:var(--color-text-secondary)}
+.score-track{height:8px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden}
+.score-fill{height:100%;border-radius:3px;background:#378ADD;transition:width .2s ease}
+.score-val{text-align:right;color:var(--color-text-primary);font-weight:500}
+.buy-result-box{border-radius:var(--border-radius-md);padding:12px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-primary)}
+.buy-result-title{font-size:18px;font-weight:600;color:var(--color-text-primary);margin-bottom:2px}
+.buy-result-action{font-size:13px;font-weight:500;margin-bottom:8px}
+.buy-result-good{color:var(--color-success-text)}.buy-result-warn{color:var(--color-warning-text)}.buy-result-bad{color:var(--color-danger-text)}
+.buy-notes{font-size:11px;line-height:1.6;color:var(--color-text-secondary);display:flex;flex-direction:column;gap:4px}
+.buy-note{display:flex;gap:5px;align-items:flex-start}
+.buy-note i{font-size:12px;margin-top:2px;flex-shrink:0}
+@media(max-width:720px){.buy-score-grid{grid-template-columns:1fr}.buy-form{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.buy-form{grid-template-columns:1fr}}
 @media(max-width:500px){.rebalance-table .col-tgt-pct,.rebalance-table .col-hold-pct{display:none}}
 @media(max-width:400px){.bar-row{flex-wrap:wrap}.bar-track{flex:1 0 150px}.bar-amt{margin-left:auto}}
 </style>
@@ -315,6 +335,73 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
       </tr></tfoot>
     </table>
     <div id="drawdown-area" class="drawdown-bar dd-ok" style="display:none"></div>
+  </div>
+
+  <p class="section-label"><i class="ti ti-shopping-cart-check"></i>標的買入評分</p>
+  <div class="card-base" style="margin-bottom:12px">
+    <div class="buy-score-grid">
+      <div>
+        <p class="chart-title"><i class="ti ti-adjustments"></i>標的資料</p>
+        <div class="buy-form">
+          <div class="buy-field">
+            <label>標的類型</label>
+            <select id="buy-type" onchange="calcBuyScore()">
+              <option value="etf">ETF / 核心資產</option>
+              <option value="stock">個股</option>
+              <option value="satellite">衛星資產</option>
+            </select>
+          </div>
+          <div class="buy-field">
+            <label>標的代號</label>
+            <input id="buy-symbol" placeholder="例如 009816" oninput="calcBuyScore()"/>
+          </div>
+          <div class="buy-field">
+            <label>現價</label>
+            <input type="number" id="buy-price" min="0" step="0.01" placeholder="—" oninput="calcBuyScore()"/>
+          </div>
+          <div class="buy-field">
+            <label>60MA</label>
+            <input type="number" id="buy-ma60" min="0" step="0.01" placeholder="—" oninput="calcBuyScore()"/>
+          </div>
+          <div class="buy-field">
+            <label>60MA / 結構</label>
+            <select id="buy-trend" onchange="calcBuyScore()">
+              <option value="healthy">上升，結構健康</option>
+              <option value="neutral">持平，整理中</option>
+              <option value="weak">下彎，結構轉弱</option>
+            </select>
+          </div>
+          <div class="buy-field">
+            <label>籌碼 / 法人</label>
+            <select id="buy-flow" onchange="calcBuyScore()">
+              <option value="stable">穩定，無明顯倒貨</option>
+              <option value="neutral">中性整理</option>
+              <option value="selloff">連續大賣 / 出貨</option>
+            </select>
+          </div>
+          <div class="buy-field wide">
+            <label>波動風險</label>
+            <select id="buy-vol" onchange="calcBuyScore()">
+              <option value="normal">正常，無異常長黑</option>
+              <option value="choppy">震盪，但未破壞結構</option>
+              <option value="panic">爆量長黑 / 跳空下跌 / 急跌</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p class="chart-title"><i class="ti ti-chart-dots"></i>分項分數</p>
+        <div class="score-list" id="buy-score-list"></div>
+      </div>
+      <div>
+        <p class="chart-title"><i class="ti ti-clipboard-check"></i>結論</p>
+        <div class="buy-result-box">
+          <div class="buy-result-title" id="buy-score-total">— / 100</div>
+          <div class="buy-result-action" id="buy-score-action">請先完成 DAA 與標的資料</div>
+          <div class="buy-notes" id="buy-score-notes"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <p class="section-label"><i class="ti ti-shield-lock"></i>部位操作硬規則</p>
@@ -692,6 +779,7 @@ function render(){
     memoEl.innerHTML=memoParts[0]+'<div class="memo-hint'+(isWarn?' memo-hint-warn':'')+'">'+memoParts.slice(1).join('<br>')+'</div>';
   }else{memoEl.textContent=memoText;}
   renderRebalTable();
+  calcBuyScore();
 
   const rg=document.getElementById('rules-grid');rg.innerHTML='';
   RULES_BASE.forEach(r=>{
@@ -915,6 +1003,98 @@ function renderRebalTable(){
   checkHWM();
 }
 
+function getBuyMarketScore(regime){
+  if(regime==='bull')return 20;
+  if(regime==='range')return 10;
+  return 0;
+}
+function getBuyAction(type,total,trendScore,regime,distancePct,volState){
+  const isSingleName=type==='stock'||type==='satellite';
+  const hard=[];
+  const absDistance=distancePct===null?null:Math.abs(distancePct);
+  if(regime==='extremeBear')hard.push('Extreme Bear：拒絕新增風險資產');
+  if(isSingleName&&regime==='bear')hard.push('Bear regime：個股 / 衛星不新增重倉');
+  if(isSingleName&&trendScore<20)hard.push('拒絕進場：個股 / 衛星趨勢分數未達 20');
+  if(absDistance!==null&&absDistance>10)hard.push('拒絕追價：距離 60MA 絕對值超過 10%');
+  if(volState==='panic')hard.push('拒絕進場：爆量長黑 / 跳空下跌 / 急跌');
+  if(hard.length){
+    let label='拒絕進場 / 只觀察';
+    if(regime==='extremeBear')label='拒絕進場：Extreme Bear';
+    else if(isSingleName&&trendScore<20)label='拒絕進場：趨勢未達標';
+    else if(volState==='panic')label='拒絕進場：波動失控';
+    else if(absDistance!==null&&absDistance>10)label='拒絕追價：距離過遠';
+    return{label,cls:'buy-result-bad',pace:'硬性否決條件成立',hard};
+  }
+  if(isSingleName){
+    if(total>=75&&trendScore>=20)return{label:'可考慮小量布局',cls:'buy-result-warn',pace:'單筆不超過預定部位 10–15%',hard};
+    if(total>=75&&trendScore<20)return{label:'拒絕進場：趨勢未達標',cls:'buy-result-bad',pace:'總分足夠但趨勢不健康',hard:['拒絕進場：個股 / 衛星趨勢分數未達 20']};
+    if(total>=60)return{label:'觀察，不急著買',cls:'buy-result-warn',pace:'總分未達個股 / 衛星門檻 75',hard};
+    return{label:'不碰',cls:'buy-result-bad',pace:'分數不足',hard};
+  }
+  if(total>=80)return{label:'可正常分批布局',cls:'buy-result-good',pace:'分 3–4 筆，單筆不超過預定部位 25%',hard};
+  if(total>=65)return{label:'可小量布局',cls:'buy-result-warn',pace:'先試 10–15%，不要一次買滿',hard};
+  if(total>=50)return{label:'觀察，不急著買',cls:'buy-result-warn',pace:'等待回到更合理的位置',hard};
+  return{label:'不碰',cls:'buy-result-bad',pace:'風險報酬不佳',hard};
+}
+function calcBuyScore(){
+  const list=document.getElementById('buy-score-list');
+  const totalEl=document.getElementById('buy-score-total');
+  const actionEl=document.getElementById('buy-score-action');
+  const notesEl=document.getElementById('buy-score-notes');
+  if(!list||!totalEl||!actionEl||!notesEl)return;
+  const type=document.getElementById('buy-type').value;
+  const price=parseFloat(document.getElementById('buy-price').value);
+  const ma=parseFloat(document.getElementById('buy-ma60').value);
+  const trendStateInput=document.getElementById('buy-trend').value;
+  const flowState=document.getElementById('buy-flow').value;
+  const volState=document.getElementById('buy-vol').value;
+  const trendScores={healthy:30,neutral:20,weak:8};
+  const flowScores={stable:15,neutral:8,selloff:0};
+  const volScores={normal:10,choppy:5,panic:0};
+  const trendScore=trendScores[trendStateInput]??0;
+  const distancePct=(!isNaN(price)&&!isNaN(ma)&&price>0&&ma>0)?(price-ma)/ma*100:null;
+  const absDistance=distancePct===null?null:Math.abs(distancePct);
+  let distanceScore=0;
+  if(absDistance!==null){
+    if(absDistance<=3)distanceScore=25;
+    else if(absDistance<=6)distanceScore=20;
+    else if(absDistance<=10)distanceScore=10;
+  }
+  const marketReady=!!(S.trend&&S.vix&&S.rate);
+  const regime=marketReady?getRegime():null;
+  const marketScore=marketReady?getBuyMarketScore(regime):0;
+  const flowScore=flowScores[flowState]??0;
+  const volScore=volScores[volState]??0;
+  const total=trendScore+distanceScore+marketScore+flowScore+volScore;
+  const rows=[
+    ['趨勢',trendScore,30],
+    ['距離(|60MA|)',distanceScore,25],
+    ['市場風險(DAA)',marketScore,20],
+    ['籌碼',flowScore,15],
+    ['波動',volScore,10]
+  ];
+  list.innerHTML=rows.map(([name,score,max])=>`
+    <div class="score-row">
+      <span title="${name}">${name}</span>
+      <div class="score-track"><div class="score-fill" style="width:${Math.round(score/max*100)}%"></div></div>
+      <span class="score-val">${score}/${max}</span>
+    </div>`).join('');
+  const action=getBuyAction(type,total,trendScore,regime,distancePct,volState);
+  totalEl.textContent=marketReady?`${total} / 100`:'— / 100';
+  actionEl.className=`buy-result-action ${marketReady?action.cls:'buy-result-warn'}`;
+  actionEl.textContent=marketReady?action.label:'請先完成 DAA 市場判斷';
+  const notes=[];
+  if(distancePct===null)notes.push(['ti-info-circle','請輸入現價與 60MA；距離分數採絕對距離計算']);
+  else notes.push(['ti-ruler','距離 60MA '+(distancePct>=0?'+':'')+distancePct.toFixed(1)+'%，計分使用絕對值 '+absDistance.toFixed(1)+'%']);
+  notes.push(['ti-scale','距離只判斷遠近，不判斷多空方向；方向由趨勢分數處理']);
+  if(marketReady)notes.push(['ti-radar','市場風險由 DAA 自動帶入：'+REGIME_META[regime].label+'，本評分器不改變配置比例']);
+  else notes.push(['ti-radar','市場風險分需先完成 DAA Regime 判斷']);
+  notes.push(['ti-player-play','建議節奏：'+(marketReady?action.pace:'等待市場參數完成')]);
+  action.hard.forEach(t=>notes.push(['ti-alert-triangle',t]));
+  notes.push(['ti-shield-check','即使高分，也禁止 All-in、追高或忽略部位上限']);
+  notesEl.innerHTML=notes.map(([icon,text])=>`<div class="buy-note"><i class="ti ${icon}"></i><span>${text}</span></div>`).join('');
+}
+
 function exportJSON(){
   const data={version:'v10',exportDate:new Date().toISOString(),
     params:{trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,
@@ -981,6 +1161,7 @@ function resetAll(){
 }
 
 lsLoad();
+calcBuyScore();
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
