@@ -198,6 +198,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .score-fill{height:100%;border-radius:3px;background:#378ADD;transition:width .2s ease}
 .score-val{text-align:right;color:var(--color-text-primary);font-weight:500}
 .buy-result-box{border-radius:var(--border-radius-md);padding:12px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-primary)}
+.buy-result-symbol{font-size:11px;color:var(--color-text-secondary);margin-bottom:2px}
 .buy-result-title{font-size:18px;font-weight:600;color:var(--color-text-primary);margin-bottom:2px}
 .buy-result-action{font-size:13px;font-weight:500;margin-bottom:8px}
 .buy-result-good{color:var(--color-success-text)}.buy-result-warn{color:var(--color-warning-text)}.buy-result-bad{color:var(--color-danger-text)}
@@ -353,7 +354,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
           </div>
           <div class="buy-field">
             <label>標的代號</label>
-            <input id="buy-symbol" placeholder="例如 009816" oninput="calcBuyScore()"/>
+            <input id="buy-symbol" placeholder="例如 009816" maxlength="20" oninput="calcBuyScore()"/>
           </div>
           <div class="buy-field">
             <label>現價</label>
@@ -366,6 +367,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
           <div class="buy-field">
             <label>60MA / 結構</label>
             <select id="buy-trend" onchange="calcBuyScore()">
+              <option value="" disabled selected>請選擇</option>
               <option value="healthy">上升，結構健康</option>
               <option value="neutral">持平，整理中</option>
               <option value="weak">下彎，結構轉弱</option>
@@ -374,6 +376,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
           <div class="buy-field">
             <label>籌碼 / 法人</label>
             <select id="buy-flow" onchange="calcBuyScore()">
+              <option value="" disabled selected>請選擇</option>
               <option value="stable">穩定，無明顯倒貨</option>
               <option value="neutral">中性整理</option>
               <option value="selloff">連續大賣 / 出貨</option>
@@ -382,6 +385,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
           <div class="buy-field wide">
             <label>波動風險</label>
             <select id="buy-vol" onchange="calcBuyScore()">
+              <option value="" disabled selected>請選擇</option>
               <option value="normal">正常，無異常長黑</option>
               <option value="choppy">震盪，但未破壞結構</option>
               <option value="panic">爆量長黑 / 跳空下跌 / 急跌</option>
@@ -396,6 +400,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
       <div>
         <p class="chart-title"><i class="ti ti-clipboard-check"></i>結論</p>
         <div class="buy-result-box">
+          <div class="buy-result-symbol" id="buy-score-symbol"></div>
           <div class="buy-result-title" id="buy-score-total">— / 100</div>
           <div class="buy-result-action" id="buy-score-action">請先完成 DAA 與標的資料</div>
           <div class="buy-notes" id="buy-score-notes"></div>
@@ -621,6 +626,9 @@ function calcTarget(regime){
       base[k]-=cut;need-=cut;
     });
   }
+  // Final normalization safety net
+  const finalSum=Object.values(base).reduce((a,b)=>a+b,0);
+  if(finalSum!==100)base.cash=Math.max(0,base.cash+(100-finalSum));
   return base;
 }
 function getBearTrigger(){
@@ -645,7 +653,7 @@ function pick(el,grp,val,cls){
   if(grp==='vix'){
     S.vixVal=null;document.getElementById('vix-input').value='';document.getElementById('vix-badge').style.display='none';
     if(val==='low'&&inExtremeBear){inExtremeBear=false;document.getElementById('hysteresis-status').style.display='none';}
-    else if(val==='medium'&&inExtremeBear){/* medium(20-30) ambiguous; keep lock, user should use numeric input to confirm <25 */document.getElementById('hysteresis-status').style.display='none';}
+    else if((val==='medium'||val==='high')&&inExtremeBear){document.getElementById('hysteresis-status').style.display='block';document.getElementById('hysteresis-status').innerHTML=`<span class="hysteresis-tag">極端熊市鎖定中，請輸入 VIX 數值 &lt; ${CONFIG.vix.extremeExit} 才可解除</span>`;}
     else document.getElementById('hysteresis-status').style.display='none';
   }
   tryRender();
@@ -710,7 +718,7 @@ function onRateInput(){
 function onFundChange(){
   const v=parseFloat(document.getElementById('fund-input').value);
   HIGH_WATER_MARK=isNaN(v)||v<=0?0:v;
-  document.getElementById('fund-label').textContent=HIGH_WATER_MARK>0?`高水位 ${HIGH_WATER_MARK} 萬`:'高水位 — 萬';
+  updateFundStatus();
   if(S.trend&&S.vix&&S.rate)render();lsSaveDebounced();
 }
 
@@ -850,7 +858,7 @@ function rebuildRows(k){
     }else{
       const lblC=document.createElement('label');lblC.textContent='代號';
       const inpC=document.createElement('input');
-      inpC.className='inp-code';inpC.type='text';inpC.placeholder='如 006208';inpC.value=r.code||'';
+      inpC.className='inp-code';inpC.type='text';inpC.placeholder='如 006208';inpC.maxLength=20;inpC.value=r.code||'';
       inpC.addEventListener('input',function(){holdings[k][i].code=this.value;lsSaveDebounced();});
       const lblAvg=document.createElement('label');lblAvg.textContent='均價';
       const inpAvg=document.createElement('input');
@@ -929,7 +937,7 @@ function refreshStopLoss(al){
   al.querySelectorAll('.stop-loss-item').forEach(el=>el.remove());
   holdings.alpha.forEach(r=>{
     const avg=parseFloat(r.avgPrice),cur=parseFloat(r.curPrice);
-    if(!isNaN(avg)&&!isNaN(cur)&&avg>0){const pnl=((cur-avg)/avg)*100;if(pnl<=CONFIG.stopLoss){const code=(r.code||'未命名').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));al.innerHTML+=`<li class="action-item stop-loss-item"><i class="ti ti-alert-triangle" style="color:#A32D2D"></i><span style="color:#A32D2D"><strong>停損警示：${code}</strong> 虧損 ${pnl.toFixed(1)}%，已觸及 ${CONFIG.stopLoss}% 停損線</span></li>`;}}
+    if(!isNaN(avg)&&!isNaN(cur)&&avg>0){const pnl=((cur-avg)/avg)*100;if(pnl<=CONFIG.stopLoss){const code=(r.code||'未命名').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));al.innerHTML+=`<li class="action-item stop-loss-item"><i class="ti ti-alert-triangle" style="color:#A32D2D"></i><span style="color:#A32D2D"><strong>停損警示：${code}</strong> 虧損 ${pnl.toFixed(1)}%，已觸及 ${CONFIG.stopLoss}% 停損線</span></li>`;}}
   });
 }
 function r2(v){return Math.round(v*100)/100;}
@@ -953,16 +961,26 @@ function checkHWM(){
 }
 function updateHWM(val){
   HIGH_WATER_MARK=val;document.getElementById('fund-input').value=val;
-  document.getElementById('fund-label').textContent=getHwmLabel();
+  updateFundStatus();
   document.getElementById('hwm-bar').style.display='none';
   if(S.trend&&S.vix&&S.rate)render();lsSaveDebounced();
 }
 
+function updateFundStatus(){
+  const nav=getCurrentNAV();
+  const fundLabel=document.getElementById('fund-label');
+  const fd=document.getElementById('fund-display');
+  if(nav>0)fundLabel.textContent=`計算基準：持倉 NAV ${nav.toFixed(2)} 萬`;
+  else fundLabel.textContent=`計算基準：高水位 ${HIGH_WATER_MARK} 萬`;
+  if(HIGH_WATER_MARK>0&&nav>0&&HIGH_WATER_MARK<nav)fd.textContent=`⚠ 高水位低於持倉 NAV ${nav.toFixed(2)} 萬，回撤計算可能失真`;
+  else fd.textContent='歷史最高市值，用於回撤與配置計算';
+}
 function renderRebalTable(){
   const tbody=document.getElementById('rebal-body');if(!tbody)return;
   tbody.innerHTML='';
   const ref=currentTarget||BASE;
   const capitalBase=getCapitalBase();
+  updateFundStatus();
   let totalTgt=0,totalHolding=0;
   REBAL_KEYS.forEach(k=>{
     const tgtPct=ref[k],tgtAmt=+(capitalBase*tgtPct/100).toFixed(2);
@@ -1041,8 +1059,10 @@ function calcBuyScore(){
   const totalEl=document.getElementById('buy-score-total');
   const actionEl=document.getElementById('buy-score-action');
   const notesEl=document.getElementById('buy-score-notes');
+  const symbolEl=document.getElementById('buy-score-symbol');
   if(!list||!totalEl||!actionEl||!notesEl)return;
   const type=document.getElementById('buy-type').value;
+  const symbol=document.getElementById('buy-symbol').value.trim();
   const price=parseFloat(document.getElementById('buy-price').value);
   const ma=parseFloat(document.getElementById('buy-ma60').value);
   const trendStateInput=document.getElementById('buy-trend').value;
@@ -1061,6 +1081,12 @@ function calcBuyScore(){
     else if(absDistance<=10)distanceScore=10;
   }
   const marketReady=!!(S.trend&&S.vix&&S.rate);
+  const priceReady=!isNaN(price)&&price>0;
+  const maReady=!isNaN(ma)&&ma>0;
+  const trendReady=trendStateInput!=='';
+  const flowReady=flowState!=='';
+  const volReady=volState!=='';
+  const allReady=marketReady&&priceReady&&maReady&&trendReady&&flowReady&&volReady;
   const regime=marketReady?getRegime():null;
   const marketScore=marketReady?getBuyMarketScore(regime):0;
   const flowScore=flowScores[flowState]??0;
@@ -1079,18 +1105,26 @@ function calcBuyScore(){
       <div class="score-track"><div class="score-fill" style="width:${Math.round(score/max*100)}%"></div></div>
       <span class="score-val">${score}/${max}</span>
     </div>`).join('');
-  const action=getBuyAction(type,total,trendScore,regime,distancePct,volState);
-  totalEl.textContent=marketReady?`${total} / 100`:'— / 100';
-  actionEl.className=`buy-result-action ${marketReady?action.cls:'buy-result-warn'}`;
-  actionEl.textContent=marketReady?action.label:'請先完成 DAA 市場判斷';
+  const action=allReady?getBuyAction(type,total,trendScore,regime,distancePct,volState):{label:'',cls:'',pace:'',hard:[]};
+  const missing=[];
+  if(!marketReady)missing.push('DAA 市場判斷');
+  if(!priceReady)missing.push('現價');
+  if(!maReady)missing.push('60MA');
+  if(!trendReady)missing.push('趨勢結構');
+  if(!flowReady)missing.push('籌碼');
+  if(!volReady)missing.push('波動風險');
+  if(symbolEl)symbolEl.textContent=symbol?symbol.slice(0,20):'';
+  totalEl.textContent=allReady?`${total} / 100`:'— / 100';
+  actionEl.className=`buy-result-action ${allReady?action.cls:'buy-result-warn'}`;
+  actionEl.textContent=allReady?action.label:'請先填寫：'+missing.join('、');
   const notes=[];
   if(distancePct===null)notes.push(['ti-info-circle','請輸入現價與 60MA；距離分數採絕對距離計算']);
   else notes.push(['ti-ruler','距離 60MA '+(distancePct>=0?'+':'')+distancePct.toFixed(1)+'%，計分使用絕對值 '+absDistance.toFixed(1)+'%']);
   notes.push(['ti-scale','距離只判斷遠近，不判斷多空方向；方向由趨勢分數處理']);
   if(marketReady)notes.push(['ti-radar','市場風險由 DAA 自動帶入：'+REGIME_META[regime].label+'，本評分器不改變配置比例']);
   else notes.push(['ti-radar','市場風險分需先完成 DAA Regime 判斷']);
-  notes.push(['ti-player-play','建議節奏：'+(marketReady?action.pace:'等待市場參數完成')]);
-  action.hard.forEach(t=>notes.push(['ti-alert-triangle',t]));
+  notes.push(['ti-player-play','建議節奏：'+(allReady?action.pace:'等待所有欄位完成')]);
+  if(allReady)action.hard.forEach(t=>notes.push(['ti-alert-triangle',t]));
   notes.push(['ti-shield-check','即使高分，也禁止 All-in、追高或忽略部位上限']);
   notesEl.innerHTML=notes.map(([icon,text])=>`<div class="buy-note"><i class="ti ${icon}"></i><span>${text}</span></div>`).join('');
 }
