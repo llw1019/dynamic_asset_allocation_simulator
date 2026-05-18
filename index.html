@@ -317,11 +317,11 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 
   <p class="section-label" style="margin-top:2px">
     <i class="ti ti-refresh"></i>再平衡檢查
-    <span class="rebal-section-note">衛星/避險偏離 ≥ 3%、其餘 ≥ 5% 時建議調整</span>
+    <span class="rebal-section-note">衛星/避險偏離 ≥ <span id="txt-th-alpha"></span>%、其餘 ≥ <span id="txt-th-beta"></span>% 時建議調整</span>
   </p>
   <div class="rebal-freq-note">
     <i class="ti ti-calendar-event" style="font-size:13px"></i>
-    建議每季（3 個月）定期檢查一次再平衡，避免過度頻繁操作。極端市場（VIX &gt; 30）時可縮短為每月檢查。
+    建議每季（3 個月）定期檢查一次再平衡，避免過度頻繁操作。極端市場（VIX &gt; <span id="txt-th-vix"></span>）時可縮短為每月檢查。
   </div>
   <div class="card-base" style="margin-bottom:12px">
     <table class="rebalance-table">
@@ -438,8 +438,22 @@ const CONFIG={
   rate:{threshold:0.25},
   stopLoss:-8,
   drawdown:{warn:5,danger:8},
-  ma60:{overheat:10,warm:6,near:3}
+  ma60:{overheat:10,warm:6,near:3},
+  buyScore:{
+    single:{good:75,warn:60,trendThreshold:20},
+    etf:{good:80,warn:65,observe:50},
+    distanceLimit:10,
+    weights:{
+      trend:{healthy:30,neutral:20,weak:8},
+      distance:{close:25,med:20,far:10},
+      flow:{stable:15,neutral:8,selloff:0},
+      vol:{normal:10,choppy:5,panic:0},
+      market:{bull:20,range:10,bear:0}
+    }
+  }
 };
+const fPct=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Number(v).toFixed(1):'—';
+const fAmt=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Number(v).toFixed(2):'0.00';
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
 const REGIME_META={
   bull: {label:'成長牛市 Risk-on', sub:'進攻模式，動態層擴張', bannerCls:'regime-bull',  dotColor:'#639922'},
@@ -449,17 +463,17 @@ const REGIME_META={
 REGIME_META.extremeBear={label:'極端熊市 Extreme Risk-off',sub:'極端恐慌鎖定，Alpha 歸零並提高現金',bannerCls:'regime-bear',dotColor:'#A32D2D'};
 const ACTIONS={
   bull:[
-    {icon:'ti-arrow-up',  text:'<strong>衛星 Alpha</strong> 加碼至 15%，追蹤高貝塔機會'},
-    {icon:'ti-arrow-up',  text:'<strong>現金 Option</strong> 保留至 15%，維持機動性'},
-    {icon:'ti-arrow-down',text:'<strong>防禦 Vol-Abs</strong> 減碼至 15%，釋放保守配置'},
-    {icon:'ti-arrow-down',text:'<strong>避險 Hedge</strong> 減碼至 5%，降低對沖成本'},
+    {icon:'ti-arrow-up',  text:`<strong>衛星 Alpha</strong> 加碼至 ${REGIME_WEIGHTS.bull.alpha}%，追蹤高貝塔機會`},
+    {icon:'ti-arrow-up',  text:`<strong>現金 Option</strong> 保留至 ${REGIME_WEIGHTS.bull.cash}%，維持機動性`},
+    {icon:'ti-arrow-down',text:`<strong>防禦 Vol-Abs</strong> 減碼至 ${REGIME_WEIGHTS.bull.defense}%，釋放保守配置`},
+    {icon:'ti-arrow-down',text:`<strong>避險 Hedge</strong> 減碼至 ${REGIME_WEIGHTS.bull.hedge}%，降低對沖成本`},
     {icon:'ti-lock',      text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，僅執行再平衡'}
   ],
   bear:[
-    {icon:'ti-arrow-down',text:'<strong>衛星 Alpha</strong> 大幅減碼至 5%，降低高風險敞口'},
-    {icon:'ti-arrow-up',  text:'<strong>防禦 Vol-Abs</strong> 拉升至 25%，強化緩衝'},
-    {icon:'ti-equal',     text:'<strong>避險 Hedge</strong> 維持 10%，逆週期對沖'},
-    {icon:'ti-equal',     text:'<strong>現金 Option</strong> 維持 10%，保留反彈火力'},
+    {icon:'ti-arrow-down',text:`<strong>衛星 Alpha</strong> 大幅減碼至 ${REGIME_WEIGHTS.bear.alpha}%，降低高風險敞口`},
+    {icon:'ti-arrow-up',  text:`<strong>防禦 Vol-Abs</strong> 拉升至 ${REGIME_WEIGHTS.bear.defense}%，強化緩衝`},
+    {icon:'ti-equal',     text:`<strong>避險 Hedge</strong> 維持 ${REGIME_WEIGHTS.bear.hedge}%，逆週期對沖`},
+    {icon:'ti-equal',     text:`<strong>現金 Option</strong> 維持 ${REGIME_WEIGHTS.bear.cash}%，保留反彈火力`},
     {icon:'ti-lock',      text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，不因恐慌賣出'}
   ],
   range:[
@@ -469,32 +483,32 @@ const ACTIONS={
   ]
 };
 ACTIONS.extremeBear=[
-  {icon:'ti-arrow-down',text:'<strong>衛星 Alpha</strong> 歸零，極端恐慌時不承擔高波動衛星部位'},
-  {icon:'ti-arrow-up',text:'<strong>現金 Option</strong> 提高至 15%，保留最可靠的防線'},
-  {icon:'ti-equal',text:'<strong>避險 Hedge</strong> 維持 10%，長債不是無條件避險，不因恐慌過度押注'},
+  {icon:'ti-arrow-down',text:`<strong>衛星 Alpha</strong> 歸零，極端恐慌時不承擔高波動衛星部位`},
+  {icon:'ti-arrow-up',text:`<strong>現金 Option</strong> 提高至 ${REGIME_WEIGHTS.extremeBear.cash}%，保留最可靠的防線`},
+  {icon:'ti-equal',text:`<strong>避險 Hedge</strong> 維持 ${REGIME_WEIGHTS.extremeBear.hedge}%，長債不是無條件避險，不因恐慌過度押注`},
   {icon:'ti-lock',text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，避免恐慌中砍長期核心資產'}
 ];
 const MEMOS={
-  bull:'市場動能強勁，VIX 低位且大盤創高。衛星加碼追蹤高貝塔機會，現金保留 15% 維持機動性。內核外核固定不動，不因牛市追加核心部位。',
-  bear:'啟動防禦機制，收縮戰線。衛星大幅減碼，防禦拉升至最高。內核外核絕對不動，不因恐慌賣出長期核心資產。等待 VIX 回落至 '+CONFIG.vix.extremeExit+' 以下再評估恢復動態層。',
+  bull:`市場動能強勁，VIX 低位且大盤創高。衛星加碼追蹤高貝塔機會，現金保留 ${REGIME_WEIGHTS.bull.cash}% 維持機動性。內核外核固定不動，不因牛市追加核心部位。`,
+  bear:`啟動防禦機制，收縮戰線。衛星大幅減碼至 ${REGIME_WEIGHTS.bear.alpha}%，防禦拉升至最高。內核外核絕對不動，不因恐慌賣出長期核心資產。等待 VIX 回落至 ${CONFIG.vix.extremeExit} 以下再評估恢復動態層。`,
   range:'方向不明，維持均衡基準。重點是定期再平衡，確認各部位未偏離目標超過門檻。內核外核固定不動，衛星可小區間操作。'
 };
-MEMOS.extremeBear='極端熊市啟動：VIX 已進入極端恐慌區，衛星 Alpha 歸零，現金提高至 15%。Hedge 維持 10%，因為長債在升息型熊市可能失效，現金才是不依賴市場假設的防線。';
+MEMOS.extremeBear=`極端熊市啟動：VIX 已進入極端恐慌區，衛星 Alpha 歸零，現金提高至 ${REGIME_WEIGHTS.extremeBear.cash}%。Hedge 維持 ${REGIME_WEIGHTS.extremeBear.hedge}%，因為長債在升息型熊市可能失效，現金才是不依賴市場假設的防線。`;
 function getMemo(regime){
   const base=MEMOS[regime];
   if(regime==='bear'||regime==='extremeBear'){
-    if(inExtremeBear)return base+'\n\n⚠ 極端恐慌警示：目前處於極端恐慌，現金僅供避險使用，勿加碼任何風險資產。等待 VIX 回落至 '+CONFIG.vix.extremeExit+' 以下再議布局。';
-    return base+'\n\n提醒：Hedge 不是無條件避險。若是升息型熊市，長債可能與股票同跌，因此熊市維持 hedge 10%，不額外押注，主要靠降低 Alpha 與保留現金控制回撤。';
+    if(inExtremeBear)return base+`\n\n⚠ 極端恐慌警示：目前處於極端恐慌，現金僅供避險使用，勿加碼任何風險資產。等待 VIX 回落至 ${CONFIG.vix.extremeExit} 以下再議布局。`;
+    return base+`\n\n提醒：Hedge 不是無條件避險。若是升息型熊市，長債可能與股票同跌，因此熊市維持 hedge ${REGIME_WEIGHTS.bear.hedge}%，不額外押注，主要靠降低 Alpha 與保留現金控制回撤。`;
   }
   if(indexPct===null)return base;
   const p=indexPct;
   if(regime==='bull'){
-    if(p>CONFIG.ma60.overheat)return base+'\n\n⚠ 現金部署提示：指數偏離60MA達 +'+p.toFixed(1)+'%，風險報酬比偏差，現金暫緩動用。勿追高，等待指數回測均線或 VIX 升至 20 以上再評估布局。';
-    return base+'\n\n現金部署條件（目前距60MA '+(p>=0?'+':'')+p.toFixed(1)+'%）：優先用於 ① 指數回測60MA附近、② VIX 升至 20 以上、③ 恐慌性回撤後量縮止穩。持有現金是紀律，勿因 FOMO 追高。';
-  }
-  if(regime==='range'){
-    if(Math.abs(p)<=CONFIG.ma60.near)return base+'\n\n均線提示：指數貼近60MA（偏離 '+(p>=0?'+':'')+p.toFixed(1)+'%），現金分批布局的合理區間。留意60MA走勢，若均線走平或轉折下彎，降低進取心，優先維持均衡配置。';
-    if(p<-CONFIG.ma60.near)return base+'\n\n均線提示：指數在60MA以下 '+p.toFixed(1)+'%，趨勢確認前現金以觀望為主，以季再平衡為核心動作。';
+    if(p>CONFIG.ma60.overheat)return base+`\n\n⚠ 現金部署提示：指數偏離60MA達 +${fPct(p)}%，風險報酬比偏差，現金暫緩動用。勿追高，等待指數回測均線或 VIX 升至 ${CONFIG.vix.medium} 以上再評估布局。`;
+    return base+`\n\n現金部署條件（目前距60MA ${p>=0?'+':''}${fPct(p)}%）：優先用於 ① 指數回測60MA附近、② VIX 升至 ${CONFIG.vix.medium} 以上、③ 恐慌性回撤後量縮止穩。持有現金是紀律，勿因 FOMO 追高。`;
+    }
+    if(regime==='range'){
+    if(Math.abs(p)<=CONFIG.ma60.near)return base+`\n\n均線提示：指數貼近60MA（偏離 ${p>=0?'+':''}${fPct(p)}%），現金分批布局的合理區間。留意60MA走勢，若均線走平或轉折下彎，降低進取心，優先維持均衡配置。`;
+    if(p<-CONFIG.ma60.near)return base+`\n\n均線提示：指數在60MA以下 ${fPct(p)}%，趨勢確認前現金以觀望為主，以季再平衡為核心動作。`;
   }
   return base;
 }
@@ -503,8 +517,8 @@ function getCashDeployStatus(regime){
   if(indexPct===null)return null;
   const p=indexPct;
   if(regime==='bull'){
-    if(p>CONFIG.ma60.overheat)return{label:'<i class="ti ti-lock" style="font-size:12px"></i> 現金暫緩（60MA +'+p.toFixed(1)+'%）',cls:'mod-cash-locked'};
-    if(p>CONFIG.ma60.warm)return{label:'<i class="ti ti-alert-circle" style="font-size:12px"></i> 僅小額投入（60MA +'+p.toFixed(1)+'%）',cls:'mod-cash-wait'};
+    if(p>CONFIG.ma60.overheat)return{label:'<i class="ti ti-lock" style="font-size:12px"></i> 現金暫緩（60MA +'+fPct(p)+'%）',cls:'mod-cash-locked'};
+    if(p>CONFIG.ma60.warm)return{label:'<i class="ti ti-alert-circle" style="font-size:12px"></i> 僅小額投入（60MA +'+fPct(p)+'%）',cls:'mod-cash-wait'};
     return{label:'<i class="ti ti-circle-check" style="font-size:12px"></i> 現金可條件部署',cls:'mod-cash-ok'};
   }
   if(regime==='range'){
@@ -537,6 +551,14 @@ function getHwmLabel(){
 
 // LocalStorage
 const LS_KEY='daa_sim_v10';
+function initStaticTexts(){
+  const tAlpha=document.getElementById('txt-th-alpha');
+  const tBeta=document.getElementById('txt-th-beta');
+  const tVix=document.getElementById('txt-th-vix');
+  if(tAlpha) tAlpha.textContent=REBAL_THRESHOLD.alpha;
+  if(tBeta) tBeta.textContent=REBAL_THRESHOLD.beta;
+  if(tVix) tVix.textContent=CONFIG.vix.high;
+}
 function lsSave(){
   try{
     localStorage.setItem(LS_KEY,JSON.stringify({
@@ -633,7 +655,7 @@ function calcTarget(regime){
 }
 function getBearTrigger(){
   const v=S.vixVal;
-  if(inExtremeBear&&v!==null&&v>CONFIG.vix.extremeExit)return{label:`極端恐慌 VIX ${v.toFixed(1)}，需 < ${CONFIG.vix.extremeExit} 才解除`,cls:'trigger-extreme'};
+  if(inExtremeBear&&v!==null&&v>CONFIG.vix.extremeExit)return{label:`極端恐慌 VIX ${fPct(v)}，需 < ${CONFIG.vix.extremeExit} 才解除`,cls:'trigger-extreme'};
   if(inExtremeBear)return{label:'極端恐慌 Hysteresis 鎖定中',cls:'trigger-extreme'};
   if(S.trend==='below'&&S.vix==='high')return{label:`跌破季線 + VIX > ${CONFIG.vix.high}`,cls:'trigger-both'};
   if(S.trend!=='below'&&S.vix==='high')return{label:`VIX > ${CONFIG.vix.high} 觸發`,cls:'trigger-vix'};
@@ -678,9 +700,9 @@ function onIndexInput(){
     else trendState='flat';
   }
   val=trendState;
-  if(val==='above'){label=`季線上方 +${pct.toFixed(1)}%`;cls='nb-above';}
-  else if(val==='below'){label=`跌破季線 ${pct.toFixed(1)}%`;cls='nb-below';}
-  else{label=`季線附近 ${pct>=0?'+':''}${pct.toFixed(1)}%`;cls='nb-flat';}
+  if(val==='above'){label=`季線上方 +${fPct(pct)}%`;cls='nb-above';}
+  else if(val==='below'){label=`跌破季線 ${fPct(pct)}%`;cls='nb-below';}
+  else{label=`季線附近 ${pct>=0?'+':''}${fPct(pct)}%`;cls='nb-flat';}
   badge.textContent=label;badge.className=`num-badge ${cls}`;badge.style.display='inline-block';
   autoSelect('trend',val);
 }
@@ -695,10 +717,10 @@ function onVixInput(){
   if(inExtremeBear){hsEl.style.display='block';hsEl.innerHTML=`<span class="hysteresis-tag">極端熊市鎖定中，需 VIX &lt; ${CONFIG.vix.extremeExit} 才解除</span>`;}
   else hsEl.style.display='none';
   let val,label,cls;
-  if(v>CONFIG.vix.extremeEnter){val='high';label=`極端恐慌 ${v.toFixed(1)} ⚠`;cls='nb-extreme';}
-  else if(v>=CONFIG.vix.high){val='high';label=`高恐慌 ${v.toFixed(1)}`;cls='nb-high';}
-  else if(v>=CONFIG.vix.medium){val='medium';label=`中恐慌 ${v.toFixed(1)}`;cls='nb-med';}
-  else{val='low';label=`低恐慌 ${v.toFixed(1)}`;cls='nb-low';}
+  if(v>CONFIG.vix.extremeEnter){val='high';label=`極端恐慌 ${fPct(v)} ⚠`;cls='nb-extreme';}
+  else if(v>=CONFIG.vix.high){val='high';label=`高恐慌 ${fPct(v)}`;cls='nb-high';}
+  else if(v>=CONFIG.vix.medium){val='medium';label=`中恐慌 ${fPct(v)}`;cls='nb-med';}
+  else{val='low';label=`低恐慌 ${fPct(v)}`;cls='nb-low';}
   badge.textContent=label;badge.className=`num-badge ${cls}`;badge.style.display='inline-block';
   autoSelect('vix',val);
 }
@@ -709,9 +731,9 @@ function onRateInput(){
   if(isNaN(now)||isNaN(prev)){badge.style.display='none';return;}
   const diff=now-prev;
   let val,label,cls;
-  if(diff>CONFIG.rate.threshold){val='rising';label=`升息 +${diff.toFixed(2)}%`;cls='nb-rising';}
-  else if(diff<-CONFIG.rate.threshold){val='falling';label=`降息 ${diff.toFixed(2)}%`;cls='nb-falling';}
-  else{val='stable';label=`穩定 ${diff>=0?'+':''}${diff.toFixed(2)}%`;cls='nb-stable';}
+  if(diff>CONFIG.rate.threshold){val='rising';label=`升息 +${fAmt(diff)}%`;cls='nb-rising';}
+  else if(diff<-CONFIG.rate.threshold){val='falling';label=`降息 ${fAmt(diff)}%`;cls='nb-falling';}
+  else{val='stable';label=`穩定 ${diff>=0?'+':''}${fAmt(diff)}%`;cls='nb-stable';}
   badge.textContent=label;badge.className=`num-badge ${cls}`;badge.style.display='inline-block';
   autoSelect('rate',val);
 }
@@ -744,7 +766,8 @@ function render(){
   if(cashDeploy)modHtml+=`<span class="mod-tag ${cashDeploy.cls}">${cashDeploy.label}</span>`;
   modRow.innerHTML=modHtml;
 
-  const barsEl=document.getElementById('bars');barsEl.innerHTML='';
+  const barsEl=document.getElementById('bars');
+  let barsHtml='';
   const keys=Object.keys(BASE);
   const maxVal=Math.max(...keys.map(k=>Math.max(BASE[k],target[k])));
   keys.forEach(k=>{
@@ -752,12 +775,12 @@ function render(){
     const bPct=Math.round(b/maxVal*100),tPct=Math.round(t/maxVal*100);
     const dc=diff>0?'delta-up':diff<0?'delta-dn':'delta-ne';
     const ds=diff>0?`+${diff}%`:diff<0?`${diff}%`:'±0';
-    const amt=(capitalBase*t/100).toFixed(2);
+    const amt=fAmt(capitalBase*t/100);
     const hold=getHoldingTotal(k);
-    const holdStr=hold>0?hold.toFixed(2):'—';
+    const holdStr=hold>0?fAmt(hold):'—';
     const dotCls=hold>0?'holding-dot-on':'holding-dot-off';
     const isFixed=FIXED_KEYS.includes(k);
-    barsEl.innerHTML+=`
+    barsHtml+=`
       <div class="bar-row" onclick="togglePanel('${k}')">
         <span class="bar-label"><span class="holding-dot ${dotCls}" id="dot-${k}"></span><span class="bar-nature ${isFixed?'bar-nature-fixed':'bar-nature-dyn'}">${isFixed?'固':'動'}</span>${LABELS[k]}</span>
         <div class="bar-track">
@@ -770,14 +793,17 @@ function render(){
       </div>
       <div class="holding-panel" id="panel-${k}"></div>`;
   });
+  barsEl.innerHTML=barsHtml;
 
   if(openPanel){
     const p=document.getElementById('panel-'+openPanel);
     if(p){p.classList.add('open');buildPanel(openPanel);const ic=document.getElementById('icon-'+openPanel);if(ic)ic.style.transform='rotate(180deg)';}
   }
 
-  const al=document.getElementById('actions');al.innerHTML='';
-  ACTIONS[regime].forEach(a=>{al.innerHTML+=`<li class="action-item"><i class="ti ${a.icon}"></i><span>${a.text}</span></li>`;});
+  const al=document.getElementById('actions');
+  let alHtml='';
+  ACTIONS[regime].forEach(a=>{alHtml+=`<li class="action-item"><i class="ti ${a.icon}"></i><span>${a.text}</span></li>`;});
+  al.innerHTML=alHtml;
   refreshStopLoss(al);
   const memoEl=document.getElementById('memo');
   const memoText=getMemo(regime);
@@ -799,7 +825,7 @@ function render(){
   const wa=document.getElementById('warn-area');wa.innerHTML='';
   const vv=S.vixVal;
   if(inExtremeBear&&vv!==null&&vv>CONFIG.vix.extremeExit)
-    wa.innerHTML=`<div class="warn-box warn-box-extreme"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>極端恐慌 Hysteresis 鎖定：VIX ${vv.toFixed(1)}。停止一切加碼，等待 VIX 回落至 ${CONFIG.vix.extremeExit} 以下才解除熊市防禦。</div>`;
+    wa.innerHTML=`<div class="warn-box warn-box-extreme"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>極端恐慌 Hysteresis 鎖定：VIX ${fPct(vv)}。停止一切加碼，等待 VIX 回落至 ${CONFIG.vix.extremeExit} 以下才解除熊市防禦。</div>`;
   else if(regime==='bear'||regime==='extremeBear')
     wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>硬規則：衛星標的出現跳空缺口或單日跌幅 > 3%，禁止動用現金加碼。等待 VIX 回落至 ${CONFIG.vix.extremeExit} 以下再評估進場。</div>`;
   else if(S.vix==='high')
@@ -867,12 +893,12 @@ function rebuildRows(k){
       const badgeEl=document.createElement('span');badgeEl.className='holding-pnl';
       function updateRowDisplay(){
         const a=parseFloat(holdings[k][i].avgPrice),c=parseFloat(holdings[k][i].curPrice),s=parseFloat(holdings[k][i].shares);
-        if(!isNaN(c)&&!isNaN(s)&&s>0){mvEl.textContent=(c*s/10000).toFixed(2)+'萬';mvEl.style.display='';}
+        if(!isNaN(c)&&!isNaN(s)&&s>0){mvEl.textContent=fAmt(c*s/10000)+'萬';mvEl.style.display='';}
         else{mvEl.textContent='';mvEl.style.display='none';}
         if(!isNaN(a)&&!isNaN(c)&&a>0){
           const pnl=((c-a)/a*100);
           badgeEl.className='holding-pnl '+(pnl<=CONFIG.stopLoss?'pnl-stop':pnl<0?'pnl-neg':'pnl-pos');
-          badgeEl.textContent=(pnl>=0?'+':'')+pnl.toFixed(1)+'%';
+          badgeEl.textContent=(pnl>=0?'+':'')+fPct(pnl)+'%';
           if(pnl<=CONFIG.stopLoss&&k==='alpha')badgeEl.textContent+=' 停損';
           badgeEl.style.display='';
         }else{badgeEl.textContent='';badgeEl.style.display='none';}
@@ -897,15 +923,15 @@ function rebuildRows(k){
 function updatePanelTotal(k){
   const el=document.getElementById('htotal-'+k);if(!el)return;
   const total=getHoldingTotal(k);
-  el.textContent=total.toFixed(2)+' 萬';
+  el.textContent=fAmt(total)+' 萬';
   updateBarAmt(k);
 }
 function updateBarAmt(k){
   const el=document.getElementById('bar-amt-'+k);if(!el)return;
   const ref=currentTarget||BASE;
-  const amt=(getCapitalBase()*ref[k]/100).toFixed(2);
+  const amt=fAmt(getCapitalBase()*ref[k]/100);
   const hold=getHoldingTotal(k);
-  const holdStr=hold>0?hold.toFixed(2):'—';
+  const holdStr=hold>0?fAmt(hold):'—';
   el.textContent=holdStr+' / '+amt+'萬';
   const dot=document.getElementById('dot-'+k);
   if(dot){dot.className='holding-dot '+(hold>0?'holding-dot-on':'holding-dot-off');}
@@ -935,10 +961,12 @@ function refreshStopLoss(al){
   if(!al)al=document.getElementById('actions');
   if(!al)return;
   al.querySelectorAll('.stop-loss-item').forEach(el=>el.remove());
+  let slHtml='';
   holdings.alpha.forEach(r=>{
     const avg=parseFloat(r.avgPrice),cur=parseFloat(r.curPrice);
-    if(!isNaN(avg)&&!isNaN(cur)&&avg>0){const pnl=((cur-avg)/avg)*100;if(pnl<=CONFIG.stopLoss){const code=(r.code||'未命名').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));al.innerHTML+=`<li class="action-item stop-loss-item"><i class="ti ti-alert-triangle" style="color:#A32D2D"></i><span style="color:#A32D2D"><strong>停損警示：${code}</strong> 虧損 ${pnl.toFixed(1)}%，已觸及 ${CONFIG.stopLoss}% 停損線</span></li>`;}}
+    if(!isNaN(avg)&&!isNaN(cur)&&avg>0){const pnl=((cur-avg)/avg)*100;if(pnl<=CONFIG.stopLoss){const code=(r.code||'未命名').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));slHtml+=`<li class="action-item stop-loss-item"><i class="ti ti-alert-triangle" style="color:#A32D2D"></i><span style="color:#A32D2D"><strong>停損警示：${code}</strong> 虧損 ${fPct(pnl)}%，已觸及 ${CONFIG.stopLoss}% 停損線</span></li>`;}}
   });
+  if(slHtml)al.insertAdjacentHTML('beforeend',slHtml);
 }
 function r2(v){return Math.round(v*100)/100;}
 function checkHWM(){
@@ -949,13 +977,13 @@ function checkHWM(){
   const bar=document.getElementById('hwm-bar');if(!bar)return;
   if(fund<=0&&(total>0||cost>0)){
     bar.style.display='flex';
-    bar.innerHTML='<i class="ti ti-info-circle" style="color:#378ADD"></i> 尚未設定高水位 <button class="hwm-update-btn" onclick="updateHWM('+suggested.toFixed(2)+')">設為 '+suggested.toFixed(2)+' 萬</button>';
+    bar.innerHTML='<i class="ti ti-info-circle" style="color:#378ADD"></i> 尚未設定高水位 <button class="hwm-update-btn" onclick="updateHWM('+fAmt(suggested)+')">設為 '+fAmt(suggested)+' 萬</button>';
   }else if(total>fund&&fund>0){
     bar.style.display='flex';
-    bar.innerHTML='<i class="ti ti-trophy" style="color:#639922"></i> 持倉市值 '+total.toFixed(2)+' 萬已超過高水位 '+fund.toFixed(2)+' 萬 <button class="hwm-update-btn" onclick="updateHWM('+suggested.toFixed(2)+')">更新高水位</button>';
+    bar.innerHTML='<i class="ti ti-trophy" style="color:#639922"></i> 持倉市值 '+fAmt(total)+' 萬已超過高水位 '+fAmt(fund)+' 萬 <button class="hwm-update-btn" onclick="updateHWM('+fAmt(suggested)+')">更新高水位</button>';
   }else if(cost>fund&&fund>0&&cost>0){
     bar.style.display='flex';
-    bar.innerHTML='<i class="ti ti-alert-circle" style="color:#BA7517"></i> 高水位 '+fund.toFixed(2)+' 萬低於持倉成本 '+cost.toFixed(2)+' 萬，回撤計算可能失真 <button class="hwm-update-btn" onclick="updateHWM('+cost.toFixed(2)+')">修正為 '+cost.toFixed(2)+' 萬</button>';
+    bar.innerHTML='<i class="ti ti-alert-circle" style="color:#BA7517"></i> 高水位 '+fAmt(fund)+' 萬低於持倉成本 '+fAmt(cost)+' 萬，回撤計算可能失真 <button class="hwm-update-btn" onclick="updateHWM('+fAmt(cost)+')">修正為 '+fAmt(cost)+' 萬</button>';
   }else{bar.style.display='none';}
   refreshStopLoss();
 }
@@ -970,48 +998,47 @@ function updateFundStatus(){
   const nav=getCurrentNAV();
   const fundLabel=document.getElementById('fund-label');
   const fd=document.getElementById('fund-display');
-  if(nav>0)fundLabel.textContent=`計算基準：持倉 NAV ${nav.toFixed(2)} 萬`;
+  if(nav>0)fundLabel.textContent=`計算基準：持倉 NAV ${fAmt(nav)} 萬`;
   else fundLabel.textContent=`計算基準：高水位 ${HIGH_WATER_MARK} 萬`;
-  if(HIGH_WATER_MARK>0&&nav>0&&HIGH_WATER_MARK<nav)fd.textContent=`⚠ 高水位低於持倉 NAV ${nav.toFixed(2)} 萬，回撤計算可能失真`;
+  if(HIGH_WATER_MARK>0&&nav>0&&HIGH_WATER_MARK<nav)fd.textContent=`⚠ 高水位低於持倉 NAV ${fAmt(nav)} 萬，回撤計算可能失真`;
   else fd.textContent='歷史最高市值，用於回撤與配置計算';
 }
 function renderRebalTable(){
   const tbody=document.getElementById('rebal-body');if(!tbody)return;
-  tbody.innerHTML='';
+  let tbodyHtml='';
   const ref=currentTarget||BASE;
   const capitalBase=getCapitalBase();
   updateFundStatus();
   let totalTgt=0,totalHolding=0;
   REBAL_KEYS.forEach(k=>{
-    const tgtPct=ref[k],tgtAmt=+(capitalBase*tgtPct/100).toFixed(2);
-    const holdAmt=+getHoldingTotal(k).toFixed(2);
-    const holdPct=capitalBase>0?+(holdAmt/capitalBase*100).toFixed(1):0;
-    const diffPct=+(holdPct-tgtPct).toFixed(1);
+    const tgtPct=ref[k],tgtAmt=+fAmt(capitalBase*tgtPct/100);
+    const holdAmt=+fAmt(getHoldingTotal(k));
+    const holdPct=capitalBase>0?+fPct(holdAmt/capitalBase*100):0;
+    const diffPct=+fPct(holdPct-tgtPct);
     const threshold=REBAL_THRESHOLD[k];
     const warn=holdAmt>0&&Math.abs(diffPct)>=threshold;
     totalTgt+=tgtAmt;totalHolding+=holdAmt;
-    const diffAmt=Math.abs(+(tgtAmt-holdAmt).toFixed(2));
+    const diffAmt=Math.abs(+fAmt(tgtAmt-holdAmt));
     const advice=diffPct>0?`偏高，建議減碼 ≈ ${diffAmt} 萬`:(diffPct<0?`偏低，建議加碼 ≈ ${diffAmt} 萬`:'維持');
     const note=threshold<5?`(門檻${threshold}%)`:'';
-    tbody.innerHTML+=`<tr>
-      <td>${LABELS[k]}</td><td class="col-tgt-pct">${tgtPct}%</td><td>${tgtAmt.toFixed(2)}</td>
-      <td style="cursor:pointer;color:${COLORS[k]};font-weight:500" onclick="togglePanel('${k}')">${holdAmt>0?holdAmt.toFixed(2):'— 點擊輸入'}</td>
+    tbodyHtml+=`<tr>
+      <td>${LABELS[k]}</td><td class="col-tgt-pct">${tgtPct}%</td><td>${fAmt(tgtAmt)}</td>
+      <td style="cursor:pointer;color:${COLORS[k]};font-weight:500" onclick="togglePanel('${k}')">${holdAmt>0?fAmt(holdAmt):'— 點擊輸入'}</td>
       <td class="col-hold-pct">${holdAmt>0?holdPct+'%':'—'}</td>
       <td class="${warn?'rebal-warn':'rebal-ok'}">${holdAmt>0?(diffPct>0?'+':'')+diffPct+'%':'—'}</td>
       <td class="${warn?'rebal-warn':'rebal-ok'}">${holdAmt>0?(warn?'⚠ '+advice+note:'—'):'—'}</td>
     </tr>`;
   });
-  document.getElementById('rebal-tgt-total').textContent=totalTgt.toFixed(2)+' 萬';
-  document.getElementById('rebal-holding-total').textContent=totalHolding.toFixed(2)+' 萬';
-  document.getElementById('rebal-total-pct').textContent=(totalHolding>0&&capitalBase>0)?+(totalHolding/capitalBase*100).toFixed(1)+'%':'—';
+  tbody.innerHTML=tbodyHtml;
+  document.getElementById('rebal-tgt-total').textContent=fAmt(totalTgt)+' 萬';
+  document.getElementById('rebal-holding-total').textContent=fAmt(totalHolding)+' 萬';
+  document.getElementById('rebal-total-pct').textContent=(totalHolding>0&&capitalBase>0)?+fPct(totalHolding/capitalBase*100)+'%':'—';
   const tmEl=document.getElementById('rebal-total-msg');
-  const diff=+(totalHolding-capitalBase).toFixed(2);
   if(totalHolding===0||capitalBase<=0){tmEl.textContent=HIGH_WATER_MARK<=0?'請先設定高水位':'尚未輸入持倉';tmEl.className='rebal-total-ok';}
-  else if(diff>0.5){tmEl.textContent=`⚠ 超過配置基準 ${diff.toFixed(2)} 萬`;tmEl.className='rebal-total-warn';}
   else{tmEl.textContent='';tmEl.className='rebal-total-ok';}
   const ddEl=document.getElementById('drawdown-area');
   if(ddEl&&totalHolding>0&&HIGH_WATER_MARK>0){
-    const dd=+(((HIGH_WATER_MARK-totalHolding)/HIGH_WATER_MARK)*100).toFixed(1);
+    const dd=+fPct(((HIGH_WATER_MARK-totalHolding)/HIGH_WATER_MARK)*100);
     if(dd>=CONFIG.drawdown.danger){ddEl.className='drawdown-bar dd-danger';ddEl.innerHTML='<i class="ti ti-alert-triangle" style="font-size:13px"></i> 組合回撤 '+dd+'%（門檻 '+CONFIG.drawdown.danger+'%）— 建議立即檢視衛星與高風險部位，考慮減碼';}
     else if(dd>=CONFIG.drawdown.warn){ddEl.className='drawdown-bar dd-warn';ddEl.innerHTML='<i class="ti ti-alert-circle" style="font-size:13px"></i> 組合回撤 '+dd+'% — 接近門檻，請留意';}
     else if(dd>0){ddEl.className='drawdown-bar dd-ok';ddEl.textContent='組合回撤 '+dd+'%，在安全範圍內';}
@@ -1022,36 +1049,39 @@ function renderRebalTable(){
 }
 
 function getBuyMarketScore(regime){
-  if(regime==='bull')return 20;
-  if(regime==='range')return 10;
-  return 0;
+  if(regime==='bull')return CONFIG.buyScore.weights.market.bull;
+  if(regime==='range')return CONFIG.buyScore.weights.market.range;
+  return CONFIG.buyScore.weights.market.bear;
 }
 function getBuyAction(type,total,trendScore,regime,distancePct,volState){
   const isSingleName=type==='stock'||type==='satellite';
   const hard=[];
   const absDistance=distancePct===null?null:Math.abs(distancePct);
+  const cfgSingle=CONFIG.buyScore.single;
+  const cfgEtf=CONFIG.buyScore.etf;
+  const distLimit=CONFIG.buyScore.distanceLimit;
   if(regime==='extremeBear')hard.push('Extreme Bear：拒絕新增風險資產');
   if(isSingleName&&regime==='bear')hard.push('Bear regime：個股 / 衛星不新增重倉');
-  if(isSingleName&&trendScore<20)hard.push('拒絕進場：個股 / 衛星趨勢分數未達 20');
-  if(absDistance!==null&&absDistance>10)hard.push('拒絕追價：距離 60MA 絕對值超過 10%');
+  if(isSingleName&&trendScore<cfgSingle.trendThreshold)hard.push(`拒絕進場：個股 / 衛星趨勢分數未達 ${cfgSingle.trendThreshold}`);
+  if(absDistance!==null&&absDistance>distLimit)hard.push(`拒絕追價：距離 60MA 絕對值超過 ${distLimit}%`);
   if(volState==='panic')hard.push('拒絕進場：爆量長黑 / 跳空下跌 / 急跌');
   if(hard.length){
     let label='拒絕進場 / 只觀察';
     if(regime==='extremeBear')label='拒絕進場：Extreme Bear';
-    else if(isSingleName&&trendScore<20)label='拒絕進場：趨勢未達標';
+    else if(isSingleName&&trendScore<cfgSingle.trendThreshold)label='拒絕進場：趨勢未達標';
     else if(volState==='panic')label='拒絕進場：波動失控';
-    else if(absDistance!==null&&absDistance>10)label='拒絕追價：距離過遠';
+    else if(absDistance!==null&&absDistance>distLimit)label='拒絕追價：距離過遠';
     return{label,cls:'buy-result-bad',pace:'硬性否決條件成立',hard};
   }
   if(isSingleName){
-    if(total>=75&&trendScore>=20)return{label:'可考慮小量布局',cls:'buy-result-warn',pace:'單筆不超過預定部位 10–15%',hard};
-    if(total>=75&&trendScore<20)return{label:'拒絕進場：趨勢未達標',cls:'buy-result-bad',pace:'總分足夠但趨勢不健康',hard:['拒絕進場：個股 / 衛星趨勢分數未達 20']};
-    if(total>=60)return{label:'觀察，不急著買',cls:'buy-result-warn',pace:'總分未達個股 / 衛星門檻 75',hard};
+    if(total>=cfgSingle.good&&trendScore>=cfgSingle.trendThreshold)return{label:'可考慮小量布局',cls:'buy-result-warn',pace:'單筆不超過預定部位 10–15%',hard};
+    if(total>=cfgSingle.good&&trendScore<cfgSingle.trendThreshold)return{label:'拒絕進場：趨勢未達標',cls:'buy-result-bad',pace:'總分足夠但趨勢不健康',hard:[`拒絕進場：個股 / 衛星趨勢分數未達 ${cfgSingle.trendThreshold}`]};
+    if(total>=cfgSingle.warn)return{label:'觀察，不急著買',cls:'buy-result-warn',pace:`總分未達個股 / 衛星門檻 ${cfgSingle.good}`,hard};
     return{label:'不碰',cls:'buy-result-bad',pace:'分數不足',hard};
   }
-  if(total>=80)return{label:'可正常分批布局',cls:'buy-result-good',pace:'分 3–4 筆，單筆不超過預定部位 25%',hard};
-  if(total>=65)return{label:'可小量布局',cls:'buy-result-warn',pace:'先試 10–15%，不要一次買滿',hard};
-  if(total>=50)return{label:'觀察，不急著買',cls:'buy-result-warn',pace:'等待回到更合理的位置',hard};
+  if(total>=cfgEtf.good)return{label:'可正常分批布局',cls:'buy-result-good',pace:'分 3–4 筆，單筆不超過預定部位 25%',hard};
+  if(total>=cfgEtf.warn)return{label:'可小量布局',cls:'buy-result-warn',pace:'先試 10–15%，不要一次買滿',hard};
+  if(total>=cfgEtf.observe)return{label:'觀察，不急著買',cls:'buy-result-warn',pace:'等待回到更合理的位置',hard};
   return{label:'不碰',cls:'buy-result-bad',pace:'風險報酬不佳',hard};
 }
 function calcBuyScore(){
@@ -1068,17 +1098,18 @@ function calcBuyScore(){
   const trendStateInput=document.getElementById('buy-trend').value;
   const flowState=document.getElementById('buy-flow').value;
   const volState=document.getElementById('buy-vol').value;
-  const trendScores={healthy:30,neutral:20,weak:8};
-  const flowScores={stable:15,neutral:8,selloff:0};
-  const volScores={normal:10,choppy:5,panic:0};
+  const w=CONFIG.buyScore.weights;
+  const trendScores=w.trend;
+  const flowScores=w.flow;
+  const volScores=w.vol;
   const trendScore=trendScores[trendStateInput]??0;
   const distancePct=(!isNaN(price)&&!isNaN(ma)&&price>0&&ma>0)?(price-ma)/ma*100:null;
   const absDistance=distancePct===null?null:Math.abs(distancePct);
   let distanceScore=0;
   if(absDistance!==null){
-    if(absDistance<=3)distanceScore=25;
-    else if(absDistance<=6)distanceScore=20;
-    else if(absDistance<=10)distanceScore=10;
+    if(absDistance<=3)distanceScore=w.distance.close;
+    else if(absDistance<=6)distanceScore=w.distance.med;
+    else if(absDistance<=CONFIG.buyScore.distanceLimit)distanceScore=w.distance.far;
   }
   const marketReady=!!(S.trend&&S.vix&&S.rate);
   const priceReady=!isNaN(price)&&price>0;
@@ -1093,11 +1124,11 @@ function calcBuyScore(){
   const volScore=volScores[volState]??0;
   const total=trendScore+distanceScore+marketScore+flowScore+volScore;
   const rows=[
-    ['趨勢',trendScore,30],
-    ['距離(|60MA|)',distanceScore,25],
-    ['市場風險(DAA)',marketScore,20],
-    ['籌碼',flowScore,15],
-    ['波動',volScore,10]
+    ['趨勢',trendScore,w.trend.healthy],
+    ['距離(|60MA|)',distanceScore,w.distance.close],
+    ['市場風險(DAA)',marketScore,w.market.bull],
+    ['籌碼',flowScore,w.flow.stable],
+    ['波動',volScore,w.vol.normal]
   ];
   list.innerHTML=rows.map(([name,score,max])=>`
     <div class="score-row">
@@ -1119,7 +1150,7 @@ function calcBuyScore(){
   actionEl.textContent=allReady?action.label:'請先填寫：'+missing.join('、');
   const notes=[];
   if(distancePct===null)notes.push(['ti-info-circle','請輸入現價與 60MA；距離分數採絕對距離計算']);
-  else notes.push(['ti-ruler','距離 60MA '+(distancePct>=0?'+':'')+distancePct.toFixed(1)+'%，計分使用絕對值 '+absDistance.toFixed(1)+'%']);
+  else notes.push(['ti-ruler','距離 60MA '+(distancePct>=0?'+':'')+fPct(distancePct)+'%，計分使用絕對值 '+fPct(absDistance)+'%']);
   notes.push(['ti-scale','距離只判斷遠近，不判斷多空方向；方向由趨勢分數處理']);
   if(marketReady)notes.push(['ti-radar','市場風險由 DAA 自動帶入：'+REGIME_META[regime].label+'，本評分器不改變配置比例']);
   else notes.push(['ti-radar','市場風險分需先完成 DAA Regime 判斷']);
@@ -1194,6 +1225,7 @@ function resetAll(){
   location.reload();
 }
 
+initStaticTexts();
 lsLoad();
 calcBuyScore();
 if('serviceWorker' in navigator){
