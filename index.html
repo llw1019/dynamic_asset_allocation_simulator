@@ -346,7 +346,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
         <div class="buy-form">
           <div class="buy-field">
             <label>標的類型</label>
-            <select id="buy-type" onchange="calcBuyScore()">
+            <select id="buy-type" onchange="onBuyTypeChange()">
               <option value="etf">ETF / 核心資產</option>
               <option value="stock">個股</option>
               <option value="satellite">衛星資產</option>
@@ -355,6 +355,10 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
           <div class="buy-field">
             <label>標的代號</label>
             <input id="buy-symbol" placeholder="例如 009816" maxlength="20" oninput="calcBuyScore()"/>
+          </div>
+          <div class="buy-field">
+            <label>折溢價 (%)</label>
+            <input type="number" id="buy-etf-premium" step="0.01" placeholder="例如 1.5" oninput="calcBuyScore()"/>
           </div>
           <div class="buy-field">
             <label>現價</label>
@@ -382,7 +386,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
               <option value="selloff">連續大賣 / 出貨</option>
             </select>
           </div>
-          <div class="buy-field wide">
+          <div class="buy-field">
             <label>波動風險</label>
             <select id="buy-vol" onchange="calcBuyScore()">
               <option value="" disabled selected>請選擇</option>
@@ -450,6 +454,11 @@ const CONFIG={
       vol:{normal:10,choppy:5,panic:0},
       market:{bull:20,range:10,bear:0}
     }
+  },
+  etfPremium:{
+    warnThreshold:1.5,
+    vetoThreshold:3.0,
+    discountNotify:-0.5
   }
 };
 const fPct=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Number(v).toFixed(1):'—';
@@ -461,52 +470,87 @@ const REGIME_META={
   range:{label:'盤整震盪 Range',   sub:'均衡模式，執行再平衡', bannerCls:'regime-range', dotColor:'#BA7517'}
 };
 REGIME_META.extremeBear={label:'極端熊市 Extreme Risk-off',sub:'極端恐慌鎖定，Alpha 歸零並提高現金',bannerCls:'regime-bear',dotColor:'#A32D2D'};
-const ACTIONS={
-  bull:[
-    {icon:'ti-arrow-up',  text:`<strong>衛星 Alpha</strong> 加碼至 ${REGIME_WEIGHTS.bull.alpha}%，追蹤高貝塔機會`},
-    {icon:'ti-arrow-up',  text:`<strong>現金 Option</strong> 保留至 ${REGIME_WEIGHTS.bull.cash}%，維持機動性`},
-    {icon:'ti-arrow-down',text:`<strong>防禦 Vol-Abs</strong> 減碼至 ${REGIME_WEIGHTS.bull.defense}%，釋放保守配置`},
-    {icon:'ti-arrow-down',text:`<strong>避險 Hedge</strong> 減碼至 ${REGIME_WEIGHTS.bull.hedge}%，降低對沖成本`},
-    {icon:'ti-lock',      text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，僅執行再平衡'}
-  ],
-  bear:[
-    {icon:'ti-arrow-down',text:`<strong>衛星 Alpha</strong> 大幅減碼至 ${REGIME_WEIGHTS.bear.alpha}%，降低高風險敞口`},
-    {icon:'ti-arrow-up',  text:`<strong>防禦 Vol-Abs</strong> 拉升至 ${REGIME_WEIGHTS.bear.defense}%，強化緩衝`},
-    {icon:'ti-equal',     text:`<strong>避險 Hedge</strong> 維持 ${REGIME_WEIGHTS.bear.hedge}%，逆週期對沖`},
-    {icon:'ti-equal',     text:`<strong>現金 Option</strong> 維持 ${REGIME_WEIGHTS.bear.cash}%，保留反彈火力`},
-    {icon:'ti-lock',      text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，不因恐慌賣出'}
-  ],
-  range:[
-    {icon:'ti-equal',  text:'動態層維持基準比例，不主動調整'},
-    {icon:'ti-refresh',text:'執行<strong>再平衡檢查</strong>，偏離超過門檻時進行修正'},
-    {icon:'ti-lock',   text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，僅執行季再平衡'}
-  ]
-};
-ACTIONS.extremeBear=[
-  {icon:'ti-arrow-down',text:`<strong>衛星 Alpha</strong> 歸零，極端恐慌時不承擔高波動衛星部位`},
-  {icon:'ti-arrow-up',text:`<strong>現金 Option</strong> 提高至 ${REGIME_WEIGHTS.extremeBear.cash}%，保留最可靠的防線`},
-  {icon:'ti-equal',text:`<strong>避險 Hedge</strong> 維持 ${REGIME_WEIGHTS.extremeBear.hedge}%，長債不是無條件避險，不因恐慌過度押注`},
-  {icon:'ti-lock',text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，避免恐慌中砍長期核心資產'}
-];
-const MEMOS={
-  bull:`市場動能強勁，VIX 低位且大盤創高。衛星加碼追蹤高貝塔機會，現金保留 ${REGIME_WEIGHTS.bull.cash}% 維持機動性。內核外核固定不動，不因牛市追加核心部位。`,
-  bear:`啟動防禦機制，收縮戰線。衛星大幅減碼至 ${REGIME_WEIGHTS.bear.alpha}%，防禦拉升至最高。內核外核絕對不動，不因恐慌賣出長期核心資產。等待 VIX 回落至 ${CONFIG.vix.extremeExit} 以下再評估恢復動態層。`,
-  range:'方向不明，維持均衡基準。重點是定期再平衡，確認各部位未偏離目標超過門檻。內核外核固定不動，衛星可小區間操作。'
-};
-MEMOS.extremeBear=`極端熊市啟動：VIX 已進入極端恐慌區，衛星 Alpha 歸零，現金提高至 ${REGIME_WEIGHTS.extremeBear.cash}%。Hedge 維持 ${REGIME_WEIGHTS.extremeBear.hedge}%，因為長債在升息型熊市可能失效，現金才是不依賴市場假設的防線。`;
-function getMemo(regime){
-  const base=MEMOS[regime];
+function isRateActive(regime,key,rate){
+  if(key!=='hedge'&&key!=='cash')return false;
+  if(rate==='stable')return false;
+  if(rate==='falling'&&regime!=='bull')return false;
+  return true;
+}
+function getActionIcon(targetVal,rangeVal){
+  if(targetVal>rangeVal)return'ti-arrow-up';
+  if(targetVal<rangeVal)return'ti-arrow-down';
+  return'ti-equal';
+}
+function getActionBody(regime,key,target,rate){
+  const t=target[key],r=REGIME_WEIGHTS.range[key],ra=isRateActive(regime,key,rate);
+  if(key==='alpha'){
+    if(t===0)return'暫不承擔高波動敞口';
+    if(t>r)return'擴張衛星追蹤機會';
+    if(t<r)return'降低高風險敞口';
+    return'維持均衡';
+  }
+  if(key==='defense'){
+    if(t>r)return'強化緩衝';
+    if(t<r)return'釋放保守配置';
+    return'維持均衡';
+  }
+  if(key==='hedge'){
+    if(t===0)return'升息壓抑至零';
+    if(t>r)return ra?'降息提升避險權重':'提升逆週期對沖';
+    if(t<r)return ra?'升息壓抑債券配置':'降低對沖成本';
+    return ra?'利率抵消回歸均衡':'維持均衡';
+  }
+  if(key==='cash'){
+    if(t>r){
+      if(ra)return'升息增配現金防線';
+      return regime==='bull'?'保留機動性':'建立防線';
+    }
+    if(t<r)return ra?'降息釋放現金至避險':'壓縮現金';
+    return ra?'利率抵消回歸均衡':'維持均衡';
+  }
+  return'';
+}
+function getActionItems(regime,target,rate){
+  const range=REGIME_WEIGHTS.range;
+  const DYN_KEYS=['alpha','defense','hedge','cash'];
+  const DYN_LABELS={alpha:'衛星 Alpha',defense:'防禦 Vol-Abs',hedge:'避險 Hedge',cash:'現金 Option'};
+  if(regime==='range'){
+    const rateNote=isRateActive('range','hedge',rate)?` · ${rate==='rising'?'升息':'降息'} Modifier`:'';
+    return[
+      {icon:rateNote?'ti-arrows-sort':'ti-equal',text:`<strong>動態層</strong>：Alpha ${target.alpha}% / Defense ${target.defense}% / Hedge ${target.hedge}% / Cash ${target.cash}%${rateNote}`},
+      {icon:'ti-refresh',text:'依再平衡表處理偏離，不因盤整反覆追價或殺低'},
+      {icon:'ti-lock',text:'<strong>內核 Beta / 外核 Global</strong> 固定不動，核心配置維持紀律'}
+    ];
+  }
+  const items=DYN_KEYS.map(key=>{
+    const icon=getActionIcon(target[key],range[key]);
+    const body=getActionBody(regime,key,target,rate);
+    const hint=isRateActive(regime,key,rate)?(rate==='rising'?' · 升息':' · 降息'):'';
+    return{icon,text:`<strong>${DYN_LABELS[key]}</strong> ${target[key]}%，${body}${hint}`};
+  });
+  const lockTexts={bull:'不因牛市追加核心部位',bear:'不因恐慌賣出長期核心資產',extremeBear:'避免恐慌中砍長期核心資產'};
+  items.push({icon:'ti-lock',text:`<strong>內核 Beta / 外核 Global</strong> 固定不動，${lockTexts[regime]}`});
+  return items;
+}
+function getBaseMemo(regime,target){
+  if(regime==='bull')return`市場動能強勁，VIX 低位且大盤創高。衛星加碼追蹤高貝塔機會，現金保留 ${target.cash}% 維持機動性。內核外核固定不動，不因牛市追加核心部位。`;
+  if(regime==='extremeBear')return`極端熊市啟動：VIX 已進入極端恐慌區，衛星 Alpha 歸零，現金 ${target.cash}%，Hedge ${target.hedge}%。`;
+  if(regime==='bear')return`啟動防禦機制，收縮戰線。衛星減碼至 ${target.alpha}%，防禦拉升至 ${target.defense}%。內核外核絕對不動，不因恐慌賣出長期核心資產。等待 VIX 回落至 ${CONFIG.vix.extremeExit} 以下再評估恢復動態層。`;
+  return'方向不明，維持均衡基準。重點是定期再平衡，確認各部位未偏離目標超過門檻。內核外核固定不動，衛星可小區間操作。';
+}
+function getMemo(regime,target){
+  const base=getBaseMemo(regime,target);
   if(regime==='bear'||regime==='extremeBear'){
     if(inExtremeBear)return base+`\n\n⚠ 極端恐慌警示：目前處於極端恐慌，現金僅供避險使用，勿加碼任何風險資產。等待 VIX 回落至 ${CONFIG.vix.extremeExit} 以下再議布局。`;
-    return base+`\n\n提醒：Hedge 不是無條件避險。若是升息型熊市，長債可能與股票同跌，因此熊市維持 hedge ${REGIME_WEIGHTS.bear.hedge}%，不額外押注，主要靠降低 Alpha 與保留現金控制回撤。`;
+    return base+`\n\n提醒：Hedge 不是無條件避險。若是升息型熊市，長債可能與股票同跌，因此熊市 hedge ${target.hedge}%，不額外押注，主要靠降低 Alpha 與保留現金控制回撤。`;
   }
   if(indexPct===null)return base;
   const p=indexPct;
   if(regime==='bull'){
     if(p>CONFIG.ma60.overheat)return base+`\n\n⚠ 現金部署提示：指數偏離60MA達 +${fPct(p)}%，風險報酬比偏差，現金暫緩動用。勿追高，等待指數回測均線或 VIX 升至 ${CONFIG.vix.medium} 以上再評估布局。`;
     return base+`\n\n現金部署條件（目前距60MA ${p>=0?'+':''}${fPct(p)}%）：優先用於 ① 指數回測60MA附近、② VIX 升至 ${CONFIG.vix.medium} 以上、③ 恐慌性回撤後量縮止穩。持有現金是紀律，勿因 FOMO 追高。`;
-    }
-    if(regime==='range'){
+  }
+  if(regime==='range'){
     if(Math.abs(p)<=CONFIG.ma60.near)return base+`\n\n均線提示：指數貼近60MA（偏離 ${p>=0?'+':''}${fPct(p)}%），現金分批布局的合理區間。留意60MA走勢，若均線走平或轉折下彎，降低進取心，優先維持均衡配置。`;
     if(p<-CONFIG.ma60.near)return base+`\n\n均線提示：指數在60MA以下 ${fPct(p)}%，趨勢確認前現金以觀望為主，以季再平衡為核心動作。`;
   }
@@ -625,6 +669,8 @@ function calcTarget(regime){
   const protectedBear=regime==='bear'||regime==='extremeBear';
   Object.entries(mod).forEach(([k,d])=>{
     if(base[k]===undefined)return;
+    // Falling rates are only treated as constructive in bull regimes; otherwise keep cash and hedge unchanged.
+    if(S.rate==='falling'&&regime!=='bull')return;
     if(protectedBear&&k==='cash'&&d<0)return;
     base[k]=Math.max(0,base[k]+d);
   });
@@ -759,7 +805,7 @@ function render(){
   const modRow=document.getElementById('modifier-row');
   let modHtml='';
   if(S.rate==='rising')modHtml=`<span class="mod-tag mod-rising">↑ 升息 Modifier：避險 −5%，現金 +5%</span>`;
-  else if(S.rate==='falling'&&(regime==='bear'||regime==='extremeBear'))modHtml=`<span class="mod-tag mod-falling">↓ 降息 Modifier：熊市保護，現金不降低，避免把 recession cut 誤判成 risk-on</span>`;
+  else if(S.rate==='falling'&&regime!=='bull')modHtml=`<span class="mod-tag mod-falling">↓ 降息 Modifier：非牛市不增配避險債券，也不消耗現金</span>`;
   else if(S.rate==='falling')modHtml=`<span class="mod-tag mod-falling">↓ 降息 Modifier：避險 +5%，現金 −5%</span>`;
   else modHtml=`<span class="mod-tag mod-neutral">利率穩定，無修正因子</span>`;
   const cashDeploy=getCashDeployStatus(regime);
@@ -802,11 +848,11 @@ function render(){
 
   const al=document.getElementById('actions');
   let alHtml='';
-  ACTIONS[regime].forEach(a=>{alHtml+=`<li class="action-item"><i class="ti ${a.icon}"></i><span>${a.text}</span></li>`;});
+  getActionItems(regime,target,S.rate).forEach(a=>{alHtml+=`<li class="action-item"><i class="ti ${a.icon}"></i><span>${a.text}</span></li>`;});
   al.innerHTML=alHtml;
   refreshStopLoss(al);
   const memoEl=document.getElementById('memo');
-  const memoText=getMemo(regime);
+  const memoText=getMemo(regime,target);
   const memoParts=memoText.split('\n\n');
   if(memoParts.length>1){
     const isWarn=memoParts[1].startsWith('⚠');
@@ -1053,7 +1099,7 @@ function getBuyMarketScore(regime){
   if(regime==='range')return CONFIG.buyScore.weights.market.range;
   return CONFIG.buyScore.weights.market.bear;
 }
-function getBuyAction(type,total,trendScore,regime,distancePct,volState){
+function getBuyAction(type,total,trendScore,regime,distancePct,volState,premiumPct){
   const isSingleName=type==='stock'||type==='satellite';
   const hard=[];
   const absDistance=distancePct===null?null:Math.abs(distancePct);
@@ -1065,12 +1111,16 @@ function getBuyAction(type,total,trendScore,regime,distancePct,volState){
   if(isSingleName&&trendScore<cfgSingle.trendThreshold)hard.push(`拒絕進場：個股 / 衛星趨勢分數未達 ${cfgSingle.trendThreshold}`);
   if(absDistance!==null&&absDistance>distLimit)hard.push(`拒絕追價：距離 60MA 絕對值超過 ${distLimit}%`);
   if(volState==='panic')hard.push('拒絕進場：爆量長黑 / 跳空下跌 / 急跌');
+  if(premiumPct!==null){
+    if(premiumPct>=CONFIG.etfPremium.vetoThreshold)hard.push(`拒絕追價：ETF 溢價達 ${premiumPct}% (≥ ${CONFIG.etfPremium.vetoThreshold}%)`);
+  }
   if(hard.length){
     let label='拒絕進場 / 只觀察';
     if(regime==='extremeBear')label='拒絕進場：Extreme Bear';
     else if(isSingleName&&trendScore<cfgSingle.trendThreshold)label='拒絕進場：趨勢未達標';
     else if(volState==='panic')label='拒絕進場：波動失控';
     else if(absDistance!==null&&absDistance>distLimit)label='拒絕追價：距離過遠';
+    else if(premiumPct!==null&&premiumPct>=CONFIG.etfPremium.vetoThreshold)label='拒絕進場：溢價過高';
     return{label,cls:'buy-result-bad',pace:'硬性否決條件成立',hard};
   }
   if(isSingleName){
@@ -1084,6 +1134,21 @@ function getBuyAction(type,total,trendScore,regime,distancePct,volState){
   if(total>=cfgEtf.observe)return{label:'觀察，不急著買',cls:'buy-result-warn',pace:'等待回到更合理的位置',hard};
   return{label:'不碰',cls:'buy-result-bad',pace:'風險報酬不佳',hard};
 }
+function onBuyTypeChange(){
+  const type=document.getElementById('buy-type').value;
+  const input=document.getElementById('buy-etf-premium');
+  const block=input.closest('.buy-field');
+  const volBlock=document.getElementById('buy-vol').closest('.buy-field');
+  if(type==='etf'){
+    block.style.display='';
+    if(volBlock) volBlock.classList.remove('wide');
+  }else{
+    block.style.display='none';
+    input.value='';
+    if(volBlock) volBlock.classList.add('wide');
+  }
+  calcBuyScore();
+}
 function calcBuyScore(){
   const list=document.getElementById('buy-score-list');
   const totalEl=document.getElementById('buy-score-total');
@@ -1094,6 +1159,9 @@ function calcBuyScore(){
   const type=document.getElementById('buy-type').value;
   const symbol=document.getElementById('buy-symbol').value.trim();
   const price=parseFloat(document.getElementById('buy-price').value);
+  const premiumInput=document.getElementById('buy-etf-premium').value;
+  const parsedPremium=parseFloat(premiumInput);
+  const premiumPct=(type==='etf' && !isNaN(parsedPremium)) ? parsedPremium : null;
   const ma=parseFloat(document.getElementById('buy-ma60').value);
   const trendStateInput=document.getElementById('buy-trend').value;
   const flowState=document.getElementById('buy-flow').value;
@@ -1117,7 +1185,8 @@ function calcBuyScore(){
   const trendReady=trendStateInput!=='';
   const flowReady=flowState!=='';
   const volReady=volState!=='';
-  const allReady=marketReady&&priceReady&&maReady&&trendReady&&flowReady&&volReady;
+  const premiumReady=(type!=='etf'||premiumPct!==null);
+  const allReady=marketReady&&priceReady&&maReady&&trendReady&&flowReady&&volReady&&premiumReady;
   const regime=marketReady?getRegime():null;
   const marketScore=marketReady?getBuyMarketScore(regime):0;
   const flowScore=flowScores[flowState]??0;
@@ -1136,7 +1205,7 @@ function calcBuyScore(){
       <div class="score-track"><div class="score-fill" style="width:${Math.round(score/max*100)}%"></div></div>
       <span class="score-val">${score}/${max}</span>
     </div>`).join('');
-  const action=allReady?getBuyAction(type,total,trendScore,regime,distancePct,volState):{label:'',cls:'',pace:'',hard:[]};
+  const action=allReady?getBuyAction(type,total,trendScore,regime,distancePct,volState,premiumPct):{label:'',cls:'',pace:'',hard:[]};
   const missing=[];
   if(!marketReady)missing.push('DAA 市場判斷');
   if(!priceReady)missing.push('現價');
@@ -1144,6 +1213,7 @@ function calcBuyScore(){
   if(!trendReady)missing.push('趨勢結構');
   if(!flowReady)missing.push('籌碼');
   if(!volReady)missing.push('波動風險');
+  if(!premiumReady)missing.push('折溢價');
   if(symbolEl)symbolEl.textContent=symbol?symbol.slice(0,20):'';
   totalEl.textContent=allReady?`${total} / 100`:'— / 100';
   actionEl.className=`buy-result-action ${allReady?action.cls:'buy-result-warn'}`;
@@ -1156,6 +1226,13 @@ function calcBuyScore(){
   else notes.push(['ti-radar','市場風險分需先完成 DAA Regime 判斷']);
   notes.push(['ti-player-play','建議節奏：'+(allReady?action.pace:'等待所有欄位完成')]);
   if(allReady)action.hard.forEach(t=>notes.push(['ti-alert-triangle',t]));
+  if(premiumPct!==null){
+    if(premiumPct>=CONFIG.etfPremium.warnThreshold && premiumPct<CONFIG.etfPremium.vetoThreshold){
+      notes.push(['ti-alert-circle', `溢價偏高 (${premiumPct}%)，達警戒門檻 (${CONFIG.etfPremium.warnThreshold}%)，請留意買貴風險`]);
+    } else if(premiumPct<=CONFIG.etfPremium.discountNotify){
+      notes.push(['ti-thumb-up', `目前折價 (${premiumPct}%)，具備安全邊際`]);
+    }
+  }
   notes.push(['ti-shield-check','即使高分，也禁止 All-in、追高或忽略部位上限']);
   notesEl.innerHTML=notes.map(([icon,text])=>`<div class="buy-note"><i class="ti ${icon}"></i><span>${text}</span></div>`).join('');
 }
@@ -1227,7 +1304,7 @@ function resetAll(){
 
 initStaticTexts();
 lsLoad();
-calcBuyScore();
+onBuyTypeChange();
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
