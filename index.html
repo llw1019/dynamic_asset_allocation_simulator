@@ -736,7 +736,7 @@ function onIndexInput(){
   indexPct=pct;
   let val,label,cls;
   if(trendState==='below'){
-    if(pct>=CONFIG.trend.bearExit)trendState='above';
+    if(pct>=CONFIG.trend.bearExit)trendState='flat';
   }else if(trendState==='above'){
     if(pct<=CONFIG.trend.bullExit)trendState='flat';
   }

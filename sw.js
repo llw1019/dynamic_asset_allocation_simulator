@@ -1,4 +1,4 @@
-const CACHE = 'daa-v10.2';
+const CACHE = 'daa-v10.9';
 const ASSETS = [
   '/dynamic_asset_allocation_simulator/',
   '/dynamic_asset_allocation_simulator/index.html',
