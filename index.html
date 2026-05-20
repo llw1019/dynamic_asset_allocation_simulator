@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>動態資產配置模擬器 v10</title>
+<title>動態資產配置模擬器</title>
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#378ADD"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -185,6 +185,11 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .dd-ok{background:var(--color-background-secondary);color:var(--color-text-secondary)}
 .dd-warn{background:var(--color-warning-bg);color:var(--color-warning-text);border:0.5px solid #BA7517}
 .dd-danger{background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid #F09595}
+.pnl-area{margin-top:8px;padding:10px 14px;border-radius:var(--border-radius-md);font-size:12px;line-height:1.8;background:var(--color-background-secondary);color:var(--color-text-secondary);display:none}
+.pnl-area .pnl-row{display:flex;justify-content:space-between;align-items:center}
+.pnl-positive{color:#639922;font-weight:600}
+.pnl-negative{color:#A32D2D;font-weight:600}
+.pnl-zero{color:var(--color-text-tertiary)}
 .rebal-freq-note{font-size:11px;color:var(--color-text-tertiary);margin-bottom:8px;display:flex;align-items:center;gap:5px;line-height:1.6;padding:8px 12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md)}
 .buy-score-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:12px}
 .buy-form{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -212,7 +217,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 </style>
 </head>
 <body>
-<h1><i class="ti ti-chart-pie"></i> 動態資產配置模擬器 v10</h1>
+<h1><i class="ti ti-chart-pie"></i> 動態資產配置模擬器</h1>
 
 <p class="section-label"><i class="ti ti-sliders"></i>第一步：輸入市場觀測參數</p>
 <div class="param-grid">
@@ -269,7 +274,14 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
   <span style="font-size:12px;color:var(--color-text-tertiary)">萬元</span>
   <span id="fund-display" style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)">歷史最高市值，用於回撤與配置計算</span>
 </div>
+<div class="fund-row">
+  <label><i class="ti ti-wallet" style="font-size:15px;margin-right:4px"></i>總投入資金</label>
+  <input type="number" id="contributed-input" value="" min="0" step="0.1" placeholder="選填" oninput="onContributedChange()"/>
+  <span style="font-size:12px;color:var(--color-text-tertiary)">萬元</span>
+  <span id="contributed-display" style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)">累計投入本金，用於損益計算</span>
+</div>
 <div class="hwm-bar" id="hwm-bar" style="display:none"></div>
+<div class="hwm-bar" id="contributed-bar" style="display:none"></div>
 <div class="ls-notice"><span class="ls-dot ls-dot-ok" id="ls-dot"></span><span id="ls-msg">本機儲存已啟用，下次開啟自動載入</span></div>
 
 <div class="io-bar">
@@ -336,6 +348,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
       </tr></tfoot>
     </table>
     <div id="drawdown-area" class="drawdown-bar dd-ok" style="display:none"></div>
+    <div id="pnl-area" class="pnl-area"></div>
   </div>
 
   <p class="section-label"><i class="ti ti-shopping-cart-check"></i>標的買入評分</p>
@@ -422,7 +435,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 
 <script>
 const S={trend:null,vix:null,rate:null,vixVal:null};
-let HIGH_WATER_MARK=100,currentTarget=null,inExtremeBear=false,indexPct=null,trendState=null;
+let HIGH_WATER_MARK=100,TOTAL_CONTRIBUTED=0,currentTarget=null,inExtremeBear=false,indexPct=null,trendState=null;
 
 const BASE={beta:30,global:20,defense:20,alpha:10,hedge:10,cash:10};
 const REGIME_WEIGHTS={
@@ -592,9 +605,12 @@ function getCapitalBase(){
 function getHwmLabel(){
   return HIGH_WATER_MARK>0?`高水位 ${HIGH_WATER_MARK} 萬`:'高水位 — 萬';
 }
+function getContributedLabel(){
+  return TOTAL_CONTRIBUTED>0?`總投入 ${TOTAL_CONTRIBUTED} 萬`:'總投入 — 萬';
+}
 
 // LocalStorage
-const LS_KEY='daa_sim_v10';
+const LS_KEY='daa_sim_v11';
 function initStaticTexts(){
   const tAlpha=document.getElementById('txt-th-alpha');
   const tBeta=document.getElementById('txt-th-beta');
@@ -606,7 +622,7 @@ function initStaticTexts(){
 function lsSave(){
   try{
     localStorage.setItem(LS_KEY,JSON.stringify({
-      trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,inExtremeBear,hwm:HIGH_WATER_MARK,trendState,
+      trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,inExtremeBear,hwm:HIGH_WATER_MARK,contributed:TOTAL_CONTRIBUTED,trendState,
       taiex:document.getElementById('taiex-input').value,
       ma60:document.getElementById('ma60-input').value,
       vixInput:document.getElementById('vix-input').value,
@@ -622,6 +638,7 @@ function lsLoad(){
     const raw=localStorage.getItem(LS_KEY);if(!raw)return;
     const d=JSON.parse(raw);
     if(typeof d.hwm==='number'&&isFinite(d.hwm)){HIGH_WATER_MARK=d.hwm;document.getElementById('fund-input').value=d.hwm;document.getElementById('fund-label').textContent=HIGH_WATER_MARK>0?`高水位 ${HIGH_WATER_MARK} 萬`:'高水位 — 萬';}
+    if(typeof d.contributed==='number'&&isFinite(d.contributed)&&d.contributed>0){TOTAL_CONTRIBUTED=d.contributed;document.getElementById('contributed-input').value=d.contributed;}
     if(['above','flat','below'].includes(d.trendState))trendState=d.trendState;
     if(d.inExtremeBear!==undefined)inExtremeBear=d.inExtremeBear;
     if(d.taiex)document.getElementById('taiex-input').value=d.taiex;
@@ -638,6 +655,7 @@ function lsLoad(){
     if(d.rate&&!S.rate)  setBtn('rate',d.rate);
     if(d.vixVal)S.vixVal=d.vixVal;
     tryRender();
+    renderPnL();
   }catch(e){}
 }
 function setBtn(grp,val){
@@ -788,6 +806,11 @@ function onFundChange(){
   HIGH_WATER_MARK=isNaN(v)||v<=0?0:v;
   updateFundStatus();
   if(S.trend&&S.vix&&S.rate)render();lsSaveDebounced();
+}
+function onContributedChange(){
+  const v=parseFloat(document.getElementById('contributed-input').value);
+  TOTAL_CONTRIBUTED=isNaN(v)||v<=0?0:v;
+  checkContributed();renderPnL();lsSaveDebounced();
 }
 
 function render(){
@@ -1039,6 +1062,19 @@ function updateHWM(val){
   document.getElementById('hwm-bar').style.display='none';
   if(S.trend&&S.vix&&S.rate)render();lsSaveDebounced();
 }
+function checkContributed(){
+  const cost=r2(REBAL_KEYS.reduce((s,k)=>s+getHoldingCost(k),0));
+  const bar=document.getElementById('contributed-bar');if(!bar)return;
+  if(TOTAL_CONTRIBUTED<=0&&cost>0){
+    bar.style.display='flex';
+    bar.innerHTML='<i class="ti ti-info-circle" style="color:#378ADD"></i> 尚未設定總投入資金 <button class="hwm-update-btn" onclick="updateContributed('+fAmt(cost)+')">設為持倉成本 '+fAmt(cost)+' 萬</button>';
+  }else{bar.style.display='none';}
+}
+function updateContributed(val){
+  TOTAL_CONTRIBUTED=val;document.getElementById('contributed-input').value=val;
+  document.getElementById('contributed-bar').style.display='none';
+  renderPnL();lsSaveDebounced();
+}
 
 function updateFundStatus(){
   const nav=getCurrentNAV();
@@ -1092,6 +1128,32 @@ function renderRebalTable(){
     ddEl.style.display='flex';
   }else if(ddEl){ddEl.style.display='none';}
   checkHWM();
+  checkContributed();
+  renderPnL();
+}
+function renderPnL(){
+  const el=document.getElementById('pnl-area');if(!el)return;
+  const nav=getCurrentNAV();
+  if(nav<=0||TOTAL_CONTRIBUTED<=0){el.style.display='none';return;}
+  let estSellCost=0;
+  REBAL_KEYS.forEach(k=>{if(k==='cash')return;holdings[k].forEach(r=>{
+    const p=parseFloat(r.curPrice),sh=parseFloat(r.shares),code=r.code||'';
+    if(isNaN(p)||isNaN(sh)||p<=0||sh<=0)return;
+    const mv=p*sh;
+    estSellCost+=Math.round(mv*0.001425)+Math.round(mv*(code.startsWith('00')?0.001:0.003));
+  });});
+  const cost=REBAL_KEYS.reduce((s,k)=>s+getHoldingCost(k),0);
+  const totalPnLNTD=Math.round((nav-TOTAL_CONTRIBUTED)*10000);
+  const unrealizedNTD=Math.round((nav-cost)*10000)-estSellCost;
+  const realizedNTD=totalPnLNTD-unrealizedNTD;
+  const returnPct=+(totalPnLNTD/(TOTAL_CONTRIBUTED*10000)*100).toFixed(2);
+  function pnlClass(v){return v>0?'pnl-positive':v<0?'pnl-negative':'pnl-zero';}
+  function fNTD(v){return (v>0?'+':'')+v.toLocaleString();}
+  el.innerHTML=`<div class="pnl-row"><span>總損益 (NAV − 投入)</span><span class="${pnlClass(totalPnLNTD)}">${fNTD(totalPnLNTD)} 元 (${returnPct>0?'+':''}${returnPct}%)</span></div>`+
+    `<div class="pnl-row"><span>未實現損益 (扣預估賣出費用)</span><span class="${pnlClass(unrealizedNTD)}">${fNTD(unrealizedNTD)} 元</span></div>`+
+    `<div class="pnl-row"><span>已實現損益 (總損益 − 未實現)</span><span class="${pnlClass(realizedNTD)}">${fNTD(realizedNTD)} 元</span></div>`+
+    `<div class="pnl-row" style="font-size:11px;color:var(--color-text-tertiary)"><span>預估賣出費用 (手續費0.1425% + 稅)</span><span>${estSellCost.toLocaleString()} 元</span></div>`;
+  el.style.display='block';
 }
 
 function getBuyMarketScore(regime){
@@ -1238,14 +1300,14 @@ function calcBuyScore(){
 }
 
 function exportJSON(){
-  const data={version:'v10',exportDate:new Date().toISOString(),
+  const data={version:'v11',exportDate:new Date().toISOString(),
     params:{trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,
       taiex:document.getElementById('taiex-input').value,
       ma60:document.getElementById('ma60-input').value,
       vixInput:document.getElementById('vix-input').value,
       rateNow:document.getElementById('rate-now').value,
       ratePrev:document.getElementById('rate-prev').value},
-    hwm:HIGH_WATER_MARK,inExtremeBear:inExtremeBear,trendState:trendState,
+    hwm:HIGH_WATER_MARK,contributed:TOTAL_CONTRIBUTED,inExtremeBear:inExtremeBear,trendState:trendState,
     holdings:JSON.parse(JSON.stringify(holdings))};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
@@ -1266,6 +1328,7 @@ function importJSON(input){
       S.trend=null;S.vix=null;S.rate=null;S.vixVal=null;trendState=null;
       document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate'));
       if(typeof data.hwm==='number'&&isFinite(data.hwm)&&data.hwm>0){HIGH_WATER_MARK=data.hwm;document.getElementById('fund-input').value=data.hwm;document.getElementById('fund-label').textContent=getHwmLabel();}
+      if(typeof data.contributed==='number'&&isFinite(data.contributed)&&data.contributed>0){TOTAL_CONTRIBUTED=data.contributed;document.getElementById('contributed-input').value=data.contributed;}
       if(['above','flat','below'].includes(data.trendState))trendState=data.trendState;
       if(typeof data.inExtremeBear==='boolean')inExtremeBear=data.inExtremeBear;
       const p=data.params;
@@ -1289,6 +1352,7 @@ function importJSON(input){
       REBAL_KEYS.forEach(k=>{const panel=document.getElementById('panel-'+k);if(panel){delete panel.dataset.built;panel.classList.remove('open');}});
       openPanel=null;
       tryRender();
+      renderPnL();
       showIOMsg('\u2705 \u5df2\u532f\u5165 '+file.name);
     }catch(err){showIOMsg('\u274c \u532f\u5165\u5931\u6557\uff1a'+err.message);}
   };
