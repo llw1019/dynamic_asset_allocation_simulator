@@ -469,6 +469,7 @@ const CONFIG={
   }
 };
 const fPct=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Number(v).toFixed(1):'—';
+const fPct2=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Number(v).toFixed(2):'—';
 const fNTD10k=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?(Number(v)/10000).toFixed(2):'0.00';
 const fNTD=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Math.round(Number(v)).toLocaleString():'0';
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
@@ -667,12 +668,8 @@ function setBtn(grp,val){
 
 // Regime
 function getRegime(){
-  const{trend,vix}=S,v=S.vixVal;
-  if(v!==null){
-    if(!inExtremeBear&&v>CONFIG.vix.extremeEnter)inExtremeBear=true;
-    else if(inExtremeBear&&v<CONFIG.vix.extremeExit)inExtremeBear=false;
-  }
   if(inExtremeBear)return'extremeBear';
+  const{trend,vix}=S;
   if(trend==='below'||vix==='high')return'bear';
   if(trend==='above'&&vix==='low')return'bull';
   return'range';
@@ -731,12 +728,18 @@ function tryRender(){
 function pick(el,grp,val,cls){
   document.querySelectorAll(`[data-grp="${grp}"]`).forEach(b=>b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate'));
   el.classList.add(cls);S[grp]=val;
-  if(grp==='trend')trendState=val;
+  if(grp==='trend'){
+    trendState=val;indexPct=null;
+    document.getElementById('taiex-input').value='';document.getElementById('ma60-input').value='';document.getElementById('trend-badge').style.display='none';
+  }
   if(grp==='vix'){
     S.vixVal=null;document.getElementById('vix-input').value='';document.getElementById('vix-badge').style.display='none';
     if(val==='low'&&inExtremeBear){inExtremeBear=false;document.getElementById('hysteresis-status').style.display='none';}
     else if((val==='medium'||val==='high')&&inExtremeBear){document.getElementById('hysteresis-status').style.display='block';document.getElementById('hysteresis-status').innerHTML=`<span class="hysteresis-tag">極端熊市鎖定中，需輸入 VIX &lt; ${CONFIG.vix.extremeExit} 才解除</span>`;}
     else document.getElementById('hysteresis-status').style.display='none';
+  }
+  if(grp==='rate'){
+    document.getElementById('rate-now').value='';document.getElementById('rate-prev').value='';document.getElementById('rate-badge').style.display='none';
   }
   tryRender();
 }
@@ -766,16 +769,28 @@ function onIndexInput(){
   badge.textContent=label;badge.className=`num-badge ${cls}`;badge.style.display='inline-block';
   autoSelect('trend',val);
 }
+const debouncedExitExtreme=debounce(function(){
+  if(!inExtremeBear)return;
+  const v=S.vixVal;
+  if(v!==null&&v>0&&v<CONFIG.vix.extremeExit){
+    inExtremeBear=false;
+    document.getElementById('hysteresis-status').style.display='none';
+    if(S.trend&&S.vix&&S.rate)render();
+    lsSaveDebounced();
+  }
+},2000);
 function onVixInput(){
   const v=parseFloat(document.getElementById('vix-input').value);
   const badge=document.getElementById('vix-badge');
   const hsEl=document.getElementById('hysteresis-status');
-  if(isNaN(v)||v<=0){badge.style.display='none';hsEl.style.display='none';S.vixVal=null;lsSaveDebounced();return;}
+  if(isNaN(v)||v<=0){badge.style.display='none';S.vixVal=null;lsSaveDebounced();return;}
   S.vixVal=v;
-  if(!inExtremeBear&&v>CONFIG.vix.extremeEnter)inExtremeBear=true;
-  else if(inExtremeBear&&v<CONFIG.vix.extremeExit)inExtremeBear=false;
-  if(inExtremeBear){hsEl.style.display='block';hsEl.innerHTML=`<span class="hysteresis-tag">極端熊市鎖定中，需輸入 VIX &lt; ${CONFIG.vix.extremeExit} 才解除</span>`;}
-  else hsEl.style.display='none';
+  if(!inExtremeBear&&v>CONFIG.vix.extremeEnter){
+    inExtremeBear=true;
+    hsEl.style.display='block';hsEl.innerHTML=`<span class="hysteresis-tag">極端熊市鎖定中，需輸入 VIX &lt; ${CONFIG.vix.extremeExit} 才解除</span>`;
+  }else if(inExtremeBear&&v<CONFIG.vix.extremeExit){
+    debouncedExitExtreme();
+  }
   let val,label,cls;
   if(v>CONFIG.vix.extremeEnter){val='high';label=`極端恐慌 ${fPct(v)} ⚠`;cls='nb-extreme';}
   else if(v>=CONFIG.vix.high){val='high';label=`高恐慌 ${fPct(v)}`;cls='nb-high';}
@@ -791,9 +806,9 @@ function onRateInput(){
   if(isNaN(now)||isNaN(prev)){badge.style.display='none';return;}
   const diff=now-prev;
   let val,label,cls;
-  if(diff>CONFIG.rate.threshold){val='rising';label=`升息 +${Number(diff).toFixed(2)}%`;cls='nb-rising';}
-  else if(diff<-CONFIG.rate.threshold){val='falling';label=`降息 ${Number(diff).toFixed(2)}%`;cls='nb-falling';}
-  else{val='stable';label=`穩定 ${diff>=0?'+':''}${Number(diff).toFixed(2)}%`;cls='nb-stable';}
+  if(diff>CONFIG.rate.threshold){val='rising';label=`升息 +${fPct2(diff)}%`;cls='nb-rising';}
+  else if(diff<-CONFIG.rate.threshold){val='falling';label=`降息 ${fPct2(diff)}%`;cls='nb-falling';}
+  else{val='stable';label=`穩定 ${diff>=0?'+':''}${fPct2(diff)}%`;cls='nb-stable';}
   badge.textContent=label;badge.className=`num-badge ${cls}`;badge.style.display='inline-block';
   autoSelect('rate',val);
 }
@@ -1144,10 +1159,10 @@ function renderPnL(){
   const totalPnL=Math.round(nav-TOTAL_CONTRIBUTED-estSellCost);
   const unrealized=Math.round(nav-cost-estSellCost);
   const realized=totalPnL-unrealized;
-  const returnPct=+(totalPnL/TOTAL_CONTRIBUTED*100).toFixed(2);
+  const returnPct=fPct2(totalPnL/TOTAL_CONTRIBUTED*100);
   function pnlClass(v){return v>0?'pnl-positive':v<0?'pnl-negative':'pnl-zero';}
   function fNTD(v){return (v>0?'+':'')+v.toLocaleString();}
-  el.innerHTML=`<div class="pnl-row"><span>總損益 (淨值 − 投入 − 費用)</span><span class="${pnlClass(totalPnL)}">${fNTD(totalPnL)} 元 (${returnPct>0?'+':''}${returnPct}%)</span></div>`+
+  el.innerHTML=`<div class="pnl-row"><span>總損益 (淨值 − 投入 − 費用)</span><span class="${pnlClass(totalPnL)}">${fNTD(totalPnL)} 元 (${totalPnL>0?'+':''}${returnPct}%)</span></div>`+
     `<div class="pnl-row"><span>未實現損益 (扣預估賣出費用)</span><span class="${pnlClass(unrealized)}">${fNTD(unrealized)} 元</span></div>`+
     `<div class="pnl-row"><span>已實現損益 (推算：總損益 − 未實現)</span><span class="${pnlClass(realized)}">${fNTD(realized)} 元</span></div>`+
     `<div class="pnl-row" style="font-size:11px;color:var(--color-text-tertiary)"><span>預估賣出費用 (手續費0.1425% + 稅)</span><span>${estSellCost.toLocaleString()} 元</span></div>`;
