@@ -214,6 +214,53 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 @media(max-width:500px){.buy-form{grid-template-columns:1fr}}
 @media(max-width:500px){.rebalance-table .col-tgt-pct,.rebalance-table .col-hold-pct{display:none}}
 @media(max-width:400px){.bar-row{flex-wrap:wrap}.bar-track{flex:1 0 150px}.bar-amt{margin-left:auto}}
+/* === Sell Advisor === */
+.sell-adv-select{width:100%;font-size:13px;padding:8px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans);margin-bottom:14px}
+.sell-step{margin-bottom:16px}
+.sell-step-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.sell-step-num{width:24px;height:24px;border-radius:50%;background:var(--color-background-secondary);border:0.5px solid var(--color-border-primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--color-text-secondary);flex-shrink:0}
+.sell-step-num.done{background:var(--color-success-bg);border-color:var(--color-success-text);color:var(--color-success-text)}
+.sell-step-title{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.sell-step-star{color:#D85A30;font-size:12px}
+.sell-step-hint{font-size:11px;color:var(--color-text-tertiary);margin-bottom:8px;padding-left:32px;line-height:1.6}
+.sell-opt-group{display:flex;flex-direction:column;gap:5px;padding-left:32px}
+.sell-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);cursor:pointer;transition:border-color .15s,background .15s;font-size:13px;color:var(--color-text-secondary)}
+.sell-opt:hover{border-color:var(--color-text-tertiary)}
+.sell-opt-icon{font-size:14px;flex-shrink:0}
+.sell-icon-green{color:var(--color-success-text)}
+.sell-icon-yellow{color:var(--color-warning-text)}
+.sell-icon-orange{color:#D85A30}
+.sell-icon-red{color:var(--color-danger-text)}
+.sell-opt.sel-green{background:var(--color-success-bg);border-color:var(--color-success-text);color:var(--color-success-text)}
+.sell-opt.sel-yellow{background:var(--color-warning-bg);border-color:#BA7517;color:var(--color-warning-text)}
+.sell-opt.sel-orange{background:#FEF0E5;border-color:#D85A30;color:#9E3800}
+.sell-opt.sel-red{background:var(--color-danger-bg);border-color:#E24B4A;color:var(--color-danger-text)}
+@media(prefers-color-scheme:dark){
+  .sell-opt.sel-orange{background:#2e1a08;color:#f0a060}
+}
+.sell-auto-box{padding:10px 14px;border-radius:var(--border-radius-md);font-size:12px;line-height:1.6;margin-left:32px}
+.sell-auto-box i{font-size:13px;margin-right:4px}
+.sell-auto-green{background:var(--color-success-bg);color:var(--color-success-text);border:0.5px solid var(--color-success-text)}
+.sell-auto-yellow{background:var(--color-warning-bg);color:var(--color-warning-text);border:0.5px solid #BA7517}
+.sell-auto-red{background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid #E24B4A}
+.sell-auto-neutral{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-primary)}
+.sell-pnl-display{font-size:13px;font-weight:600;margin-left:32px;margin-top:4px;margin-bottom:4px}
+.sell-result{border-radius:var(--border-radius-lg);padding:16px 18px;margin-top:16px}
+.sell-result-green{background:var(--color-success-bg);border:0.5px solid var(--color-success-text)}
+.sell-result-yellow{background:var(--color-warning-bg);border:0.5px solid #BA7517}
+.sell-result-red{background:var(--color-danger-bg);border:0.5px solid #E24B4A}
+.sell-result-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.sell-result-title i{font-size:15px;margin-right:5px}
+.sell-result-green .sell-result-title{color:var(--color-success-text)}
+.sell-result-yellow .sell-result-title{color:var(--color-warning-text)}
+.sell-result-red .sell-result-title{color:var(--color-danger-text)}
+.sell-result-body{font-size:12px;line-height:1.7}
+.sell-result-green .sell-result-body{color:var(--color-success-text)}
+.sell-result-yellow .sell-result-body{color:var(--color-warning-text)}
+.sell-result-red .sell-result-body{color:var(--color-danger-text)}
+.sell-reminder{margin-top:16px;padding:12px 14px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);border-left:3px solid var(--color-border-primary);font-size:11px;line-height:1.8;color:var(--color-text-secondary)}
+.sell-reminder strong{font-weight:500;color:var(--color-text-primary)}
+.sell-divider{border:none;border-top:0.5px solid var(--color-border-secondary);margin:12px 0}
 </style>
 </head>
 <body>
@@ -416,6 +463,121 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
           <div class="buy-result-action" id="buy-score-action">請先完成 DAA 與標的資料</div>
           <div class="buy-notes" id="buy-score-notes"></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="section-label"><i class="ti ti-arrow-down-right-circle"></i>Alpha 持股賣出決策助手（長線版）</p>
+  <div class="card-base" style="margin-bottom:12px" id="sell-advisor-card">
+    <p class="chart-title"><i class="ti ti-target"></i>請選擇要評估的標的</p>
+    <select class="sell-adv-select" id="sell-adv-select" onchange="onSellSelectChange()">
+      <option value="" disabled selected>— 請先在 Alpha 部位輸入持股 —</option>
+    </select>
+    <div id="sell-steps-area" style="display:none">
+      <!-- Step 1 -->
+      <div class="sell-step" id="sell-step-1">
+        <div class="sell-step-header">
+          <span class="sell-step-num" id="sell-sn-1">1</span>
+          <span class="sell-step-title">買入的核心理由，現在還有效嗎？ <span class="sell-step-star">★ 最重要</span></span>
+        </div>
+        <p class="sell-step-hint">當初你買這檔的主要理由（題材、營收成長、籌碼、外資買超、產業趨勢等），現在還成立嗎？</p>
+        <div class="sell-opt-group" id="sell-s1-opts">
+          <div class="sell-opt" data-step="1" data-val="valid" onclick="pickSellOpt(this)">
+            <i class="ti ti-circle-check sell-opt-icon sell-icon-green"></i> 有效（主要理由仍成立）
+          </div>
+          <div class="sell-opt" data-step="1" data-val="weak" onclick="pickSellOpt(this)">
+            <i class="ti ti-alert-triangle sell-opt-icon sell-icon-yellow"></i> 部分弱化
+          </div>
+          <div class="sell-opt" data-step="1" data-val="invalid" onclick="pickSellOpt(this)">
+            <i class="ti ti-circle-x sell-opt-icon sell-icon-red"></i> 已失效（核心邏輯已改變）
+          </div>
+        </div>
+      </div>
+      <hr class="sell-divider"/>
+      <!-- Step 2 -->
+      <div class="sell-step" id="sell-step-2">
+        <div class="sell-step-header">
+          <span class="sell-step-num" id="sell-sn-2">2</span>
+          <span class="sell-step-title">當初買入的位置風險</span>
+        </div>
+        <div class="sell-opt-group" id="sell-s2-opts">
+          <div class="sell-opt" data-step="2" data-val="safe" onclick="pickSellOpt(this)">
+            <i class="ti ti-circle-check sell-opt-icon sell-icon-green"></i> 安全買入（接近或低於 60MA）
+          </div>
+          <div class="sell-opt" data-step="2" data-val="neutral" onclick="pickSellOpt(this)">
+            <i class="ti ti-circle sell-opt-icon sell-icon-yellow"></i> 中性買入
+          </div>
+          <div class="sell-opt" data-step="2" data-val="chase" onclick="pickSellOpt(this)">
+            <i class="ti ti-alert-circle sell-opt-icon sell-icon-red"></i> 追高買入（大幅高於短期均線）
+          </div>
+        </div>
+      </div>
+      <hr class="sell-divider"/>
+      <!-- Step 3 -->
+      <div class="sell-step" id="sell-step-3">
+        <div class="sell-step-header">
+          <span class="sell-step-num" id="sell-sn-3">3</span>
+          <span class="sell-step-title">目前技術結構如何？</span>
+        </div>
+        <p class="sell-step-hint">請參考最新 K 線圖判斷（建議收盤後使用）</p>
+        <div class="sell-opt-group" id="sell-s3-opts">
+          <div class="sell-opt" data-step="3" data-val="strong" onclick="pickSellOpt(this)">
+            <i class="ti ti-circle-check sell-opt-icon sell-icon-green"></i> 整體強勢：股價仍在 60MA 上方，趨勢大致健康
+          </div>
+          <div class="sell-opt" data-step="3" data-val="shaky" onclick="pickSellOpt(this)">
+            <i class="ti ti-circle sell-opt-icon sell-icon-yellow"></i> 中期震盪：已跌破 20MA，但仍在 60MA 上方（可能只是洗盤）
+          </div>
+          <div class="sell-opt" data-step="3" data-val="weak" onclick="pickSellOpt(this)">
+            <i class="ti ti-alert-triangle sell-opt-icon sell-icon-orange"></i> 明顯轉弱：跌破 60MA，或 20MA 明顯下彎且量能增加
+          </div>
+          <div class="sell-opt" data-step="3" data-val="reversed" onclick="pickSellOpt(this)">
+            <i class="ti ti-alert-circle sell-opt-icon sell-icon-red"></i> 趨勢反轉：60MA 下彎，長期趨勢已變差
+          </div>
+        </div>
+      </div>
+      <hr class="sell-divider"/>
+      <!-- Step 4 (auto) -->
+      <div class="sell-step" id="sell-step-4">
+        <div class="sell-step-header">
+          <span class="sell-step-num done" id="sell-sn-4">4</span>
+          <span class="sell-step-title">Alpha 目標額度占用風險（系統自動計算）</span>
+        </div>
+        <div class="sell-auto-box sell-auto-neutral" id="sell-s4-box">
+          請先選擇評估標的
+        </div>
+      </div>
+      <hr class="sell-divider"/>
+      <!-- Step 5 -->
+      <div class="sell-step" id="sell-step-5">
+        <div class="sell-step-header">
+          <span class="sell-step-num" id="sell-sn-5">5</span>
+          <span class="sell-step-title">停損與風險控制</span>
+        </div>
+        <p class="sell-step-hint">請選擇這檔股票類型：</p>
+        <div class="sell-opt-group" id="sell-s5-opts">
+          <div class="sell-opt" data-step="5" data-val="etf" onclick="pickSellOpt(this)">
+            <i class="ti ti-chart-bar sell-opt-icon sell-icon-green"></i> 大型 ETF → 建議停損 -11%
+          </div>
+          <div class="sell-opt" data-step="5" data-val="tech" onclick="pickSellOpt(this)">
+            <i class="ti ti-cpu sell-opt-icon sell-icon-yellow"></i> 一般電子 / AI 股 → 建議停損 -9%
+          </div>
+          <div class="sell-opt" data-step="5" data-val="bio" onclick="pickSellOpt(this)">
+            <i class="ti ti-flask sell-opt-icon sell-icon-red"></i> 生技 / 高波動題材股 → 建議停損 -7%
+          </div>
+        </div>
+        <div class="sell-pnl-display" id="sell-pnl-display" style="margin-top:8px">
+          目前損益：—，請先在持股面板輸入均價與現價
+        </div>
+        <div class="sell-auto-box sell-auto-neutral" id="sell-s5-box" style="display:none"></div>
+      </div>
+      <!-- Final Recommendation -->
+      <div id="sell-result-area"></div>
+      <!-- Fixed Reminder -->
+      <div class="sell-reminder">
+        <strong><i class="ti ti-bulb" style="font-size:12px"></i> 固定提醒：</strong><br/>
+        ① 如果你只是因為短期下跌「心情不好」想賣，但 Step 1 選擇「有效」且 Step 3 不是「趨勢反轉」，建議先等 1–2 天再重新評估。<br/>
+        ② 除非 Thesis 已失效或觸及停損，否則優先採取分批賣出。<br/>
+        ③ 保護本金永遠優先於追求最高賣出價格。
       </div>
     </div>
   </div>
@@ -966,7 +1128,7 @@ function rebuildRows(k){
       const lblC=document.createElement('label');lblC.textContent='代號';
       const inpC=document.createElement('input');
       inpC.className='inp-code';inpC.type='text';inpC.placeholder='如 006208';inpC.maxLength=20;inpC.value=r.code||'';
-      inpC.addEventListener('input',function(){holdings[k][i].code=this.value;lsSaveDebounced();});
+      inpC.addEventListener('input',function(){holdings[k][i].code=this.value;if(k==='alpha')syncSellAdvisor(true);lsSaveDebounced();});
       const lblAvg=document.createElement('label');lblAvg.textContent='均價';
       const inpAvg=document.createElement('input');
       inpAvg.className='inp-avg';inpAvg.type='number';inpAvg.placeholder='元';inpAvg.min='0';inpAvg.step='0.01';inpAvg.value=r.avgPrice||'';
@@ -984,15 +1146,15 @@ function rebuildRows(k){
           badgeEl.style.display='';
         }else{badgeEl.textContent='';badgeEl.style.display='none';}
       }
-      inpAvg.addEventListener('input',function(){holdings[k][i].avgPrice=this.value;updateRowDisplay();updatePanelTotal(k);renderRebalTable();lsSaveDebounced();});
+      inpAvg.addEventListener('input',function(){holdings[k][i].avgPrice=this.value;updateRowDisplay();updatePanelTotal(k);renderRebalTable();if(k==='alpha')syncSellAdvisor(false);lsSaveDebounced();});
       const lblCur=document.createElement('label');lblCur.textContent='現價';
       const inpCur=document.createElement('input');
       inpCur.className='inp-cur';inpCur.type='number';inpCur.placeholder='元';inpCur.min='0';inpCur.step='0.01';inpCur.value=r.curPrice||'';
-      inpCur.addEventListener('input',function(){holdings[k][i].curPrice=this.value;updateRowDisplay();updatePanelTotal(k);renderRebalTable();lsSaveDebounced();});
+      inpCur.addEventListener('input',function(){holdings[k][i].curPrice=this.value;updateRowDisplay();updatePanelTotal(k);renderRebalTable();if(k==='alpha')syncSellAdvisor(false);lsSaveDebounced();});
       const lblSh=document.createElement('label');lblSh.textContent='股';
       const inpSh=document.createElement('input');
       inpSh.className='inp-shares';inpSh.type='number';inpSh.placeholder='股數';inpSh.min='0';inpSh.step='1';inpSh.value=r.shares||'';
-      inpSh.addEventListener('input',function(){holdings[k][i].shares=this.value;updateRowDisplay();updatePanelTotal(k);renderRebalTable();lsSaveDebounced();});
+      inpSh.addEventListener('input',function(){holdings[k][i].shares=this.value;updateRowDisplay();updatePanelTotal(k);renderRebalTable();if(k==='alpha')syncSellAdvisor(false);lsSaveDebounced();});
       const del=document.createElement('button');del.className='holding-del-btn';del.textContent='×';
       del.addEventListener('click',()=>delHolding(k,i));
       row.append(lblC,inpC,lblAvg,inpAvg,lblCur,inpCur,lblSh,inpSh,mvEl,badgeEl,del);
@@ -1024,6 +1186,10 @@ function addHolding(k){
   buildPanel(k);lsSaveDebounced();
 }
 function delHolding(k,i){
+  if(k==='alpha'&&typeof sellState!=='undefined'&&sellState.idx!==null){
+    if(i===sellState.idx){sellState.idx=null;resetSellChoices();}
+    else if(i<sellState.idx){sellState.idx--;}
+  }
   if(holdings[k].length===1)holdings[k][0]=k==='cash'?{amt:''}:{code:'',avgPrice:'',curPrice:'',shares:''};
   else holdings[k].splice(i,1);
   const panel=document.getElementById('panel-'+k);
@@ -1374,9 +1540,298 @@ function resetAll(){
   location.reload();
 }
 
+// === Sell Advisor ===
+const sellState={idx:null,s1:null,s2:null,s3:null,s5:null};
+function getAlphaHoldings(){
+  return Array.isArray(holdings.alpha)?holdings.alpha:[];
+}
+function resetSellChoices(){
+  sellState.s1=null;sellState.s2=null;sellState.s3=null;sellState.s5=null;
+  [1,2,3,5].forEach(n=>{
+    document.querySelectorAll('#sell-s'+n+'-opts .sell-opt').forEach(o=>o.className='sell-opt');
+    const sn=document.getElementById('sell-sn-'+n);if(sn)sn.className='sell-step-num';
+  });
+  const box=document.getElementById('sell-s5-box');if(box)box.style.display='none';
+  const area=document.getElementById('sell-result-area');if(area)area.innerHTML='';
+}
+function getSelectedSellHolding(){
+  const alpha=getAlphaHoldings();
+  if(sellState.idx===null||sellState.idx<0||sellState.idx>=alpha.length)return null;
+  return alpha[sellState.idx]||null;
+}
+function getSellRiskMetrics(r){
+  r=r||getSelectedSellHolding();if(!r)return null;
+  const c=parseFloat(r.curPrice),sh=parseFloat(r.shares);
+  if(isNaN(c)||isNaN(sh)||c<=0||sh<=0)return null;
+  const mv=c*sh;
+  const alphaTotal=getHoldingTotal('alpha');
+  const capitalBase=getCapitalBase();
+  const target=currentTarget||BASE;
+  const alphaTargetAmt=capitalBase*target.alpha/100;
+  return{
+    marketValue:mv,
+    alphaPct:alphaTotal>0?mv/alphaTotal*100:null,
+    budgetPct:alphaTargetAmt>0?mv/alphaTargetAmt*100:(mv>0?Infinity:null),
+    overallPct:capitalBase>0?mv/capitalBase*100:null,
+    alphaTargetPct:target.alpha,
+    alphaTargetAmt
+  };
+}
+function refreshSellAdvisorDropdown(){
+  const sel=document.getElementById('sell-adv-select');if(!sel)return;
+  const alpha=getAlphaHoldings();
+  const prevVal=sellState.idx!==null?String(sellState.idx):sel.value;
+  sel.innerHTML='<option value="" disabled selected>— 請先在 Alpha 部位輸入持股 —</option>';
+  let unnamed=0;
+  alpha.forEach((r,i)=>{
+    const opt=document.createElement('option');opt.value=String(i);
+    if(r.code&&r.code.trim()){
+      opt.textContent=r.code.trim();
+    }else{
+      unnamed++;
+      opt.textContent='未命名標的 '+unnamed;
+    }
+    sel.appendChild(opt);
+  });
+  if(alpha.length===0){
+    sellState.idx=null;
+    resetSellChoices();
+    const steps=document.getElementById('sell-steps-area');if(steps)steps.style.display='none';
+  }else if(prevVal!==''&&sel.querySelector('option[value="'+prevVal+'"]')){
+    sel.value=prevVal;
+    sellState.idx=parseInt(prevVal);
+  }else{
+    sellState.idx=null;
+    document.getElementById('sell-steps-area').style.display='none';
+  }
+}
+function updateSellAdvisorView(options){
+  options=options||{};
+  const sel=document.getElementById('sell-adv-select');
+  const steps=document.getElementById('sell-steps-area');
+  const alpha=getAlphaHoldings();
+  if(alpha.length===0||sellState.idx===null||sellState.idx<0||sellState.idx>=alpha.length){
+    sellState.idx=null;
+    resetSellChoices();
+    if(sel)sel.value='';
+    if(steps)steps.style.display='none';
+    return;
+  }
+  const selectedHolding=alpha[sellState.idx]||null;
+  if(sel&&sel.value!==String(sellState.idx))sel.value=String(sellState.idx);
+  if(steps)steps.style.display='';
+  updateSellStep4(selectedHolding);
+  updateSellStep5PnL(selectedHolding);
+  if(options.resetStopBox){
+    const box=document.getElementById('sell-s5-box');
+    if(box)box.style.display='none';
+  }else{
+    updateSellStep5Box(selectedHolding);
+  }
+  calcSellResult(selectedHolding);
+}
+function syncSellAdvisor(refreshOptions){
+  if(refreshOptions)refreshSellAdvisorDropdown();
+  updateSellAdvisorView();
+}
+function onSellSelectChange(){
+  const sel=document.getElementById('sell-adv-select');
+  const idx=parseInt(sel.value);
+  const alpha=getAlphaHoldings();
+  if(isNaN(idx)||idx<0||idx>=alpha.length)return;
+  sellState.idx=idx;
+  resetSellChoices();
+  updateSellAdvisorView({resetStopBox:true});
+}
+function pickSellOpt(el){
+  const step=parseInt(el.dataset.step);
+  const val=el.dataset.val;
+  const colorMap={
+    1:{valid:'sel-green',weak:'sel-yellow',invalid:'sel-red'},
+    2:{safe:'sel-green',neutral:'sel-yellow',chase:'sel-red'},
+    3:{strong:'sel-green',shaky:'sel-yellow',weak:'sel-orange',reversed:'sel-red'},
+    5:{etf:'sel-green',tech:'sel-yellow',bio:'sel-red'}
+  };
+  const group=document.getElementById('sell-s'+step+'-opts');
+  group.querySelectorAll('.sell-opt').forEach(o=>o.className='sell-opt');
+  el.classList.add(colorMap[step][val]);
+  const sn=document.getElementById('sell-sn-'+step);
+  if(sn)sn.className='sell-step-num done';
+  if(step===1)sellState.s1=val;
+  if(step===2)sellState.s2=val;
+  if(step===3)sellState.s3=val;
+  if(step===5)sellState.s5=val;
+  updateSellAdvisorView();
+}
+function updateSellStep4(r){
+  const box=document.getElementById('sell-s4-box');if(!box)return;
+  if(!r||sellState.idx===null){box.textContent='請先選擇評估標的';box.className='sell-auto-box sell-auto-neutral';return;}
+  const risk=getSellRiskMetrics(r);
+  if(!risk||risk.budgetPct===null){
+    box.textContent='該標的尚未輸入現價或股數，無法計算集中度';
+    box.className='sell-auto-box sell-auto-neutral';return;
+  }
+  let cls,label;
+  if(risk.budgetPct===Infinity||risk.budgetPct>50){cls='sell-auto-red';label='<i class="ti ti-alert-circle"></i> 高風險';}
+  else if(risk.budgetPct>=30){cls='sell-auto-yellow';label='<i class="ti ti-alert-triangle"></i> 中等風險';}
+  else{cls='sell-auto-green';label='<i class="ti ti-circle-check"></i> 低風險';}
+  box.className='sell-auto-box '+cls;
+  const budgetText=risk.budgetPct===Infinity?'Alpha 目標額度目前為 0':`占 Alpha 目標額度 <strong>${fPct(risk.budgetPct)}%</strong>`;
+  const alphaText=risk.alphaPct!==null?`Alpha 內占比 ${fPct(risk.alphaPct)}%`:'Alpha 內占比 —';
+  const overallText=risk.overallPct!==null?`整體資產占比 ${fPct(risk.overallPct)}%`:'整體資產占比 —';
+  box.innerHTML=`目前這檔${budgetText}　${label}<br><span style="font-size:11px">${alphaText}；${overallText}；Alpha 目標 ${fPct(risk.alphaTargetPct)}%</span>`
+    +(risk.budgetPct===Infinity||risk.budgetPct>50?' → 建議優先分批減碼':'');
+}
+function getSellStopLoss(type){
+  if(type==='etf')return-11;
+  if(type==='tech')return-9;
+  if(type==='bio')return-7;
+  return null;
+}
+function updateSellStep5PnL(r){
+  const el=document.getElementById('sell-pnl-display');if(!el)return;
+  if(!r||sellState.idx===null){el.textContent='目前損益：—，請先在持股面板輸入均價與現價';el.className='sell-pnl-display';return;}
+  const avg=parseFloat(r.avgPrice),cur=parseFloat(r.curPrice);
+  if(isNaN(avg)||isNaN(cur)||avg<=0){
+    el.textContent='目前損益：—，請先在持股面板輸入均價與現價';
+    el.className='sell-pnl-display';return;
+  }
+  const pnl=((cur-avg)/avg)*100;
+  const sign=pnl>=0?'+':'';
+  const colorCls=pnl>=0?'pnl-positive':'pnl-negative';
+  el.innerHTML=`目前損益：<span class="${colorCls}">${sign}${fPct(pnl)}%</span>`;
+  el.className='sell-pnl-display';
+}
+function updateSellStep5Box(r){
+  const box=document.getElementById('sell-s5-box');if(!box)return;
+  if(!sellState.s5||sellState.idx===null){box.style.display='none';return;}
+  const stopLine=getSellStopLoss(sellState.s5);
+  if(!r){box.style.display='none';return;}
+  const avg=parseFloat(r.avgPrice),cur=parseFloat(r.curPrice);
+  if(isNaN(avg)||isNaN(cur)||avg<=0){
+    box.style.display='block';
+    box.className='sell-auto-box sell-auto-neutral';
+    box.textContent='尚未輸入均價或現價，無法判斷是否觸及停損線 ('+stopLine+'%)';
+    return;
+  }
+  const pnl=((cur-avg)/avg)*100;
+  box.style.display='block';
+  if(pnl<=stopLine){
+    box.className='sell-auto-box sell-auto-red';
+    box.innerHTML='<i class="ti ti-alert-triangle"></i> 已觸及停損線！目前 <strong>'+fPct(pnl)+'%</strong>，建議停損 '+stopLine+'%';
+  }else if(pnl<0){
+    box.className='sell-auto-box sell-auto-yellow';
+    box.innerHTML='目前虧損 '+fPct(pnl)+'%，尚未觸及停損線 ('+stopLine+'%)，持續觀察';
+  }else{
+    box.className='sell-auto-box sell-auto-green';
+    box.innerHTML='目前獲利 +'+fPct(pnl)+'%，距停損線 ('+stopLine+'%) 尚有安全空間';
+  }
+}
+function calcSellResult(selectedHolding){
+  const area=document.getElementById('sell-result-area');if(!area)return;
+  // Step 4 is automatic; wait for all manual steps before showing final advice.
+  if(!sellState.s1||!sellState.s2||!sellState.s3||!sellState.s5){area.innerHTML='';return;}
+  const risk=getSellRiskMetrics(selectedHolding);
+  const alphaBudgetPct=risk?(risk.budgetPct===Infinity?100:risk.budgetPct||0):0;
+  const alphaInnerPct=risk&&risk.alphaPct!==null?risk.alphaPct:0;
+  const weights={
+    thesis:sellState.s1==='valid'?0:sellState.s1==='weak'?20:60,
+    entry:sellState.s2==='safe'?0:sellState.s2==='neutral'?5:10,
+    structure:{strong:0,shaky:8,weak:16,reversed:25}[sellState.s3]||0,
+    concentration:alphaBudgetPct>50?10:alphaBudgetPct>=30?5:0,
+    stop:0
+  };
+  let hitStopLoss=false;
+  let pnlVal=null;
+  if(selectedHolding&&sellState.s5){
+    const avg=parseFloat(selectedHolding.avgPrice),cur=parseFloat(selectedHolding.curPrice);
+    if(!isNaN(avg)&&!isNaN(cur)&&avg>0){
+      pnlVal=((cur-avg)/avg)*100;
+      const stopLine=getSellStopLoss(sellState.s5);
+      if(pnlVal<=stopLine){weights.stop=15;hitStopLoss=true;}
+      else if(pnlVal<-3)weights.stop=8;
+      else if(pnlVal<0)weights.stop=4;
+    }
+  }
+  const score=Object.values(weights).reduce((sum,v)=>sum+v,0);
+  // Determine recommendation
+  let level,title,body;
+  // Hard override: thesis invalid, stop-loss hit, or trend reversal -> RED
+  if(sellState.s1==='invalid'||hitStopLoss||sellState.s3==='reversed'){
+    level='red';
+    title='<i class="ti ti-alert-circle"></i> 建議：全賣或大幅減碼';
+    const reasons=[];
+    if(sellState.s1==='invalid')reasons.push('買入 Thesis 已失效');
+    if(hitStopLoss)reasons.push('已觸及個人停損線');
+    if(sellState.s3==='reversed')reasons.push('趨勢已反轉');
+    body='理由：'+reasons.join('、')+'。保護本金為第一優先。';
+  }
+  else if(alphaBudgetPct>50||sellState.s3==='weak'||(sellState.s2==='chase'&&pnlVal!==null&&pnlVal<0)){
+    level='yellow';
+    title='<i class="ti ti-alert-triangle"></i> 建議：分批減碼';
+    const reasons=[];
+    if(alphaBudgetPct>50)reasons.push('Alpha 目標額度占用過高');
+    if(sellState.s3==='weak')reasons.push('技術結構明顯轉弱');
+    if(sellState.s2==='chase'&&pnlVal!==null&&pnlVal<0)reasons.push('追高買入後出現虧損');
+    body='理由：'+reasons.join('、')+'。建議先賣出部分，回收本金並降低風險。';
+  }
+  // Thesis valid + structure acceptable -> GREEN, unless explicit yellow/red conditions above matched.
+  else if(sellState.s1==='valid'&&(sellState.s3==='strong'||sellState.s3==='shaky')&&score<25){
+    level='green';
+    title='<i class="ti ti-circle-check"></i> 建議：繼續長期持有';
+    body='理由：買入核心理由仍然有效，技術結構尚可，短期波動不影響長線布局。';
+  }
+  else if(score>=35){
+    level='red';
+    title='<i class="ti ti-alert-circle"></i> 建議：全賣或大幅減碼';
+    const reasons=[];
+    if(sellState.s1==='weak')reasons.push('核心理由部分弱化');
+    if(sellState.s3==='weak'||sellState.s3==='reversed')reasons.push('技術結構轉弱或反轉');
+    if(alphaBudgetPct>50)reasons.push('Alpha 目標額度占用過高');
+    if(pnlVal!==null&&pnlVal<-3)reasons.push('目前處於虧損狀態');
+    body='理由：'+(reasons.length?reasons.join('、'):'綜合風險偏高')+'。保護本金為第一優先。';
+  }
+  else if(score>=15){
+    level='yellow';
+    title='<i class="ti ti-alert-triangle"></i> 建議：分批減碼';
+    const reasons=[];
+    if(alphaBudgetPct>=30)reasons.push('Alpha 目標額度占用較高');
+    else if(alphaInnerPct>=50)reasons.push('Alpha 內部集中度較高');
+    if(sellState.s3==='shaky'||sellState.s3==='weak')reasons.push('技術結構輕微轉弱');
+    if(sellState.s2==='chase')reasons.push('追高買入後風險偏高');
+    if(pnlVal!==null&&pnlVal>15)reasons.push('獲利已高');
+    if(pnlVal!==null&&pnlVal<0)reasons.push('出現虧損');
+    if(sellState.s1==='weak')reasons.push('核心理由部分弱化');
+    body='理由：'+(reasons.length?reasons.join('、'):'部分條件出現警訊')+'。建議先賣出部分，回收本金並降低風險。';
+  }
+  else{
+    level='green';
+    title='<i class="ti ti-circle-check"></i> 建議：繼續長期持有';
+    body='理由：買入核心理由仍然有效，技術結構尚可，短期波動不影響長線布局。';
+  }
+  area.innerHTML=`<div class="sell-result sell-result-${level}">
+    <div class="sell-result-title">${title}</div>
+    <div class="sell-result-body">${body}</div>
+  </div>`;
+}
+
+// Hook: refresh dropdown whenever render() rebuilds bars (which rebuilds panels)
+const _origRender=render;
+render=function(){
+  _origRender();
+  syncSellAdvisor(true);
+};
+// Also refresh when holdings change via panel operations
+const _origRebuildRows=rebuildRows;
+rebuildRows=function(k){
+  _origRebuildRows(k);
+  if(k==='alpha')syncSellAdvisor(true);
+};
+
 initStaticTexts();
 lsLoad();
 onBuyTypeChange();
+refreshSellAdvisorDropdown();
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
