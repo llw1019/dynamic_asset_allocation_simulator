@@ -77,7 +77,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .opt-btn.active-rate{background:#EEEDFE;border-color:#7F77DD;color:#3C3489}
 .num-input-row{display:flex;flex-direction:column;gap:4px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--color-border-secondary)}
 .num-input-row label{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}
-.num-input-row input{width:100%;font-size:12px;padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans);box-sizing:border-box}
+.num-input-row input,.num-input-row select{width:100%;font-size:12px;padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans);box-sizing:border-box}
 .num-badge{font-size:11px;font-weight:500;padding:2px 7px;border-radius:4px;margin-top:4px;display:inline-block}
 .nb-low{background:#EAF3DE;color:#3B6D11}.nb-med{background:#FAEEDA;color:#854F0B}
 .nb-high{background:#FCEBEB;color:#A32D2D}.nb-extreme{background:#A32D2D;color:#fff}
@@ -181,6 +181,10 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .io-btn{font-size:12px;padding:6px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans);display:flex;align-items:center;gap:5px;transition:border-color .15s}
 .io-btn:hover{border-color:var(--color-text-secondary)}
 .io-file{display:none}
+.json-paste-panel{display:none;margin:-.6rem 0 1.2rem;padding:10px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary)}
+.json-paste-panel.open{display:block}
+.json-paste-panel textarea{width:100%;min-height:150px;resize:vertical;font-size:12px;line-height:1.5;padding:8px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-mono,Consolas,Menlo,monospace);box-sizing:border-box}
+.json-paste-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
 .drawdown-bar{margin-top:10px;padding:10px 14px;border-radius:var(--border-radius-md);font-size:12px;line-height:1.6;display:flex;align-items:center;gap:4px}
 .dd-ok{background:var(--color-background-secondary);color:var(--color-text-secondary)}
 .dd-warn{background:var(--color-warning-bg);color:var(--color-warning-text);border:0.5px solid #BA7517}
@@ -244,6 +248,10 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .sell-auto-yellow{background:var(--color-warning-bg);color:var(--color-warning-text);border:0.5px solid #BA7517}
 .sell-auto-red{background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid #E24B4A}
 .sell-auto-neutral{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-primary)}
+.sell-auto-title{font-size:12px;font-weight:600;margin-bottom:1px}
+.sell-auto-desc{font-size:12px}
+.sell-auto-action{font-size:11px;margin-top:2px;opacity:.85}
+.sell-auto-meta{font-size:11px;margin-top:3px;opacity:.75}
 .sell-pnl-display{font-size:13px;font-weight:600;margin-left:32px;margin-top:4px;margin-bottom:4px}
 .sell-result{border-radius:var(--border-radius-lg);padding:16px 18px;margin-top:16px}
 .sell-result-green{background:var(--color-success-bg);border:0.5px solid var(--color-success-text)}
@@ -284,14 +292,19 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
     <span id="trend-badge" class="num-badge" style="display:none"></span>
   </div>
   <div class="param-card">
-    <p class="param-title"><i class="ti ti-activity"></i>恐慌指數 VIX</p>
+    <p class="param-title"><i class="ti ti-activity"></i><span id="vix-title-text">恐慌指數 VIX</span></p>
     <div class="btn-group">
-      <button class="opt-btn" data-grp="vix" data-val="low"    onclick="pick(this,'vix','low','active-vix-low')">低恐慌（&lt; 20）</button>
-      <button class="opt-btn" data-grp="vix" data-val="medium" onclick="pick(this,'vix','medium','active-vix-med')">中恐慌（20–30）</button>
-      <button class="opt-btn" data-grp="vix" data-val="high"   onclick="pick(this,'vix','high','active-vix-high')">高恐慌（&gt; 30）</button>
+      <button class="opt-btn" data-grp="vix" data-val="low"    onclick="pick(this,'vix','low','active-vix-low')"><span id="vix-low-text">低恐慌（&lt; 20）</span></button>
+      <button class="opt-btn" data-grp="vix" data-val="medium" onclick="pick(this,'vix','medium','active-vix-med')"><span id="vix-medium-text">中恐慌（20–30）</span></button>
+      <button class="opt-btn" data-grp="vix" data-val="high"   onclick="pick(this,'vix','high','active-vix-high')"><span id="vix-high-text">高恐慌（&gt; 30）</span></button>
     </div>
     <div class="num-input-row">
-      <label>VIX 數值 (^VIX)</label>
+      <label>指標來源</label>
+      <select id="vix-source" onchange="onVixSourceChange()">
+        <option value="us">美股 VIX (^VIX)</option>
+        <option value="tw">台股 VIXTWN</option>
+      </select>
+      <label id="vix-input-label">VIX 數值 (^VIX)</label>
       <input type="number" id="vix-input" placeholder="—" min="5" max="90" step="0.1" oninput="onVixInput()"/>
     </div>
     <span id="vix-badge" class="num-badge" style="display:none"></span>
@@ -334,9 +347,17 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 <div class="io-bar">
   <button class="io-btn" onclick="exportJSON()"><i class="ti ti-download"></i>匯出設定</button>
   <button class="io-btn" onclick="document.getElementById('import-file').click()"><i class="ti ti-upload"></i>匯入設定</button>
+  <button class="io-btn" onclick="toggleJsonPastePanel()"><i class="ti ti-clipboard-text"></i>貼上 JSON 匯入</button>
   <button class="io-btn" onclick="resetAll()"><i class="ti ti-trash"></i>重置</button>
   <input type="file" id="import-file" class="io-file" accept=".json" onchange="importJSON(this)"/>
   <span id="io-msg" style="font-size:11px;color:var(--color-text-tertiary)"></span>
+</div>
+<div class="json-paste-panel" id="json-paste-panel">
+  <textarea id="json-paste-input" placeholder="請貼上從「匯出設定」取得的 JSON 內容"></textarea>
+  <div class="json-paste-actions">
+    <button class="io-btn" onclick="applyPastedJSON()"><i class="ti ti-check"></i>套用 JSON</button>
+    <button class="io-btn" onclick="toggleJsonPastePanel(false)"><i class="ti ti-x"></i>取消</button>
+  </div>
 </div>
 
 <div id="out" class="pending">
@@ -380,7 +401,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
   </p>
   <div class="rebal-freq-note">
     <i class="ti ti-calendar-event" style="font-size:13px"></i>
-    建議每季（3 個月）定期檢查一次再平衡，避免過度頻繁操作。極端市場（VIX &gt; <span id="txt-th-vix"></span>）時可縮短為每月檢查。
+    建議每季（3 個月）定期檢查一次再平衡，避免過度頻繁操作。高波動市場（<span id="txt-th-vix"></span>）時可縮短為每月檢查。
   </div>
   <div class="card-base" style="margin-bottom:12px">
     <table class="rebalance-table">
@@ -590,7 +611,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 </div>
 
 <script>
-const S={trend:null,vix:null,rate:null,vixVal:null};
+const S={trend:null,vix:null,rate:null,vixVal:null,vixSource:'us'};
 let HIGH_WATER_MARK=0,TOTAL_CONTRIBUTED=0,currentTarget=null,inExtremeBear=false,indexPct=null,trendState=null;
 
 const BASE={beta:30,global:20,defense:20,alpha:10,hedge:10,cash:10};
@@ -607,6 +628,7 @@ const COLORS={beta:'#378ADD',global:'#7F77DD',defense:'#1D9E75',alpha:'#D85A30',
 const FIXED_KEYS=['beta','global'];
 const CONFIG={
   vix:{medium:20,high:30,extremeEnter:35,extremeExit:25},
+  vixtwn:{medium:30,high:40,extremeEnter:45,extremeExit:40},
   trend:{threshold:2,bearEnter:-5,bearExit:3,bullEnter:3,bullExit:-2},
   rate:{threshold:0.25},
   stopLoss:-8,
@@ -635,6 +657,9 @@ const fPct2=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Number(v).toFixed(
 const fNTD10k=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?(Number(v)/10000).toFixed(2):'0.00';
 const fNTD=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Math.round(Number(v)).toLocaleString():'0';
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
+function getVixConfig(){return S.vixSource==='tw'?CONFIG.vixtwn:CONFIG.vix;}
+function getVixName(){return S.vixSource==='tw'?'VIXTWN':'VIX';}
+function getVixInputName(){return S.vixSource==='tw'?'VIXTWN':'^VIX';}
 const REGIME_META={
   bull: {label:'成長牛市 Risk-on', sub:'進攻模式，動態層擴張', bannerCls:'regime-bull',  dotColor:'#639922'},
   bear: {label:'緊縮熊市 Risk-off',sub:'防禦模式，收縮戰線',   bannerCls:'regime-bear',  dotColor:'#E24B4A'},
@@ -704,24 +729,31 @@ function getActionItems(regime,target,rate){
   return items;
 }
 function getBaseMemo(regime,target){
-  if(regime==='bull')return`市場動能強勁，VIX 低位且大盤創高。衛星加碼追蹤高貝塔機會，現金保留 ${target.cash}% 維持機動性。內核外核固定不動，不因牛市追加核心部位。`;
-  if(regime==='extremeBear')return`極端熊市啟動：VIX 已進入極端恐慌區，衛星 Alpha 歸零，現金 ${target.cash}%，Hedge ${target.hedge}%。`;
-  if(regime==='bear')return`啟動防禦機制，收縮戰線。衛星減碼至 ${target.alpha}%，防禦拉升至 ${target.defense}%。內核外核絕對不動，不因恐慌賣出長期核心資產。等待 VIX 回落至 ${CONFIG.vix.extremeExit} 以下再評估恢復動態層。`;
-  return'方向不明，維持均衡基準。重點是定期再平衡，確認各部位未偏離目標超過門檻。內核外核固定不動，衛星可小區間操作。';
+  const vixName=getVixName(),vixCfg=getVixConfig();
+  if(regime==='bull')return`市場動能強勁，${vixName} 低位且大盤創高。衛星加碼追蹤高貝塔機會，現金保留 ${target.cash}% 維持機動性。內核外核固定不動，不因牛市追加核心部位。`;
+  if(regime==='extremeBear')return`極端熊市啟動：${vixName} 已進入極端恐慌區，衛星 Alpha 歸零，現金 ${target.cash}%，Hedge ${target.hedge}%。`;
+  if(regime==='bear')return`啟動防禦機制，收縮戰線。衛星減碼至 ${target.alpha}%，防禦拉升至 ${target.defense}%。內核外核絕對不動，不因恐慌賣出長期核心資產。等待 ${vixName} 回落至 ${vixCfg.high} 以下再評估恢復動態層。`;
+  return'尚未同時滿足牛市或熊市條件，維持均衡基準。重點是定期再平衡，確認各部位未偏離目標超過門檻。內核外核固定不動，衛星可小區間操作。';
 }
 function getMemo(regime,target){
   const base=getBaseMemo(regime,target);
+  const vixName=getVixName(),vixCfg=getVixConfig();
   if(regime==='bear'||regime==='extremeBear'){
-    if(inExtremeBear)return base+`\n\n⚠ 極端恐慌警示：目前處於極端恐慌，現金僅供避險使用，勿加碼任何風險資產。等待 VIX 回落至 ${CONFIG.vix.extremeExit} 以下再議布局。`;
+    if(inExtremeBear)return base+`\n\n⚠ 極端恐慌警示：目前處於極端恐慌，現金僅供避險使用，勿加碼任何風險資產。等待 ${vixName} 回落至 ${vixCfg.extremeExit} 以下再議布局。`;
+    if(indexPct!==null&&indexPct>CONFIG.ma60.near)return base+`\n\n熊市提示：雖然指數仍在60MA上方 ${fPct(indexPct)}%，但波動風險偏高且趨勢尚未恢復牛市條件。維持防守配置，既有核心不動，Alpha 只依再平衡表小幅調整。`;
     return base+`\n\n提醒：Hedge 不是無條件避險。若是升息型熊市，長債可能與股票同跌，因此熊市 hedge ${target.hedge}%，不額外押注，主要靠降低 Alpha 與保留現金控制回撤。`;
   }
   if(indexPct===null)return base;
   const p=indexPct;
   if(regime==='bull'){
-    if(p>CONFIG.ma60.overheat)return base+`\n\n⚠ 現金部署提示：指數偏離60MA達 +${fPct(p)}%，風險報酬比偏差，現金暫緩動用。勿追高，等待指數回測均線或 VIX 升至 ${CONFIG.vix.medium} 以上再評估布局。`;
-    return base+`\n\n現金部署條件（目前距60MA ${p>=0?'+':''}${fPct(p)}%）：優先用於 ① 指數回測60MA附近、② VIX 升至 ${CONFIG.vix.medium} 以上、③ 恐慌性回撤後量縮止穩。持有現金是紀律，勿因 FOMO 追高。`;
+    if(p>CONFIG.ma60.overheat)return base+`\n\n⚠ 現金部署提示：指數偏離60MA達 +${fPct(p)}%，風險報酬比偏差，現金暫緩動用。勿追高，等待指數回測均線或 ${vixName} 升至 ${vixCfg.medium} 以上再評估布局。`;
+    if(p>CONFIG.ma60.warm)return base+`\n\n強勢偏熱：指數高於60MA +${fPct(p)}%，多頭仍健康，但新增資金以分批為主。Alpha 可依買入評分小量布局，避免一次補滿。`;
+    return base+`\n\n現金部署條件（目前距60MA ${p>=0?'+':''}${fPct(p)}%）：優先用於 ① 指數回測60MA附近、② ${vixName} 升至 ${vixCfg.medium} 以上、③ 恐慌性回撤後量縮止穩。持有現金是紀律，勿因 FOMO 追高。`;
   }
   if(regime==='range'){
+    if(p>CONFIG.ma60.overheat)return base+`\n\n⚠ 高波動強勢盤：指數高於60MA +${fPct(p)}%，但 ${vixName} 尚未低到可視為順風牛市。維持均衡配置，不追高新增 Alpha；若再平衡表顯示 Alpha 超配可分批調回，低配也不急著補滿。`;
+    if(p>CONFIG.ma60.warm)return base+`\n\n強勢震盪：指數高於60MA +${fPct(p)}%，趨勢偏強但風險報酬不便宜。維持 Range 配置，新增資金等待回測或評分明顯優勢。`;
+    if(p>CONFIG.ma60.near)return base+`\n\n均線上方震盪：指數高於60MA +${fPct(p)}%，尚未過熱。可依再平衡表微調，Alpha 新增仍以小量分批為主。`;
     if(Math.abs(p)<=CONFIG.ma60.near)return base+`\n\n均線提示：指數貼近60MA（偏離 ${p>=0?'+':''}${fPct(p)}%），現金分批布局的合理區間。留意60MA走勢，若均線走平或轉折下彎，降低進取心，優先維持均衡配置。`;
     if(p<-CONFIG.ma60.near)return base+`\n\n均線提示：指數在60MA以下 ${fPct(p)}%，趨勢確認前現金以觀望為主，以季再平衡為核心動作。`;
   }
@@ -737,6 +769,9 @@ function getCashDeployStatus(regime){
     return{label:'<i class="ti ti-circle-check" style="font-size:12px"></i> 現金可條件部署',cls:'mod-cash-ok'};
   }
   if(regime==='range'){
+    if(p>CONFIG.ma60.overheat)return{label:'<i class="ti ti-lock" style="font-size:12px"></i> 現金暫緩（過熱強勢）',cls:'mod-cash-locked'};
+    if(p>CONFIG.ma60.warm)return{label:'<i class="ti ti-alert-circle" style="font-size:12px"></i> 等回測再部署',cls:'mod-cash-wait'};
+    if(p>CONFIG.ma60.near)return{label:'<i class="ti ti-player-pause" style="font-size:12px"></i> 小量分批為主',cls:'mod-cash-wait'};
     if(Math.abs(p)<=CONFIG.ma60.near)return{label:'<i class="ti ti-circle-check" style="font-size:12px"></i> 現金可分批部署',cls:'mod-cash-ok'};
     if(p<-CONFIG.ma60.near)return{label:'<i class="ti ti-player-pause" style="font-size:12px"></i> 現金觀望為主',cls:'mod-cash-wait'};
   }
@@ -753,6 +788,10 @@ const RULES_BASE=[
 const REBAL_KEYS=Object.keys(BASE);
 const holdings={};
 REBAL_KEYS.forEach(k=>{holdings[k]=k==='cash'?[{amt:''}]:[{code:'',avgPrice:'',curPrice:'',shares:''}];});
+function getAlphaWarningStopLoss(r){
+  const code=String((r&&r.code)||'').trim();
+  return code.startsWith('00')?-10:CONFIG.stopLoss;
+}
 function getCurrentNAV(){
   return REBAL_KEYS.reduce((s,k)=>s+getHoldingTotal(k),0);
 }
@@ -769,18 +808,68 @@ function getContributedLabel(){
 
 // LocalStorage
 const LS_KEY='daa_sim_v11';
+function setHysteresisStatus(show){
+  const el=document.getElementById('hysteresis-status');if(!el)return;
+  if(!show){el.style.display='none';el.innerHTML='';return;}
+  el.style.display='block';
+  el.innerHTML=`<span class="hysteresis-tag">極端熊市鎖定中，需輸入 ${getVixName()} &lt; ${getVixConfig().extremeExit} 才解除</span>`;
+}
+function updateVixSourceUI(){
+  const cfg=getVixConfig(),name=getVixName();
+  const source=document.getElementById('vix-source');
+  if(source)source.value=S.vixSource;
+  const title=document.getElementById('vix-title-text');
+  if(title)title.textContent=`恐慌指數 ${name}`;
+  const low=document.getElementById('vix-low-text');
+  const medium=document.getElementById('vix-medium-text');
+  const high=document.getElementById('vix-high-text');
+  if(low)low.textContent=`低恐慌（< ${cfg.medium}）`;
+  if(medium)medium.textContent=`中恐慌（${cfg.medium}–${cfg.high}）`;
+  if(high)high.textContent=`高恐慌（> ${cfg.high}）`;
+  const label=document.getElementById('vix-input-label');
+  if(label)label.textContent=`${name} 數值 (${getVixInputName()})`;
+  const tVix=document.getElementById('txt-th-vix');
+  if(tVix)tVix.textContent=`${name} > ${cfg.high}`;
+  if(inExtremeBear)setHysteresisStatus(true);
+}
 function initStaticTexts(){
   const tAlpha=document.getElementById('txt-th-alpha');
   const tBeta=document.getElementById('txt-th-beta');
-  const tVix=document.getElementById('txt-th-vix');
   if(tAlpha) tAlpha.textContent=REBAL_THRESHOLD.alpha;
   if(tBeta) tBeta.textContent=REBAL_THRESHOLD.beta;
-  if(tVix) tVix.textContent=CONFIG.vix.high;
+  updateVixSourceUI();
+}
+function setOutputPending(){
+  const out=document.getElementById('out');
+  if(out)out.classList.add('pending');
+  currentTarget=null;
+  const trig=document.getElementById('regime-trigger');
+  const mod=document.getElementById('modifier-row');
+  const warn=document.getElementById('warn-area');
+  if(trig)trig.innerHTML='';
+  if(mod)mod.innerHTML='';
+  if(warn)warn.innerHTML='';
+  const name=document.getElementById('regime-name');
+  const sub=document.getElementById('regime-sub');
+  if(name)name.textContent='—';
+  if(sub)sub.textContent='請先填入所有參數';
+}
+function clearVixState(clearInput){
+  S.vix=null;
+  S.vixVal=null;
+  inExtremeBear=false;
+  const input=document.getElementById('vix-input');
+  const badge=document.getElementById('vix-badge');
+  if(clearInput&&input)input.value='';
+  if(badge){badge.textContent='';badge.style.display='none';}
+  document.querySelectorAll('[data-grp="vix"]').forEach(b=>b.classList.remove('active-vix-low','active-vix-med','active-vix-high'));
+  setHysteresisStatus(false);
+  setOutputPending();
 }
 function lsSave(){
   try{
     localStorage.setItem(LS_KEY,JSON.stringify({
-      trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,inExtremeBear,hwm:HIGH_WATER_MARK,contributed:TOTAL_CONTRIBUTED,trendState,
+      trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,vixSource:S.vixSource,inExtremeBear,hwm:HIGH_WATER_MARK,contributed:TOTAL_CONTRIBUTED,trendState,
       taiex:document.getElementById('taiex-input').value,
       ma60:document.getElementById('ma60-input').value,
       vixInput:document.getElementById('vix-input').value,
@@ -797,9 +886,11 @@ function lsLoad(){
     const d=JSON.parse(raw);
     if(typeof d.hwm==='number'&&isFinite(d.hwm)&&d.hwm>0){HIGH_WATER_MARK=d.hwm;document.getElementById('fund-input').value=d.hwm;document.getElementById('fund-label').textContent=getHwmLabel();}
     if(typeof d.contributed==='number'&&isFinite(d.contributed)&&d.contributed>0){TOTAL_CONTRIBUTED=d.contributed;document.getElementById('contributed-input').value=d.contributed;}
+    if(['us','tw'].includes(d.vixSource))S.vixSource=d.vixSource;
+    updateVixSourceUI();
     if(['above','flat','below'].includes(d.trendState))trendState=d.trendState;
     if(d.inExtremeBear!==undefined)inExtremeBear=d.inExtremeBear;
-    if(inExtremeBear){document.getElementById('hysteresis-status').style.display='block';document.getElementById('hysteresis-status').innerHTML=`<span class="hysteresis-tag">極端熊市鎖定中，需輸入 VIX &lt; ${CONFIG.vix.extremeExit} 才解除</span>`;}
+    if(inExtremeBear)setHysteresisStatus(true);
     if(d.taiex)document.getElementById('taiex-input').value=d.taiex;
     if(d.ma60) document.getElementById('ma60-input').value=d.ma60;
     if(d.vixInput)document.getElementById('vix-input').value=d.vixInput;
@@ -812,7 +903,7 @@ function lsLoad(){
     if(d.trend&&!S.trend)setBtn('trend',d.trend);
     if(d.vix&&!S.vix)    setBtn('vix',d.vix);
     if(d.rate&&!S.rate)  setBtn('rate',d.rate);
-    if(d.vixVal)S.vixVal=d.vixVal;
+    if(!d.vixInput&&typeof d.vixVal==='number'&&isFinite(d.vixVal))S.vixVal=d.vixVal;
     tryRender();
     renderPnL();
   }catch(e){}
@@ -832,7 +923,8 @@ function setBtn(grp,val){
 function getRegime(){
   if(inExtremeBear)return'extremeBear';
   const{trend,vix}=S;
-  if(trend==='below'||vix==='high')return'bear';
+  if(trend==='below')return'bear';
+  if(vix==='high'&&trend!=='above')return'bear';
   if(trend==='above'&&vix==='low')return'bull';
   return'range';
 }
@@ -874,10 +966,11 @@ function calcTarget(regime){
 }
 function getBearTrigger(){
   const v=S.vixVal;
-  if(inExtremeBear&&v!==null&&v>CONFIG.vix.extremeExit)return{label:`極端恐慌 VIX ${fPct(v)}，需 < ${CONFIG.vix.extremeExit} 才解除`,cls:'trigger-extreme'};
+  const cfg=getVixConfig(),name=getVixName();
+  if(inExtremeBear&&v!==null&&v>cfg.extremeExit)return{label:`極端恐慌 ${name} ${fPct(v)}，需 < ${cfg.extremeExit} 才解除`,cls:'trigger-extreme'};
   if(inExtremeBear)return{label:'極端恐慌 Hysteresis 鎖定中',cls:'trigger-extreme'};
-  if(S.trend==='below'&&S.vix==='high')return{label:`跌破季線 + VIX > ${CONFIG.vix.high}`,cls:'trigger-both'};
-  if(S.trend!=='below'&&S.vix==='high')return{label:`VIX > ${CONFIG.vix.high} 觸發`,cls:'trigger-vix'};
+  if(S.trend==='below'&&S.vix==='high')return{label:`跌破季線 + ${name} > ${cfg.high}`,cls:'trigger-both'};
+  if(S.trend!=='below'&&S.vix==='high')return{label:`${name} > ${cfg.high} 觸發`,cls:'trigger-vix'};
   if(S.trend==='below'&&S.vix!=='high')return{label:'跌破季線觸發',cls:'trigger-trend'};
   return null;
 }
@@ -897,7 +990,7 @@ function pick(el,grp,val,cls){
   if(grp==='vix'){
     S.vixVal=null;document.getElementById('vix-input').value='';document.getElementById('vix-badge').style.display='none';
     if(val==='low'&&inExtremeBear){inExtremeBear=false;document.getElementById('hysteresis-status').style.display='none';}
-    else if((val==='medium'||val==='high')&&inExtremeBear){document.getElementById('hysteresis-status').style.display='block';document.getElementById('hysteresis-status').innerHTML=`<span class="hysteresis-tag">極端熊市鎖定中，需輸入 VIX &lt; ${CONFIG.vix.extremeExit} 才解除</span>`;}
+    else if((val==='medium'||val==='high')&&inExtremeBear)setHysteresisStatus(true);
     else document.getElementById('hysteresis-status').style.display='none';
   }
   if(grp==='rate'){
@@ -934,7 +1027,7 @@ function onIndexInput(){
 const debouncedExitExtreme=debounce(function(){
   if(!inExtremeBear)return;
   const v=S.vixVal;
-  if(v!==null&&v>0&&v<CONFIG.vix.extremeExit){
+  if(v!==null&&v>0&&v<getVixConfig().extremeExit){
     inExtremeBear=false;
     document.getElementById('hysteresis-status').style.display='none';
     if(S.trend&&S.vix&&S.rate)render();
@@ -945,21 +1038,31 @@ function onVixInput(){
   const v=parseFloat(document.getElementById('vix-input').value);
   const badge=document.getElementById('vix-badge');
   const hsEl=document.getElementById('hysteresis-status');
-  if(isNaN(v)||v<=0){badge.style.display='none';S.vixVal=null;lsSaveDebounced();return;}
+  if(isNaN(v)||v<=0){badge.textContent='';badge.style.display='none';S.vixVal=null;lsSaveDebounced();return;}
   S.vixVal=v;
-  if(!inExtremeBear&&v>CONFIG.vix.extremeEnter){
+  const cfg=getVixConfig();
+  if(!inExtremeBear&&v>cfg.extremeEnter){
     inExtremeBear=true;
-    hsEl.style.display='block';hsEl.innerHTML=`<span class="hysteresis-tag">極端熊市鎖定中，需輸入 VIX &lt; ${CONFIG.vix.extremeExit} 才解除</span>`;
-  }else if(inExtremeBear&&v<CONFIG.vix.extremeExit){
+    setHysteresisStatus(true);
+  }else if(inExtremeBear&&v<cfg.extremeExit){
     debouncedExitExtreme();
+  }else if(!inExtremeBear){
+    hsEl.style.display='none';
   }
   let val,label,cls;
-  if(v>CONFIG.vix.extremeEnter){val='high';label=`極端恐慌 ${fPct(v)} ⚠`;cls='nb-extreme';}
-  else if(v>=CONFIG.vix.high){val='high';label=`高恐慌 ${fPct(v)}`;cls='nb-high';}
-  else if(v>=CONFIG.vix.medium){val='medium';label=`中恐慌 ${fPct(v)}`;cls='nb-med';}
+  if(v>cfg.extremeEnter){val='high';label=`極端恐慌 ${fPct(v)} ⚠`;cls='nb-extreme';}
+  else if(v>=cfg.high){val='high';label=`高恐慌 ${fPct(v)}`;cls='nb-high';}
+  else if(v>=cfg.medium){val='medium';label=`中恐慌 ${fPct(v)}`;cls='nb-med';}
   else{val='low';label=`低恐慌 ${fPct(v)}`;cls='nb-low';}
   badge.textContent=label;badge.className=`num-badge ${cls}`;badge.style.display='inline-block';
   autoSelect('vix',val);
+}
+function onVixSourceChange(){
+  const source=document.getElementById('vix-source');
+  S.vixSource=source&&source.value==='tw'?'tw':'us';
+  updateVixSourceUI();
+  clearVixState(true);
+  lsSaveDebounced();
 }
 function onRateInput(){
   const now=parseFloat(document.getElementById('rate-now').value);
@@ -1067,12 +1170,19 @@ function render(){
 
   const wa=document.getElementById('warn-area');wa.innerHTML='';
   const vv=S.vixVal;
-  if(inExtremeBear&&vv!==null&&vv>CONFIG.vix.extremeExit)
-    wa.innerHTML=`<div class="warn-box warn-box-extreme"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>極端恐慌 Hysteresis 鎖定：VIX ${fPct(vv)}。停止一切加碼，等待 VIX 回落至 ${CONFIG.vix.extremeExit} 以下才解除熊市防禦。</div>`;
-  else if(regime==='bear'||regime==='extremeBear')
-    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>硬規則：衛星標的出現跳空缺口或單日跌幅 > 3%，禁止動用現金加碼。等待 VIX 回落至 ${CONFIG.vix.extremeExit} 以下再評估進場。</div>`;
+  const vixCfg=getVixConfig(),vixName=getVixName();
+  if(inExtremeBear&&vv!==null&&vv>vixCfg.extremeExit)
+    wa.innerHTML=`<div class="warn-box warn-box-extreme"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>極端恐慌 Hysteresis 鎖定：${vixName} ${fPct(vv)}。停止一切加碼，等待 ${vixName} 回落至 ${vixCfg.extremeExit} 以下才解除熊市防禦。</div>`;
+  else if(regime==='extremeBear')
+    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>硬規則：衛星標的出現跳空缺口或單日跌幅 > 3%，禁止動用現金加碼。等待 ${vixName} 回落至 ${vixCfg.extremeExit} 以下才解除極端防禦。</div>`;
+  else if(regime==='bear')
+    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>硬規則：衛星標的出現跳空缺口或單日跌幅 > 3%，禁止動用現金加碼。等待 ${vixName} 回落至 ${vixCfg.high} 以下再評估進場。</div>`;
   else if(S.vix==='high')
-    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>VIX > ${CONFIG.vix.high} 高恐慌區間。現金保留充足備用，嚴禁一次性重壓。</div>`;
+    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>${vixName} > ${vixCfg.high} 高恐慌區間。現金保留充足備用，嚴禁一次性重壓。</div>`;
+  else if(indexPct!==null&&indexPct>CONFIG.ma60.overheat)
+    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>指數高於60MA +${fPct(indexPct)}%，屬於過熱區。維持配置紀律，新增資金等待回測或明確折價，不因強漲追高。</div>`;
+  else if(S.vix==='medium'&&regime==='range')
+    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>${vixName} 位於中恐慌區間。市場可維持均衡，但新增 Alpha 應以小量分批與買入評分為準。</div>`;
 }
 
 // 持股面板（修正 focus bug：用 DOM 事件綁定，不重建已存在的 input）
@@ -1140,9 +1250,10 @@ function rebuildRows(k){
         else{mvEl.textContent='';mvEl.style.display='none';}
         if(!isNaN(a)&&!isNaN(c)&&a>0){
           const pnl=((c-a)/a*100);
-          badgeEl.className='holding-pnl '+(pnl<=CONFIG.stopLoss?'pnl-stop':pnl<0?'pnl-neg':'pnl-pos');
+          const stopLine=k==='alpha'?getAlphaWarningStopLoss(holdings[k][i]):CONFIG.stopLoss;
+          badgeEl.className='holding-pnl '+(pnl<=stopLine?'pnl-stop':pnl<0?'pnl-neg':'pnl-pos');
           badgeEl.textContent=(pnl>=0?'+':'')+fPct(pnl)+'%';
-          if(pnl<=CONFIG.stopLoss&&k==='alpha')badgeEl.textContent+=' 停損';
+          if(pnl<=stopLine&&k==='alpha')badgeEl.textContent+=' 停損';
           badgeEl.style.display='';
         }else{badgeEl.textContent='';badgeEl.style.display='none';}
       }
@@ -1211,7 +1322,8 @@ function refreshStopLoss(al){
   let slHtml='';
   holdings.alpha.forEach(r=>{
     const avg=parseFloat(r.avgPrice),cur=parseFloat(r.curPrice);
-    if(!isNaN(avg)&&!isNaN(cur)&&avg>0){const pnl=((cur-avg)/avg)*100;if(pnl<=CONFIG.stopLoss){const code=(r.code||'未命名').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));slHtml+=`<li class="action-item stop-loss-item"><i class="ti ti-alert-triangle" style="color:#A32D2D"></i><span style="color:#A32D2D"><strong>停損警示：${code}</strong> 虧損 ${fPct(pnl)}%，已觸及 ${CONFIG.stopLoss}% 停損線</span></li>`;}}
+    const stopLine=getAlphaWarningStopLoss(r);
+    if(!isNaN(avg)&&!isNaN(cur)&&avg>0){const pnl=((cur-avg)/avg)*100;if(pnl<=stopLine){const code=(r.code||'未命名').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));slHtml+=`<li class="action-item stop-loss-item"><i class="ti ti-alert-triangle" style="color:#A32D2D"></i><span style="color:#A32D2D"><strong>停損警示：${code}</strong> 虧損 ${fPct(pnl)}%，已觸及 ${stopLine}% 警示線</span></li>`;}}
   });
   if(slHtml)al.insertAdjacentHTML('beforeend',slHtml);
 }
@@ -1348,7 +1460,7 @@ function getBuyAction(type,total,trendScore,regime,distancePct,volState,premiumP
   const cfgEtf=CONFIG.buyScore.etf;
   const distLimit=CONFIG.buyScore.distanceLimit;
   if(regime==='extremeBear')hard.push('Extreme Bear：拒絕新增風險資產');
-  if(isSingleName&&regime==='bear')hard.push('Bear regime：個股不新增重倉');
+  if(isSingleName&&regime==='bear')hard.push('Bear regime：個股不新增，僅觀察');
   if(isSingleName&&trendScore<cfgSingle.trendThreshold)hard.push(`拒絕進場：個股趨勢分數未達 ${cfgSingle.trendThreshold}`);
   if(absDistance!==null&&absDistance>distLimit)hard.push(`拒絕追價：距離均線絕對值超過 ${distLimit}%`);
   if(volState==='panic')hard.push('拒絕進場：爆量長黑 / 跳空下跌 / 急跌');
@@ -1366,9 +1478,13 @@ function getBuyAction(type,total,trendScore,regime,distancePct,volState,premiumP
   }
   if(isSingleName){
     if(total>=cfgSingle.good&&trendScore>=cfgSingle.trendThreshold)return{label:'可考慮小量布局',cls:'buy-result-warn',pace:'單筆不超過預定部位 10–15%',hard};
-    if(total>=cfgSingle.good&&trendScore<cfgSingle.trendThreshold)return{label:'拒絕進場：趨勢未達標',cls:'buy-result-bad',pace:'總分足夠但趨勢不健康',hard:[`拒絕進場：個股趨勢分數未達 ${cfgSingle.trendThreshold}`]};
     if(total>=cfgSingle.warn)return{label:'觀察，不急著買',cls:'buy-result-warn',pace:`總分未達個股門檻 ${cfgSingle.good}`,hard};
     return{label:'不碰',cls:'buy-result-bad',pace:'分數不足',hard};
+  }
+  if(regime==='bear'){
+    if(total>=cfgEtf.warn)return{label:'可小量防禦式布局',cls:'buy-result-warn',pace:'Bear regime 僅試單 10–15%，不要一次買滿',hard};
+    if(total>=cfgEtf.observe)return{label:'觀察，不急著買',cls:'buy-result-warn',pace:'Bear regime 等待回穩或折價更明顯',hard};
+    return{label:'不碰',cls:'buy-result-bad',pace:'Bear regime 下風險報酬不佳',hard};
   }
   if(total>=cfgEtf.good)return{label:'可正常分批布局',cls:'buy-result-good',pace:'分 3–4 筆，單筆不超過預定部位 25%',hard};
   if(total>=cfgEtf.warn)return{label:'可小量布局',cls:'buy-result-warn',pace:'先試 10–15%，不要一次買滿',hard};
@@ -1475,7 +1591,7 @@ function calcBuyScore(){
 
 function exportJSON(){
   const data={version:'v11',exportDate:new Date().toISOString(),
-    params:{trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,
+    params:{trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,vixSource:S.vixSource,
       taiex:document.getElementById('taiex-input').value,
       ma60:document.getElementById('ma60-input').value,
       vixInput:document.getElementById('vix-input').value,
@@ -1498,40 +1614,115 @@ function importJSON(input){
   reader.onload=function(e){
     try{
       const data=JSON.parse(e.target.result);
-      if(typeof data!=='object'||!data.params||!data.holdings)throw new Error('\u683c\u5f0f\u4e0d\u7b26');
-      S.trend=null;S.vix=null;S.rate=null;S.vixVal=null;trendState=null;
-      document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate'));
-      if(typeof data.hwm==='number'&&isFinite(data.hwm)&&data.hwm>0){HIGH_WATER_MARK=data.hwm;document.getElementById('fund-input').value=data.hwm;document.getElementById('fund-label').textContent=getHwmLabel();}
-      if(typeof data.contributed==='number'&&isFinite(data.contributed)&&data.contributed>0){TOTAL_CONTRIBUTED=data.contributed;document.getElementById('contributed-input').value=data.contributed;}
-      if(['above','flat','below'].includes(data.trendState))trendState=data.trendState;
-      if(typeof data.inExtremeBear==='boolean')inExtremeBear=data.inExtremeBear;
-      const p=data.params;
-      if(p.taiex)document.getElementById('taiex-input').value=String(p.taiex);
-      if(p.ma60)document.getElementById('ma60-input').value=String(p.ma60);
-      if(p.vixInput)document.getElementById('vix-input').value=String(p.vixInput);
-      if(p.rateNow)document.getElementById('rate-now').value=String(p.rateNow);
-      if(p.ratePrev)document.getElementById('rate-prev').value=String(p.ratePrev);
-      if(data.holdings&&typeof data.holdings==='object'){
-        const sanitize=(v)=>{const n=parseFloat(v);return isNaN(n)||n<0?'':String(n);};
-        REBAL_KEYS.forEach(k=>{if(Array.isArray(data.holdings[k])){if(k==='cash')holdings[k]=data.holdings[k].map(h=>({amt:String(h.amt||'')}));else holdings[k]=data.holdings[k].map(h=>({code:String(h.code||'').slice(0,20),avgPrice:sanitize(h.avgPrice),curPrice:sanitize(h.curPrice),shares:sanitize(h.shares)}));}});
-      }
-      if(p.taiex&&p.ma60)onIndexInput();
-      if(p.vixInput)onVixInput();
-      if(p.rateNow&&p.ratePrev)onRateInput();
-      const validT=['above','flat','below'],validV=['low','medium','high'],validR=['stable','rising','falling'];
-      if(p.trend&&validT.includes(p.trend)&&!S.trend)setBtn('trend',p.trend);
-      if(p.vix&&validV.includes(p.vix)&&!S.vix)setBtn('vix',p.vix);
-      if(p.rate&&validR.includes(p.rate)&&!S.rate)setBtn('rate',p.rate);
-      if(typeof p.vixVal==='number'&&isFinite(p.vixVal))S.vixVal=p.vixVal;
-      REBAL_KEYS.forEach(k=>{const panel=document.getElementById('panel-'+k);if(panel){delete panel.dataset.built;panel.classList.remove('open');}});
-      openPanel=null;
-      tryRender();
-      renderPnL();
-      showIOMsg('\u2705 \u5df2\u532f\u5165 '+file.name);
+      applyImportData(data,file.name);
     }catch(err){showIOMsg('\u274c \u532f\u5165\u5931\u6557\uff1a'+err.message);}
   };
   reader.readAsText(file);
   input.value='';
+}
+function applyImportData(data,sourceLabel){
+  if(typeof data!=='object'||!data.params||typeof data.params!=='object'||!data.holdings||typeof data.holdings!=='object')throw new Error('\u683c\u5f0f\u4e0d\u7b26');
+  const p=data.params;
+  const numRe=/^(?:\d+|\d*\.\d+)$/;
+  const optionalNumberString=(v,label)=>{
+    if(v===undefined||v===null||v==='')return'';
+    const s=String(v).trim();
+    if(!numRe.test(s))throw new Error(label+' 必須是非負數');
+    return s;
+  };
+  const optionalPositiveNumber=(v,label)=>{
+    const s=optionalNumberString(v,label);
+    if(s===''||parseFloat(s)<=0)return'';
+    return s;
+  };
+  const requireEnum=(v,allowed,label)=>{
+    if(v===undefined||v===null||v==='')return null;
+    if(!allowed.includes(v))throw new Error(label+' 值不支援：'+v);
+    return v;
+  };
+  const validT=['above','flat','below'],validV=['low','medium','high'],validR=['stable','rising','falling'];
+  const normalized={
+    hwmText:optionalPositiveNumber(data.hwm,'hwm'),
+    contributedText:optionalPositiveNumber(data.contributed,'contributed'),
+    trendState:requireEnum(data.trendState,validT,'trendState'),
+    inExtremeBear:typeof data.inExtremeBear==='boolean'?data.inExtremeBear:false,
+    vixSource:requireEnum(p.vixSource,['us','tw'],'vixSource')||'us',
+    taiexInput:optionalPositiveNumber(p.taiex,'taiex'),
+    ma60Input:optionalPositiveNumber(p.ma60,'ma60'),
+    vixInput:optionalPositiveNumber(p.vixInput,'vixInput'),
+    rateNow:optionalNumberString(p.rateNow,'rateNow'),
+    ratePrev:optionalNumberString(p.ratePrev,'ratePrev'),
+    trend:requireEnum(p.trend,validT,'trend'),
+    vix:requireEnum(p.vix,validV,'vix'),
+    rate:requireEnum(p.rate,validR,'rate'),
+    vixVal:optionalNumberString(p.vixVal,'vixVal'),
+    holdings:{}
+  };
+  REBAL_KEYS.forEach(k=>{
+    if(Array.isArray(data.holdings[k])){
+      if(k==='cash'){
+        normalized.holdings[k]=data.holdings[k].map(h=>({amt:optionalNumberString(h&&h.amt,k+'.amt')}));
+      }else{
+        normalized.holdings[k]=data.holdings[k].map(h=>({
+          code:String((h&&h.code)||'').slice(0,20),
+          avgPrice:optionalNumberString(h&&h.avgPrice,k+'.avgPrice'),
+          curPrice:optionalNumberString(h&&h.curPrice,k+'.curPrice'),
+          shares:optionalNumberString(h&&h.shares,k+'.shares')
+        }));
+      }
+    }else{
+      normalized.holdings[k]=k==='cash'?[{amt:''}]:[{code:'',avgPrice:'',curPrice:'',shares:''}];
+    }
+  });
+  const setInput=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val!==undefined&&val!==null?String(val):'';};
+  const hideBadge=(id)=>{const el=document.getElementById(id);if(el){el.textContent='';el.style.display='none';}};
+  S.trend=null;S.vix=null;S.rate=null;S.vixVal=null;S.vixSource='us';trendState=null;indexPct=null;inExtremeBear=false;
+  document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('active-trend','active-vix-low','active-vix-med','active-vix-high','active-rate'));
+  setInput('taiex-input','');setInput('ma60-input','');setInput('vix-input','');setInput('rate-now','');setInput('rate-prev','');
+  hideBadge('trend-badge');hideBadge('vix-badge');hideBadge('rate-badge');setHysteresisStatus(false);setOutputPending();
+  HIGH_WATER_MARK=normalized.hwmText?parseFloat(normalized.hwmText):0;
+  TOTAL_CONTRIBUTED=normalized.contributedText?parseFloat(normalized.contributedText):0;
+  setInput('fund-input',normalized.hwmText);
+  setInput('contributed-input',normalized.contributedText);
+  if(normalized.trendState)trendState=normalized.trendState;
+  inExtremeBear=normalized.inExtremeBear;
+  S.vixSource=normalized.vixSource;
+  updateVixSourceUI();
+  setInput('taiex-input',normalized.taiexInput);
+  setInput('ma60-input',normalized.ma60Input);
+  setInput('vix-input',normalized.vixInput);
+  setInput('rate-now',normalized.rateNow);
+  setInput('rate-prev',normalized.ratePrev);
+  REBAL_KEYS.forEach(k=>{holdings[k]=normalized.holdings[k];});
+  if(normalized.taiexInput&&normalized.ma60Input)onIndexInput();
+  if(normalized.vixInput)onVixInput();
+  if(normalized.rateNow&&normalized.ratePrev)onRateInput();
+  if(normalized.trend&&!S.trend)setBtn('trend',normalized.trend);
+  if(normalized.vix&&!S.vix)setBtn('vix',normalized.vix);
+  if(normalized.rate&&!S.rate)setBtn('rate',normalized.rate);
+  if(!normalized.vixInput&&normalized.vixVal)S.vixVal=parseFloat(normalized.vixVal);
+  REBAL_KEYS.forEach(k=>{const panel=document.getElementById('panel-'+k);if(panel){delete panel.dataset.built;panel.classList.remove('open');}});
+  openPanel=null;
+  tryRender();
+  renderPnL();
+  showIOMsg('\u2705 \u5df2\u532f\u5165 '+sourceLabel);
+}
+function toggleJsonPastePanel(force){
+  const panel=document.getElementById('json-paste-panel');if(!panel)return;
+  const open=force===undefined?!panel.classList.contains('open'):!!force;
+  panel.classList.toggle('open',open);
+  if(open){const input=document.getElementById('json-paste-input');if(input)input.focus();}
+}
+function applyPastedJSON(){
+  const input=document.getElementById('json-paste-input');
+  const raw=input?input.value.trim():'';
+  if(!raw){showIOMsg('\u274c \u8acb\u5148\u8cbc\u4e0a JSON \u5167\u5bb9');return;}
+  try{
+    const data=JSON.parse(raw);
+    applyImportData(data,'貼上的 JSON');
+    if(input)input.value='';
+    toggleJsonPastePanel(false);
+  }catch(err){showIOMsg('\u274c JSON \u532f\u5165\u5931\u6557\uff1a'+err.message);}
 }
 function showIOMsg(msg){const el=document.getElementById('io-msg');if(!el)return;el.textContent=msg;setTimeout(()=>{el.textContent='';},4000);}
 function resetAll(){
@@ -1665,22 +1856,39 @@ function pickSellOpt(el){
 }
 function updateSellStep4(r){
   const box=document.getElementById('sell-s4-box');if(!box)return;
-  if(!r||sellState.idx===null){box.textContent='請先選擇評估標的';box.className='sell-auto-box sell-auto-neutral';return;}
+  if(!r||sellState.idx===null){
+    box.textContent='請先選擇評估標的';
+    box.className='sell-auto-box sell-auto-neutral';return;
+  }
   const risk=getSellRiskMetrics(r);
   if(!risk||risk.budgetPct===null){
     box.textContent='該標的尚未輸入現價或股數，無法計算集中度';
     box.className='sell-auto-box sell-auto-neutral';return;
   }
-  let cls,label;
-  if(risk.budgetPct===Infinity||risk.budgetPct>50){cls='sell-auto-red';label='<i class="ti ti-alert-circle"></i> 高風險';}
-  else if(risk.budgetPct>=30){cls='sell-auto-yellow';label='<i class="ti ti-alert-triangle"></i> 中等風險';}
-  else{cls='sell-auto-green';label='<i class="ti ti-circle-check"></i> 低風險';}
+  const inf=risk.budgetPct===Infinity;
+  let cls,icon,label,desc,action='';
+  if(inf||risk.budgetPct>50){
+    cls='sell-auto-red';icon='ti-alert-circle';label='高風險';
+    desc=inf
+      ?'Alpha 目標額度目前為 0，無法分散風險'
+      :`已占 Alpha 目標額度 <strong>${fPct(risk.budgetPct)}%</strong>，集中度過高`;
+    action='→ 建議優先分批減碼';
+  }else if(risk.budgetPct>=30){
+    cls='sell-auto-yellow';icon='ti-alert-triangle';label='中等風險';
+    desc=`已占 Alpha 目標額度 <strong>${fPct(risk.budgetPct)}%</strong>，集中度偏高`;
+    action='→ 建議留意集中度';
+  }else{
+    cls='sell-auto-green';icon='ti-circle-check';label='低風險';
+    desc=`目前占 Alpha 目標額度 <strong>${fPct(risk.budgetPct)}%</strong>，集中度正常`;
+  }
+  const alphaPct=risk.alphaPct!==null?fPct(risk.alphaPct)+'%':'—';
+  const overallPct=risk.overallPct!==null?fPct(risk.overallPct)+'%':'—';
   box.className='sell-auto-box '+cls;
-  const budgetText=risk.budgetPct===Infinity?'Alpha 目標額度目前為 0':`占 Alpha 目標額度 <strong>${fPct(risk.budgetPct)}%</strong>`;
-  const alphaText=risk.alphaPct!==null?`Alpha 內占比 ${fPct(risk.alphaPct)}%`:'Alpha 內占比 —';
-  const overallText=risk.overallPct!==null?`整體資產占比 ${fPct(risk.overallPct)}%`:'整體資產占比 —';
-  box.innerHTML=`目前這檔${budgetText}　${label}<br><span style="font-size:11px">${alphaText}；${overallText}；Alpha 目標 ${fPct(risk.alphaTargetPct)}%</span>`
-    +(risk.budgetPct===Infinity||risk.budgetPct>50?' → 建議優先分批減碼':'');
+  box.innerHTML=
+    `<div class="sell-auto-title"><i class="ti ${icon}"></i> ${label}</div>`+
+    `<div class="sell-auto-desc">${desc}</div>`+
+    (action?`<div class="sell-auto-action">${action}</div>`:'')+
+    `<div class="sell-auto-meta">Alpha 內占比 ${alphaPct}｜整體資產占比 ${overallPct}</div>`;
 }
 function getSellStopLoss(type){
   if(type==='etf')return-11;
@@ -1734,13 +1942,6 @@ function calcSellResult(selectedHolding){
   const risk=getSellRiskMetrics(selectedHolding);
   const alphaBudgetPct=risk?(risk.budgetPct===Infinity?100:risk.budgetPct||0):0;
   const alphaInnerPct=risk&&risk.alphaPct!==null?risk.alphaPct:0;
-  const weights={
-    thesis:sellState.s1==='valid'?0:sellState.s1==='weak'?20:60,
-    entry:sellState.s2==='safe'?0:sellState.s2==='neutral'?5:10,
-    structure:{strong:0,shaky:8,weak:16,reversed:25}[sellState.s3]||0,
-    concentration:alphaBudgetPct>50?10:alphaBudgetPct>=30?5:0,
-    stop:0
-  };
   let hitStopLoss=false;
   let pnlVal=null;
   if(selectedHolding&&sellState.s5){
@@ -1748,66 +1949,39 @@ function calcSellResult(selectedHolding){
     if(!isNaN(avg)&&!isNaN(cur)&&avg>0){
       pnlVal=((cur-avg)/avg)*100;
       const stopLine=getSellStopLoss(sellState.s5);
-      if(pnlVal<=stopLine){weights.stop=15;hitStopLoss=true;}
-      else if(pnlVal<-3)weights.stop=8;
-      else if(pnlVal<0)weights.stop=4;
+      hitStopLoss=pnlVal<=stopLine;
     }
   }
-  const score=Object.values(weights).reduce((sum,v)=>sum+v,0);
-  // Determine recommendation
   let level,title,body;
-  // Hard override: thesis invalid, stop-loss hit, or trend reversal -> RED
-  if(sellState.s1==='invalid'||hitStopLoss||sellState.s3==='reversed'){
+  const alphaTargetZero=risk&&risk.marketValue>0&&risk.alphaTargetPct<=0;
+  const redReasons=[];
+  if(hitStopLoss)redReasons.push('已觸及個人停損線');
+  if(sellState.s1==='invalid')redReasons.push('買入 Thesis 已失效');
+  if(sellState.s3==='reversed')redReasons.push('趨勢已反轉');
+  if(alphaTargetZero)redReasons.push('目前 DAA 目標不承擔 Alpha 額度');
+  if(redReasons.length){
     level='red';
     title='<i class="ti ti-alert-circle"></i> 建議：全賣或大幅減碼';
-    const reasons=[];
-    if(sellState.s1==='invalid')reasons.push('買入 Thesis 已失效');
-    if(hitStopLoss)reasons.push('已觸及個人停損線');
-    if(sellState.s3==='reversed')reasons.push('趨勢已反轉');
-    body='理由：'+reasons.join('、')+'。保護本金為第一優先。';
-  }
-  else if(alphaBudgetPct>50||sellState.s3==='weak'||(sellState.s2==='chase'&&pnlVal!==null&&pnlVal<0)){
-    level='yellow';
-    title='<i class="ti ti-alert-triangle"></i> 建議：分批減碼';
-    const reasons=[];
-    if(alphaBudgetPct>50)reasons.push('Alpha 目標額度占用過高');
-    if(sellState.s3==='weak')reasons.push('技術結構明顯轉弱');
-    if(sellState.s2==='chase'&&pnlVal!==null&&pnlVal<0)reasons.push('追高買入後出現虧損');
-    body='理由：'+reasons.join('、')+'。建議先賣出部分，回收本金並降低風險。';
-  }
-  // Thesis valid + structure acceptable -> GREEN, unless explicit yellow/red conditions above matched.
-  else if(sellState.s1==='valid'&&(sellState.s3==='strong'||sellState.s3==='shaky')&&score<25){
-    level='green';
-    title='<i class="ti ti-circle-check"></i> 建議：繼續長期持有';
-    body='理由：買入核心理由仍然有效，技術結構尚可，短期波動不影響長線布局。';
-  }
-  else if(score>=35){
-    level='red';
-    title='<i class="ti ti-alert-circle"></i> 建議：全賣或大幅減碼';
-    const reasons=[];
-    if(sellState.s1==='weak')reasons.push('核心理由部分弱化');
-    if(sellState.s3==='weak'||sellState.s3==='reversed')reasons.push('技術結構轉弱或反轉');
-    if(alphaBudgetPct>50)reasons.push('Alpha 目標額度占用過高');
-    if(pnlVal!==null&&pnlVal<-3)reasons.push('目前處於虧損狀態');
-    body='理由：'+(reasons.length?reasons.join('、'):'綜合風險偏高')+'。保護本金為第一優先。';
-  }
-  else if(score>=15){
-    level='yellow';
-    title='<i class="ti ti-alert-triangle"></i> 建議：分批減碼';
-    const reasons=[];
-    if(alphaBudgetPct>=30)reasons.push('Alpha 目標額度占用較高');
-    else if(alphaInnerPct>=50)reasons.push('Alpha 內部集中度較高');
-    if(sellState.s3==='shaky'||sellState.s3==='weak')reasons.push('技術結構輕微轉弱');
-    if(sellState.s2==='chase')reasons.push('追高買入後風險偏高');
-    if(pnlVal!==null&&pnlVal>15)reasons.push('獲利已高');
-    if(pnlVal!==null&&pnlVal<0)reasons.push('出現虧損');
-    if(sellState.s1==='weak')reasons.push('核心理由部分弱化');
-    body='理由：'+(reasons.length?reasons.join('、'):'部分條件出現警訊')+'。建議先賣出部分，回收本金並降低風險。';
+    body='理由：'+redReasons.join('、')+'。保護本金與遵守 DAA 風險預算為第一優先。';
   }
   else{
-    level='green';
-    title='<i class="ti ti-circle-check"></i> 建議：繼續長期持有';
-    body='理由：買入核心理由仍然有效，技術結構尚可，短期波動不影響長線布局。';
+    const yellowReasons=[];
+    if(sellState.s3==='weak')yellowReasons.push('技術結構明顯轉弱');
+    if(alphaBudgetPct>50)yellowReasons.push('Alpha 目標額度占用過高');
+    else if(alphaBudgetPct>=30)yellowReasons.push('Alpha 目標額度占用較高');
+    if(sellState.s2==='chase'&&pnlVal!==null&&pnlVal<0)yellowReasons.push('追高買入後出現虧損');
+    if(sellState.s1==='weak')yellowReasons.push('核心理由部分弱化');
+    if(pnlVal!==null&&pnlVal>=30&&sellState.s3!=='strong')yellowReasons.push('獲利已高且技術結構不再強勢');
+    if(!yellowReasons.length&&alphaInnerPct>=50&&alphaBudgetPct>=20)yellowReasons.push('Alpha 內部集中度較高');
+    if(yellowReasons.length){
+      level='yellow';
+      title='<i class="ti ti-alert-triangle"></i> 建議：分批減碼';
+      body='理由：'+yellowReasons.join('、')+'。建議先賣出部分，回收本金並降低風險。';
+    }else{
+      level='green';
+      title='<i class="ti ti-circle-check"></i> 建議：繼續長期持有';
+      body='理由：買入核心理由仍然有效，技術結構尚可，短期波動不影響長線布局。';
+    }
   }
   area.innerHTML=`<div class="sell-result sell-result-${level}">
     <div class="sell-result-title">${title}</div>
