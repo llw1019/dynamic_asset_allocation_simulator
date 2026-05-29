@@ -138,6 +138,10 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .inp-code{width:80px}.inp-amt{width:80px}.inp-avg{width:65px}.inp-cur{width:65px}.inp-shares{width:65px}
 .holding-pnl{font-size:11px;font-weight:500;padding:1px 6px;border-radius:3px;white-space:nowrap}
 .pnl-pos{background:var(--color-success-bg);color:var(--color-success-text)}.pnl-neg{background:var(--color-danger-bg);color:var(--color-danger-text)}.pnl-stop{background:#A32D2D;color:#fff}
+.pnl-warn{background:var(--color-warning-bg);color:var(--color-warning-text)}
+.inp-peak{width:65px}
+.field-pair{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.peak-hint{font-size:11px;display:none;margin-left:2px}
 .holding-mv{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}
 .hwm-bar{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--color-text-tertiary);margin-top:2px;margin-bottom:8px;padding:0 16px}
 .hwm-update-btn{font-size:11px;padding:2px 8px;border-radius:4px;border:0.5px solid var(--color-success-text);background:var(--color-success-bg);color:var(--color-success-text);cursor:pointer;font-family:var(--font-sans)}
@@ -218,6 +222,11 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 @media(max-width:500px){.buy-form{grid-template-columns:1fr}}
 @media(max-width:500px){.rebalance-table .col-tgt-pct,.rebalance-table .col-hold-pct{display:none}}
 @media(max-width:400px){.bar-row{flex-wrap:wrap}.bar-track{flex:1 0 150px}.bar-amt{margin-left:auto}}
+@media(max-width:520px){
+  .inp-peak{width:55px}
+  .peak-hint{margin-left:0;margin-top:2px}
+  .holding-row{row-gap:4px}
+}
 /* === Sell Advisor === */
 .sell-adv-select{width:100%;font-size:13px;padding:8px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans);margin-bottom:14px}
 .sell-step{margin-bottom:16px}
@@ -652,6 +661,15 @@ const CONFIG={
     discountNotify:-0.5
   }
 };
+const HOLDING_THRESHOLDS={
+  beta:   {warn:-15,danger:-25,warnAction:'回撤接近警示，考慮季再平衡補倉',    dangerAction:'回撤已達警示，建議執行季再平衡補倉'},
+  global: {warn:-15,danger:-25,warnAction:'回撤接近警示，考慮季再平衡補倉',    dangerAction:'回撤已達警示，建議執行季再平衡補倉'},
+  defense:{warn:-12,danger:-20,warnAction:'回撤接近警示，考慮補倉或檢視防禦配置',dangerAction:'回撤已達警示，建議補倉或調整防禦配置'},
+  hedge:  {warn:-10,danger:-18,warnAction:'避險工具效果可能減弱，重新評估',      dangerAction:'避險工具可能失效，建議調整或清倉'},
+  alpha:{
+    stock:{warn:-8, danger:-12,warnAction:'留意回撤，接近個股警示線',             dangerAction:'已觸及個股警示線，建議停損或停利'},
+    etf:  {warn:-10,danger:-15,warnAction:'留意回撤，接近 ETF 警示線',           dangerAction:'已觸及 ETF 警示線，建議停損或停利'}}
+};
 const fPct=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Number(v).toFixed(1):'—';
 const fPct2=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Number(v).toFixed(2):'—';
 const fNTD10k=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?(Number(v)/10000).toFixed(2):'0.00';
@@ -787,11 +805,8 @@ const RULES_BASE=[
 ];
 const REBAL_KEYS=Object.keys(BASE);
 const holdings={};
-REBAL_KEYS.forEach(k=>{holdings[k]=k==='cash'?[{amt:''}]:[{code:'',avgPrice:'',curPrice:'',shares:''}];});
-function getAlphaWarningStopLoss(r){
-  const code=String((r&&r.code)||'').trim();
-  return code.startsWith('00')?-10:CONFIG.stopLoss;
-}
+REBAL_KEYS.forEach(k=>{holdings[k]=k==='cash'?[{amt:''}]:[{code:'',avgPrice:'',curPrice:'',shares:'',peakPrice:''}];});
+
 function getCurrentNAV(){
   return REBAL_KEYS.reduce((s,k)=>s+getHoldingTotal(k),0);
 }
@@ -896,7 +911,7 @@ function lsLoad(){
     if(d.vixInput)document.getElementById('vix-input').value=d.vixInput;
     if(d.rateNow) document.getElementById('rate-now').value=d.rateNow;
     if(d.ratePrev)document.getElementById('rate-prev').value=d.ratePrev;
-    if(d.holdings){REBAL_KEYS.forEach(k=>{if(Array.isArray(d.holdings[k])){if(k==='cash')holdings[k]=d.holdings[k].map(h=>({amt:String(h.amt||'')}));else holdings[k]=d.holdings[k].map(h=>('avgPrice' in h)?{code:String(h.code||''),avgPrice:String(h.avgPrice||''),curPrice:String(h.curPrice||''),shares:String(h.shares||'')}:{code:String(h.code||''),avgPrice:'',curPrice:'',shares:''});}});}
+    if(d.holdings){REBAL_KEYS.forEach(k=>{if(Array.isArray(d.holdings[k])){if(k==='cash')holdings[k]=d.holdings[k].map(h=>({amt:String(h.amt||'')}));else holdings[k]=d.holdings[k].map(h=>('avgPrice' in h)?{code:String(h.code||''),avgPrice:String(h.avgPrice||''),curPrice:String(h.curPrice||''),shares:String(h.shares||''),peakPrice:String(h.peakPrice||'')}:{code:String(h.code||''),avgPrice:'',curPrice:'',shares:'',peakPrice:''});}});}
     if(d.taiex&&d.ma60)onIndexInput();
     if(d.vixInput)onVixInput();
     if(d.rateNow&&d.ratePrev)onRateInput();
@@ -1081,6 +1096,7 @@ function onFundChange(){
   const v=parseFloat(document.getElementById('fund-input').value);
   HIGH_WATER_MARK=isNaN(v)||v<=0?0:v;
   updateFundStatus();
+  checkHWM();
   if(S.trend&&S.vix&&S.rate)render();lsSaveDebounced();
 }
 function onContributedChange(){
@@ -1150,7 +1166,6 @@ function render(){
   let alHtml='';
   getActionItems(regime,target,S.rate).forEach(a=>{alHtml+=`<li class="action-item"><i class="ti ${a.icon}"></i><span>${a.text}</span></li>`;});
   al.innerHTML=alHtml;
-  refreshStopLoss(al);
   const memoEl=document.getElementById('memo');
   const memoText=getMemo(regime,target);
   const memoParts=memoText.split('\n\n');
@@ -1223,6 +1238,7 @@ function rebuildRows(k){
   const container=document.getElementById('hrows-'+k);if(!container)return;
   container.innerHTML='';
   const isCash=k==='cash';
+  function fp(l,inp){const d=document.createElement('div');d.className='field-pair';d.append(l,inp);return d;}
   holdings[k].forEach((r,i)=>{
     const row=document.createElement('div');row.className='holding-row';
     if(isCash){
@@ -1238,38 +1254,124 @@ function rebuildRows(k){
       const lblC=document.createElement('label');lblC.textContent='代號';
       const inpC=document.createElement('input');
       inpC.className='inp-code';inpC.type='text';inpC.placeholder='如 006208';inpC.maxLength=20;inpC.value=r.code||'';
-      inpC.addEventListener('input',function(){holdings[k][i].code=this.value;if(k==='alpha')syncSellAdvisor(true);lsSaveDebounced();});
+      inpC.addEventListener('input',function(){
+        holdings[k][i].code=this.value;
+        updatePnLBadge();
+        updatePeakBadge();
+        updatePeakHint();
+        renderRebalTable();
+        if(k==='alpha')syncSellAdvisor(true);
+        lsSaveDebounced();
+      });
       const lblAvg=document.createElement('label');lblAvg.textContent='均價';
       const inpAvg=document.createElement('input');
       inpAvg.className='inp-avg';inpAvg.type='number';inpAvg.placeholder='元';inpAvg.min='0';inpAvg.step='0.01';inpAvg.value=r.avgPrice||'';
-      const mvEl=document.createElement('span');mvEl.className='holding-mv';
-      const badgeEl=document.createElement('span');badgeEl.className='holding-pnl';
-      function updateRowDisplay(){
-        const a=parseFloat(holdings[k][i].avgPrice),c=parseFloat(holdings[k][i].curPrice),s=parseFloat(holdings[k][i].shares);
+      const mvEl=document.createElement('span');mvEl.className='holding-mv';mvEl.style.display='none';
+      const pnlBadgeEl=document.createElement('span');pnlBadgeEl.className='holding-pnl';pnlBadgeEl.style.display='none';
+      const peakBadgeEl=document.createElement('span');peakBadgeEl.className='holding-pnl';peakBadgeEl.style.display='none';
+      const lblPeak=document.createElement('label');lblPeak.textContent='高點';
+      const inpPeak=document.createElement('input');
+      inpPeak.className='inp-peak';inpPeak.type='number';inpPeak.placeholder='元';
+      inpPeak.min='0';inpPeak.step='0.01';inpPeak.value=r.peakPrice||'';
+      const peakHintEl=document.createElement('span');peakHintEl.className='peak-hint';
+      function updateMvEl(){
+        const c=parseFloat(holdings[k][i].curPrice),s=parseFloat(holdings[k][i].shares);
         if(!isNaN(c)&&!isNaN(s)&&s>0){mvEl.textContent=fNTD10k(c*s)+'萬';mvEl.style.display='';}
         else{mvEl.textContent='';mvEl.style.display='none';}
-        if(!isNaN(a)&&!isNaN(c)&&a>0){
-          const pnl=((c-a)/a*100);
-          const stopLine=k==='alpha'?getAlphaWarningStopLoss(holdings[k][i]):CONFIG.stopLoss;
-          badgeEl.className='holding-pnl '+(pnl<=stopLine?'pnl-stop':pnl<0?'pnl-neg':'pnl-pos');
-          badgeEl.textContent=(pnl>=0?'+':'')+fPct(pnl)+'%';
-          if(pnl<=stopLine&&k==='alpha')badgeEl.textContent+=' 停損';
-          badgeEl.style.display='';
-        }else{badgeEl.textContent='';badgeEl.style.display='none';}
       }
-      inpAvg.addEventListener('input',function(){holdings[k][i].avgPrice=this.value;updateRowDisplay();updatePanelTotal(k);renderRebalTable();if(k==='alpha')syncSellAdvisor(false);lsSaveDebounced();});
+      function updatePnLBadge(){
+        const a=parseFloat(holdings[k][i].avgPrice),c=parseFloat(holdings[k][i].curPrice);
+        if(isNaN(a)||a<=0||isNaN(c)||c<=0){pnlBadgeEl.style.display='none';return;}
+        const pnl=(c-a)/a*100;
+        pnlBadgeEl.className='holding-pnl '+(pnl<0?'pnl-neg':'pnl-pos');
+        pnlBadgeEl.textContent=(pnl>=0?'+':'')+fPct(pnl)+'%';
+        pnlBadgeEl.style.display='';
+      }
+      function updatePeakBadge(){
+        const risk=getPeakRisk(k,holdings[k][i]);
+        if(!risk){peakBadgeEl.style.display='none';return;}
+        if(risk.level==='danger'){
+          const label=risk.isProfit?'停利⚠':'停損⚠';
+          peakBadgeEl.className='holding-pnl pnl-stop';
+          peakBadgeEl.textContent=fPct(risk.pullback)+'% '+label;
+        }else{
+          peakBadgeEl.className='holding-pnl pnl-warn';
+          peakBadgeEl.textContent=fPct(risk.pullback)+'% 留意';
+        }
+        peakBadgeEl.style.display='';
+      }
+      function updatePeakHint(){
+        const cStr=holdings[k][i].curPrice;
+        const aStr=holdings[k][i].avgPrice;
+        const c=parseFloat(cStr),a=parseFloat(aStr),p=parseFloat(holdings[k][i].peakPrice);
+        const hasCur=!isNaN(c)&&c>0;
+        const hasAvg=!isNaN(a)&&a>0;
+        if(!hasCur&&!hasAvg){peakHintEl.style.display='none';return;}
+        const suggested=Math.max(hasCur?c:0,hasAvg?a:0);
+        const peakOk=!isNaN(p)&&p>=suggested;
+        if(peakOk){peakHintEl.style.display='none';return;}
+        const suggestedStr=hasCur&&c>=a?cStr:aStr;
+        peakHintEl.innerHTML='';
+        const btn=document.createElement('button');
+        btn.className='hwm-update-btn';
+        btn.textContent='更新高點 '+suggestedStr;
+        btn.addEventListener('click',function(){
+          holdings[k][i].peakPrice=suggestedStr;
+          inpPeak.value=suggestedStr;
+          peakHintEl.style.display='none';
+          updatePeakBadge();
+          renderRebalTable();
+          lsSaveDebounced();
+        });
+        peakHintEl.appendChild(btn);
+        peakHintEl.style.display='inline-flex';
+      }
+      inpAvg.addEventListener('input',function(){
+        holdings[k][i].avgPrice=this.value;
+        updatePnLBadge();
+        updatePeakHint();
+        updatePanelTotal(k);renderRebalTable();
+        if(k==='alpha')syncSellAdvisor(false);
+        lsSaveDebounced();
+      });
       const lblCur=document.createElement('label');lblCur.textContent='現價';
       const inpCur=document.createElement('input');
       inpCur.className='inp-cur';inpCur.type='number';inpCur.placeholder='元';inpCur.min='0';inpCur.step='0.01';inpCur.value=r.curPrice||'';
-      inpCur.addEventListener('input',function(){holdings[k][i].curPrice=this.value;updateRowDisplay();updatePanelTotal(k);renderRebalTable();if(k==='alpha')syncSellAdvisor(false);lsSaveDebounced();});
+      inpCur.addEventListener('input',function(){
+        holdings[k][i].curPrice=this.value;
+        updateMvEl();updatePnLBadge();updatePeakBadge();updatePeakHint();
+        updatePanelTotal(k);renderRebalTable();
+        if(k==='alpha')syncSellAdvisor(false);
+        lsSaveDebounced();
+      });
+      inpCur.addEventListener('blur',function(){
+        updatePeakBadge();
+        updatePeakHint();
+      });
+      inpPeak.addEventListener('input',function(){
+        holdings[k][i].peakPrice=this.value;
+        updatePeakBadge();
+        updatePeakHint();
+        renderRebalTable();
+        lsSaveDebounced();
+      });
       const lblSh=document.createElement('label');lblSh.textContent='股';
       const inpSh=document.createElement('input');
       inpSh.className='inp-shares';inpSh.type='number';inpSh.placeholder='股數';inpSh.min='0';inpSh.step='1';inpSh.value=r.shares||'';
-      inpSh.addEventListener('input',function(){holdings[k][i].shares=this.value;updateRowDisplay();updatePanelTotal(k);renderRebalTable();if(k==='alpha')syncSellAdvisor(false);lsSaveDebounced();});
+      inpSh.addEventListener('input',function(){
+        holdings[k][i].shares=this.value;
+        updateMvEl();
+        updatePanelTotal(k);renderRebalTable();
+        if(k==='alpha')syncSellAdvisor(false);
+        lsSaveDebounced();
+      });
       const del=document.createElement('button');del.className='holding-del-btn';del.textContent='×';
       del.addEventListener('click',()=>delHolding(k,i));
-      row.append(lblC,inpC,lblAvg,inpAvg,lblCur,inpCur,lblSh,inpSh,mvEl,badgeEl,del);
-      updateRowDisplay();
+      row.append(fp(lblC,inpC),fp(lblAvg,inpAvg),fp(lblCur,inpCur),fp(lblSh,inpSh),fp(lblPeak,inpPeak),mvEl,pnlBadgeEl,peakBadgeEl,peakHintEl,del);
+      updateMvEl();
+      updatePnLBadge();
+      updatePeakBadge();
+      updatePeakHint();
     }
     container.appendChild(row);
   });
@@ -1291,7 +1393,7 @@ function updateBarAmt(k){
   if(dot){dot.className='holding-dot '+(hold>0?'holding-dot-on':'holding-dot-off');}
 }
 function addHolding(k){
-  holdings[k].push(k==='cash'?{amt:''}:{code:'',avgPrice:'',curPrice:'',shares:''});
+  holdings[k].push(k==='cash'?{amt:''}:{code:'',avgPrice:'',curPrice:'',shares:'',peakPrice:''});
   const panel=document.getElementById('panel-'+k);
   if(panel)delete panel.dataset.built;
   buildPanel(k);lsSaveDebounced();
@@ -1301,7 +1403,7 @@ function delHolding(k,i){
     if(i===sellState.idx){sellState.idx=null;resetSellChoices();}
     else if(i<sellState.idx){sellState.idx--;}
   }
-  if(holdings[k].length===1)holdings[k][0]=k==='cash'?{amt:''}:{code:'',avgPrice:'',curPrice:'',shares:''};
+  if(holdings[k].length===1)holdings[k][0]=k==='cash'?{amt:''}:{code:'',avgPrice:'',curPrice:'',shares:'',peakPrice:''};
   else holdings[k].splice(i,1);
   const panel=document.getElementById('panel-'+k);
   if(panel)delete panel.dataset.built;
@@ -1315,15 +1417,64 @@ function getHoldingCost(k){
   if(k==='cash')return getHoldingTotal(k);
   return holdings[k].reduce((s,r)=>{const a=parseFloat(r.avgPrice),sh=parseFloat(r.shares);return s+(isNaN(a)||isNaN(sh)?0:a*sh);},0);
 }
+function getPeakRisk(k,r){
+  const c=parseFloat(r.curPrice),p=parseFloat(r.peakPrice);
+  if(isNaN(c)||c<=0||isNaN(p)||p<=0)return null;
+  const thBase=HOLDING_THRESHOLDS[k];
+  const isAlphaEtf=k==='alpha'&&String(r.code||'').trim().startsWith('00');
+  const th=k==='alpha'?(isAlphaEtf?thBase.etf:thBase.stock):thBase;
+  const pullback=(c-p)/p*100;
+  if(pullback>th.warn)return null;
+  const level=pullback<=th.danger?'danger':'warn';
+  const a=parseFloat(r.avgPrice);
+  const isProfit=k==='alpha'&&!isNaN(a)&&a>0&&c>a;
+  return{pullback,level,th,isProfit,cur:c,peak:p};
+}
 function refreshStopLoss(al){
-  if(!al)al=document.getElementById('actions');
-  if(!al)return;
+  if(!al)al=document.getElementById('actions');if(!al)return;
   al.querySelectorAll('.stop-loss-item').forEach(el=>el.remove());
+  const esc=s=>String(s).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
   let slHtml='';
-  holdings.alpha.forEach(r=>{
-    const avg=parseFloat(r.avgPrice),cur=parseFloat(r.curPrice);
-    const stopLine=getAlphaWarningStopLoss(r);
-    if(!isNaN(avg)&&!isNaN(cur)&&avg>0){const pnl=((cur-avg)/avg)*100;if(pnl<=stopLine){const code=(r.code||'未命名').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));slHtml+=`<li class="action-item stop-loss-item"><i class="ti ti-alert-triangle" style="color:#A32D2D"></i><span style="color:#A32D2D"><strong>停損警示：${code}</strong> 虧損 ${fPct(pnl)}%，已觸及 ${stopLine}% 警示線</span></li>`;}}
+  REBAL_KEYS.filter(k=>k!=='cash').forEach(k=>{
+    holdings[k].forEach(r=>{
+      const risk=getPeakRisk(k,r);
+      if(risk){
+        // Peak-based risk (primary)
+        const code=esc(r.code||'未命名');
+        const th=risk.th;
+        const isDanger=risk.level==='danger';
+        const action=isDanger?th.dangerAction:th.warnAction;
+        const label=k==='alpha'?(risk.isProfit?'停利':'停損'):LABELS[k];
+        const icon=isDanger?'ti-alert-circle':'ti-alert-triangle';
+        const color=isDanger?'#A32D2D':'#854F0B';
+        slHtml+=`<li class="action-item stop-loss-item">
+          <i class="ti ${icon}" style="color:${color}"></i>
+          <span style="color:${color}">
+            <strong>${label}：${code}</strong>
+            從高點回撤 ${fPct(risk.pullback)}%　${action}
+          </span>
+        </li>`;
+      }else if(k==='alpha'){
+        // Backward-compat: avg-based stop-loss when no peak is set
+        const avg=parseFloat(r.avgPrice),cur=parseFloat(r.curPrice);
+        if(!isNaN(avg)&&avg>0&&!isNaN(cur)&&cur>0){
+          const isEtf=String(r.code||'').trim().startsWith('00');
+          const alphaTh=HOLDING_THRESHOLDS.alpha;
+          const stopLine=isEtf?alphaTh.etf.danger:alphaTh.stock.danger;
+          const pnl=(cur-avg)/avg*100;
+          if(pnl<=stopLine){
+            const code=esc(r.code||'未命名');
+            slHtml+=`<li class="action-item stop-loss-item">
+              <i class="ti ti-alert-triangle" style="color:#A32D2D"></i>
+              <span style="color:#A32D2D">
+                <strong>停損警示：${code}</strong>
+                虧損 ${fPct(pnl)}%，已觸及 ${stopLine}% 閾值（建議設定高點以啟用完整追蹤）
+              </span>
+            </li>`;
+          }
+        }
+      }
+    });
   });
   if(slHtml)al.insertAdjacentHTML('beforeend',slHtml);
 }
@@ -1343,7 +1494,6 @@ function checkHWM(){
     bar.style.display='flex';
     bar.innerHTML='<i class="ti ti-alert-circle" style="color:#BA7517"></i> 高水位 '+fNTD(fund)+' 元低於持倉成本 '+fNTD(cost)+' 元，回撤計算可能失真 <button class="hwm-update-btn" onclick="updateHWM('+Math.round(cost)+')">修正為 '+fNTD(cost)+' 元</button>';
   }else{bar.style.display='none';}
-  refreshStopLoss();
 }
 function updateHWM(ntd){
   HIGH_WATER_MARK=ntd;document.getElementById('fund-input').value=ntd;
@@ -1421,6 +1571,7 @@ function renderRebalTable(){
   checkHWM();
   checkContributed();
   renderPnL();
+  refreshStopLoss();
 }
 function renderPnL(){
   const el=document.getElementById('pnl-area');if(!el)return;
@@ -1667,11 +1818,12 @@ function applyImportData(data,sourceLabel){
           code:String((h&&h.code)||'').slice(0,20),
           avgPrice:optionalNumberString(h&&h.avgPrice,k+'.avgPrice'),
           curPrice:optionalNumberString(h&&h.curPrice,k+'.curPrice'),
-          shares:optionalNumberString(h&&h.shares,k+'.shares')
+          shares:optionalNumberString(h&&h.shares,k+'.shares'),
+          peakPrice:optionalNumberString(h&&h.peakPrice,k+'.peakPrice')
         }));
       }
     }else{
-      normalized.holdings[k]=k==='cash'?[{amt:''}]:[{code:'',avgPrice:'',curPrice:'',shares:''}];
+      normalized.holdings[k]=k==='cash'?[{amt:''}]:[{code:'',avgPrice:'',curPrice:'',shares:'',peakPrice:''}];
     }
   });
   const setInput=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val!==undefined&&val!==null?String(val):'';};
