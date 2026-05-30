@@ -40,6 +40,7 @@
   --color-beta:#378ADD;
   --color-icon-ok:#639922;
   --color-icon-warn:#BA7517;
+  --color-danger-accent:#E24B4A;
 }
 @media(prefers-color-scheme:dark){
   :root{
@@ -54,7 +55,7 @@
     --color-success-bg:#1a2e0a;
     --color-success-text:#9dcc6b;
     --color-danger-bg:#2e1010;
-    --color-danger-text:#f09595;
+    --color-danger-text:#f05555;
     --color-warning-bg:#2e2008;
     --color-warning-text:#e0a84a;
     --color-nature-fixed-bg:#1a2a3d;
@@ -64,6 +65,7 @@
     --color-beta:#7bb8e8;
     --color-icon-ok:#9dcc6b;
     --color-icon-warn:#e0a84a;
+    --color-danger-accent:#f07272;
   }
 }
 body{font-family:var(--font-sans);background:var(--color-background-secondary);color:var(--color-text-primary);padding:24px;max-width:900px;margin:0 auto}
@@ -79,8 +81,15 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .opt-btn.active-trend{background:#E6F1FB;border-color:#378ADD;color:#0C447C}
 .opt-btn.active-vix-low{background:#EAF3DE;border-color:#639922;color:#3B6D11}
 .opt-btn.active-vix-med{background:#FAEEDA;border-color:#BA7517;color:#854F0B}
-.opt-btn.active-vix-high{background:#FCEBEB;border-color:#E24B4A;color:#A32D2D}
+.opt-btn.active-vix-high{background:#FCEBEB;border-color:var(--color-danger-accent);color:#A32D2D}
 .opt-btn.active-rate{background:#EEEDFE;border-color:#7F77DD;color:#3C3489}
+@media(prefers-color-scheme:dark){
+  .opt-btn.active-trend{background:#1a2535;border-color:var(--color-beta);color:var(--color-beta)}
+  .opt-btn.active-vix-low{background:var(--color-success-bg);border-color:var(--color-icon-ok);color:var(--color-icon-ok)}
+  .opt-btn.active-vix-med{background:var(--color-warning-bg);border-color:var(--color-icon-warn);color:var(--color-icon-warn)}
+  .opt-btn.active-vix-high{background:var(--color-danger-bg);border-color:var(--color-danger-accent);color:var(--color-danger-accent)}
+  .opt-btn.active-rate{background:#1e1c38;border-color:#9B96E8;color:#9B96E8}
+}
 .num-input-row{display:flex;flex-direction:column;gap:4px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--color-border-secondary)}
 .num-input-row label{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}
 .num-input-row input,.num-input-row select{width:100%;font-size:12px;padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans);box-sizing:border-box}
@@ -98,7 +107,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .ls-dot-ok{background:#639922}
 .regime-banner{border-radius:var(--border-radius-lg);padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .regime-bull{background:#EAF3DE;border:0.5px solid #639922}
-.regime-bear{background:#FCEBEB;border:0.5px solid #E24B4A}
+.regime-bear{background:#FCEBEB;border:0.5px solid var(--color-danger-accent)}
 .regime-range{background:#FAEEDA;border:0.5px solid #BA7517}
 .regime-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
 .regime-name{font-size:15px;font-weight:500}
@@ -110,13 +119,13 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .mod-neutral{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-primary)}
 .mod-rising{background:#FAEEDA;color:#854F0B;border:0.5px solid #BA7517}
 .mod-falling{background:#E6F1FB;color:#0C447C;border:0.5px solid #378ADD}
-.mod-cash-locked{background:#FCEBEB;color:#A32D2D;border:0.5px solid #E24B4A}
+.mod-cash-locked{background:#FCEBEB;color:#A32D2D;border:0.5px solid var(--color-danger-accent)}
 .mod-cash-ok{background:#EAF3DE;color:#3B6D11;border:0.5px solid #639922}
 .mod-cash-wait{background:#FAEEDA;color:#854F0B;border:0.5px solid #BA7517}
 .trigger-tag{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500}
 .trigger-vix{background:#F7C1C1;color:#791F1F}.trigger-trend{background:#F0997B;color:#4A1B0C}
-.trigger-both{background:#E24B4A;color:#fff}.trigger-extreme{background:#7A0000;color:#fff}
-.hysteresis-tag{font-size:11px;padding:3px 10px;border-radius:4px;font-weight:500;background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid #E24B4A}
+.trigger-both{background:var(--color-danger-accent);color:#fff}.trigger-extreme{background:#7A0000;color:#fff}
+.hysteresis-tag{font-size:11px;padding:3px 10px;border-radius:4px;font-weight:500;background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid var(--color-danger-accent)}
 .card-base{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:16px 18px;margin-bottom:12px}
 .chart-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:0 0 12px;display:flex;align-items:center;gap:5px}
 .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;cursor:pointer;border-radius:6px;padding:2px 4px;transition:background .12s}
@@ -171,9 +180,9 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .action-item strong{font-weight:500}
 .memo-text{font-size:13px;color:var(--color-text-secondary);line-height:1.7;margin:0;white-space:pre-line}
 .memo-hint{margin-top:10px;padding:8px 12px;border-radius:var(--border-radius-md);font-size:12px;line-height:1.6;background:var(--color-background-secondary);border-left:3px solid var(--color-border-primary);color:var(--color-text-secondary)}
-.memo-hint-warn{border-left-color:#E24B4A}
+.memo-hint-warn{border-left-color:var(--color-danger-accent)}
 .holding-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.holding-dot-on{background:var(--color-success-text);opacity:.7}
+.holding-dot-on{background:var(--color-icon-ok);opacity:.7}
 .holding-dot-off{background:transparent}
 .rules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 @media(max-width:500px){.rules-grid{grid-template-columns:1fr 1fr}}
@@ -181,7 +190,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .rule-name{font-size:12px;font-weight:500;color:var(--color-text-primary);margin:0 0 4px}
 .rule-line{font-size:11px;line-height:1.5;margin:0}
 .rule-line.ok{color:var(--color-success-text)}.rule-line.no{color:var(--color-danger-text)}
-.warn-box{border-radius:var(--border-radius-md);padding:10px 14px;font-size:12px;line-height:1.6;margin-top:10px;background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid #F09595}
+.warn-box{border-radius:var(--border-radius-md);padding:10px 14px;font-size:12px;line-height:1.6;margin-top:10px;background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid var(--color-danger-text)}
 .warn-box-extreme{background:#3D0000;color:#FFB3B3;border:0.5px solid #A32D2D}
 .legend-row{display:flex;gap:16px;margin-bottom:10px;font-size:12px;color:var(--color-text-secondary);align-items:center;flex-wrap:wrap}
 .legend-swatch{width:12px;height:5px;border-radius:2px;display:inline-block;margin-right:3px}
@@ -198,7 +207,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .drawdown-bar{margin-top:10px;padding:10px 14px;border-radius:var(--border-radius-md);font-size:12px;line-height:1.6;display:flex;align-items:center;gap:4px}
 .dd-ok{background:var(--color-background-secondary);color:var(--color-text-secondary)}
 .dd-warn{background:var(--color-warning-bg);color:var(--color-warning-text);border:0.5px solid #BA7517}
-.dd-danger{background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid #F09595}
+.dd-danger{background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid var(--color-danger-text)}
 .pnl-area{margin-top:8px;padding:10px 14px;border-radius:var(--border-radius-md);font-size:12px;line-height:1.8;background:var(--color-background-secondary);color:var(--color-text-secondary);display:none}
 .pnl-area .pnl-row{display:flex;justify-content:space-between;align-items:center}
 .pnl-positive{color:#639922;font-weight:600}
@@ -246,6 +255,8 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .sell-opt{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);cursor:pointer;transition:border-color .15s,background .15s;font-size:13px;color:var(--color-text-secondary)}
 .sell-opt:hover{border-color:var(--color-text-tertiary)}
 .sell-opt-icon{font-size:14px;flex-shrink:0}
+.sell-type-text{flex:1;min-width:0}
+.sell-type-th{display:block;font-size:11px;opacity:.75;margin-top:1px}
 .sell-icon-green{color:var(--color-success-text)}
 .sell-icon-yellow{color:var(--color-warning-text)}
 .sell-icon-orange{color:#D85A30}
@@ -253,7 +264,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .sell-opt.sel-green{background:var(--color-success-bg);border-color:var(--color-success-text);color:var(--color-success-text)}
 .sell-opt.sel-yellow{background:var(--color-warning-bg);border-color:#BA7517;color:var(--color-warning-text)}
 .sell-opt.sel-orange{background:#FEF0E5;border-color:#D85A30;color:#9E3800}
-.sell-opt.sel-red{background:var(--color-danger-bg);border-color:#E24B4A;color:var(--color-danger-text)}
+.sell-opt.sel-red{background:var(--color-danger-bg);border-color:var(--color-danger-accent);color:var(--color-danger-text)}
 @media(prefers-color-scheme:dark){
   .sell-opt.sel-orange{background:#2e1a08;color:#f0a060}
 }
@@ -261,7 +272,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .sell-auto-box i{font-size:13px;margin-right:4px}
 .sell-auto-green{background:var(--color-success-bg);color:var(--color-success-text);border:0.5px solid var(--color-success-text)}
 .sell-auto-yellow{background:var(--color-warning-bg);color:var(--color-warning-text);border:0.5px solid #BA7517}
-.sell-auto-red{background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid #E24B4A}
+.sell-auto-red{background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid var(--color-danger-accent)}
 .sell-auto-neutral{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-primary)}
 .sell-auto-title{font-size:12px;font-weight:600;margin-bottom:1px}
 .sell-auto-desc{font-size:12px}
@@ -271,7 +282,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .sell-result{border-radius:var(--border-radius-lg);padding:16px 18px;margin-top:16px}
 .sell-result-green{background:var(--color-success-bg);border:0.5px solid var(--color-success-text)}
 .sell-result-yellow{background:var(--color-warning-bg);border:0.5px solid #BA7517}
-.sell-result-red{background:var(--color-danger-bg);border:0.5px solid #E24B4A}
+.sell-result-red{background:var(--color-danger-bg);border:0.5px solid var(--color-danger-accent)}
 .sell-result-title{font-size:15px;font-weight:600;margin-bottom:4px}
 .sell-result-title i{font-size:15px;margin-right:5px}
 .sell-result-green .sell-result-title{color:var(--color-success-text)}
@@ -378,7 +389,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 <div id="out" class="pending">
   <p class="section-label"><i class="ti ti-radar"></i>市場狀態判定</p>
   <div id="regime-banner" class="regime-banner regime-range">
-    <div id="regime-dot" class="regime-dot" style="background:#BA7517"></div>
+    <div id="regime-dot" class="regime-dot"></div>
     <span id="regime-name" class="regime-name">—</span>
     <span id="regime-trigger"></span>
     <span id="regime-sub" class="regime-sub">請先填入所有參數</span>
@@ -391,7 +402,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
   <div class="card-base">
     <div class="legend-row">
       <span><span class="legend-swatch" style="background:#B4B2A9"></span>基準 Base</span>
-      <span><span class="legend-swatch" style="background:#378ADD"></span>目標 Target</span>
+      <span><span class="legend-swatch" style="background:var(--color-beta)"></span>目標 Target</span>
       <span><span class="bar-nature bar-nature-fixed" style="font-size:10px;padding:1px 5px;border-radius:3px;display:inline-block">固定</span> 核心永不調整</span>
       <span style="font-size:11px;color:var(--color-text-tertiary)">金額：持倉 / 目標</span>
       <span style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)" id="fund-label">高水位 — 元</span>
@@ -592,13 +603,13 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
         <p class="sell-step-hint">請選擇這檔股票類型；系統以高點回撤判斷警示 / 危險線：</p>
         <div class="sell-opt-group" id="sell-s5-opts">
           <div class="sell-opt" data-step="5" data-val="etf" onclick="pickSellOpt(this)">
-            <i class="ti ti-chart-bar sell-opt-icon sell-icon-green"></i> <span id="sell-type-label-etf"></span> → <span id="sell-th-etf"></span>
+            <i class="ti ti-chart-bar sell-opt-icon sell-icon-green"></i><span class="sell-type-text"><span id="sell-type-label-etf"></span><span class="sell-type-th" id="sell-th-etf"></span></span>
           </div>
           <div class="sell-opt" data-step="5" data-val="tech" onclick="pickSellOpt(this)">
-            <i class="ti ti-cpu sell-opt-icon sell-icon-yellow"></i> <span id="sell-type-label-tech"></span> → <span id="sell-th-tech"></span>
+            <i class="ti ti-cpu sell-opt-icon sell-icon-yellow"></i><span class="sell-type-text"><span id="sell-type-label-tech"></span><span class="sell-type-th" id="sell-th-tech"></span></span>
           </div>
           <div class="sell-opt" data-step="5" data-val="bio" onclick="pickSellOpt(this)">
-            <i class="ti ti-flask sell-opt-icon sell-icon-red"></i> <span id="sell-type-label-bio"></span> → <span id="sell-th-bio"></span>
+            <i class="ti ti-flask sell-opt-icon sell-icon-red"></i><span class="sell-type-text"><span id="sell-type-label-bio"></span><span class="sell-type-th" id="sell-th-bio"></span></span>
           </div>
         </div>
         <div class="sell-pnl-display" id="sell-pnl-display" style="margin-top:8px">
@@ -639,6 +650,7 @@ const REGIME_WEIGHTS={
 const RATE_MODIFIER={rising:{hedge:-5,cash:+5},falling:{hedge:+5,cash:-5},stable:{}};
 const REBAL_THRESHOLD={beta:5,global:5,defense:5,alpha:3,hedge:3,cash:5};
 const LABELS={beta:'內核 Beta',global:'外核 Global',defense:'防禦 Vol-Abs',alpha:'衛星 Alpha',hedge:'避險 Hedge',cash:'現金 Option'};
+// Chart colors. COLORS.beta must stay in sync with CSS var --color-beta (light:#378ADD).
 const COLORS={beta:'#378ADD',global:'#7F77DD',defense:'#1D9E75',alpha:'#D85A30',hedge:'#D4537E',cash:'#C8C6C0'};
 const FIXED_KEYS=['beta','global'];
 const DATA_VERSION='v11';
@@ -693,11 +705,11 @@ function getVixConfig(){return S.vixSource==='tw'?CONFIG.vixtwn:CONFIG.vix;}
 function getVixName(){return S.vixSource==='tw'?'VIXTWN':'VIX';}
 function getVixInputName(){return S.vixSource==='tw'?'VIXTWN':'^VIX';}
 const REGIME_META={
-  bull: {label:'成長牛市 Risk-on', sub:'進攻模式，動態層擴張', bannerCls:'regime-bull',  dotColor:'#639922'},
-  bear: {label:'緊縮熊市 Risk-off',sub:'防禦模式，收縮戰線',   bannerCls:'regime-bear',  dotColor:'#E24B4A'},
-  range:{label:'盤整震盪 Range',   sub:'均衡模式，執行再平衡', bannerCls:'regime-range', dotColor:'#BA7517'}
+  bull: {label:'成長牛市 Risk-on', sub:'進攻模式，動態層擴張', bannerCls:'regime-bull',  dotColor:'var(--color-icon-ok)'},
+  bear: {label:'緊縮熊市 Risk-off',sub:'防禦模式，收縮戰線',   bannerCls:'regime-bear',  dotColor:'var(--color-danger-accent)'},
+  range:{label:'盤整震盪 Range',   sub:'均衡模式，執行再平衡', bannerCls:'regime-range', dotColor:'var(--color-icon-warn)'}
 };
-REGIME_META.extremeBear={label:'極端熊市 Extreme Risk-off',sub:'極端恐慌鎖定，Alpha 歸零並提高現金',bannerCls:'regime-bear',dotColor:'#A32D2D'};
+REGIME_META.extremeBear={label:'極端熊市 Extreme Risk-off',sub:'極端恐慌鎖定，Alpha 歸零並提高現金',bannerCls:'regime-bear',dotColor:'var(--color-danger-text)'};
 function isRateActive(regime,key,rate){
   if(key!=='hedge'&&key!=='cash')return false;
   if(rate==='stable')return false;
@@ -1257,7 +1269,7 @@ function buildPanel(k){
       <span class="holding-total">現值：<strong id="htotal-${k}">${isCash?'0 元':'0 萬'}</strong></span>
     </div>
     <div class="holding-rows" id="hrows-${k}"></div>
-    ${isCash?'<div class="cash-contrib-hint" id="cash-contrib-hint" style="display:none;font-size:11px;color:#BA7517;padding:4px 8px"><i class="ti ti-info-circle"></i> 現金變動時，記得同步更新「總投入資金」</div>':'<button class="holding-add-btn" onclick="addHolding(\''+k+'\')">＋ 新增標的</button>'}`;
+    ${isCash?'<div class="cash-contrib-hint" id="cash-contrib-hint" style="display:none;font-size:11px;color:var(--color-warning-text);padding:4px 8px"><i class="ti ti-info-circle"></i> 現金變動時，記得同步更新「總投入資金」</div>':'<button class="holding-add-btn" onclick="addHolding(\''+k+'\')">＋ 新增標的</button>'}`;
   rebuildRows(k);updatePanelTotal(k);
 }
 function rebuildRows(k){
@@ -1471,8 +1483,8 @@ function refreshStopLoss(al){
         const isDanger=risk.level==='danger';
         const action=isDanger?th.dangerAction:th.warnAction;
         const label=k==='alpha'?(risk.isProfit?'停利':'停損'):LABELS[k];
-        const icon=isDanger?'ti-alert-circle':'ti-alert-triangle';
-        const color=isDanger?'#A32D2D':'#854F0B';
+        const icon=isDanger?'ti-alert-triangle':'ti-alert-circle';
+        const color=isDanger?'var(--color-danger-text)':'var(--color-warning-text)';
         slHtml+=`<li class="action-item stop-loss-item">
           <i class="ti ${icon}" style="color:${color}"></i>
           <span style="color:${color}">
@@ -1491,8 +1503,8 @@ function refreshStopLoss(al){
           if(pnl<=stopLine){
             const code=esc(r.code||'未命名');
             slHtml+=`<li class="action-item stop-loss-item">
-              <i class="ti ti-alert-triangle" style="color:#A32D2D"></i>
-              <span style="color:#A32D2D">
+              <i class="ti ti-alert-triangle" style="color:var(--color-danger-text)"></i>
+              <span style="color:var(--color-danger-text)">
                 <strong>停損警示：${code}</strong>
                 虧損 ${fPct(pnl)}%，已觸及 ${stopLine}% 閾值（建議設定高點以啟用完整追蹤）
               </span>
@@ -2048,13 +2060,13 @@ function updateSellStep4(r){
   const inf=risk.budgetPct===Infinity;
   let cls,icon,label,desc,action='';
   if(inf||risk.budgetPct>CONFIG.concentration.high){
-    cls='sell-auto-red';icon='ti-alert-circle';label='高風險';
+    cls='sell-auto-red';icon='ti-alert-triangle';label='高風險';
     desc=inf
       ?'Alpha 目標額度目前為 0，無法分散風險'
       :`已占 Alpha 目標額度 <strong>${fPct(risk.budgetPct)}%</strong>，集中度過高`;
     action='→ 建議優先分批減碼';
   }else if(risk.budgetPct>=CONFIG.concentration.medium){
-    cls='sell-auto-yellow';icon='ti-alert-triangle';label='中等風險';
+    cls='sell-auto-yellow';icon='ti-alert-circle';label='中等風險';
     desc=`已占 Alpha 目標額度 <strong>${fPct(risk.budgetPct)}%</strong>，集中度偏高`;
     action='→ 建議留意集中度';
   }else{
@@ -2170,7 +2182,7 @@ function calcSellResult(selectedHolding){
   if(alphaTargetZero)redReasons.push('目前 DAA 目標不承擔 Alpha 額度');
   if(redReasons.length){
     level='red';
-    title='<i class="ti ti-alert-circle"></i> 建議：全賣或大幅減碼';
+    title='<i class="ti ti-alert-triangle"></i> 建議：全賣或大幅減碼';
     body='理由：'+redReasons.join('、')+'。保護本金與遵守 DAA 風險預算為第一優先。';
   }
   else{
@@ -2185,7 +2197,7 @@ function calcSellResult(selectedHolding){
     if(!yellowReasons.length&&alphaInnerPct>=50&&alphaBudgetPct>=20)yellowReasons.push('Alpha 內部集中度較高');
     if(yellowReasons.length){
       level='yellow';
-      title='<i class="ti ti-alert-triangle"></i> 建議：分批減碼';
+      title='<i class="ti ti-alert-circle"></i> 建議：分批減碼';
       body='理由：'+yellowReasons.join('、')+'。建議先賣出部分，回收本金並降低風險。';
     }else{
       level='green';
