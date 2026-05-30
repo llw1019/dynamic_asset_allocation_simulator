@@ -37,6 +37,9 @@
   --color-nature-fixed-text:#0C447C;
   --color-nature-dyn-bg:#FAEEDA;
   --color-nature-dyn-text:#854F0B;
+  --color-beta:#378ADD;
+  --color-icon-ok:#639922;
+  --color-icon-warn:#BA7517;
 }
 @media(prefers-color-scheme:dark){
   :root{
@@ -58,6 +61,9 @@
     --color-nature-fixed-text:#7bb8e8;
     --color-nature-dyn-bg:#2e2008;
     --color-nature-dyn-text:#e0a84a;
+    --color-beta:#7bb8e8;
+    --color-icon-ok:#9dcc6b;
+    --color-icon-warn:#e0a84a;
   }
 }
 body{font-family:var(--font-sans);background:var(--color-background-secondary);color:var(--color-text-primary);padding:24px;max-width:900px;margin:0 auto}
@@ -208,7 +214,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
 .score-list{display:flex;flex-direction:column;gap:7px}
 .score-row{display:grid;grid-template-columns:96px 1fr 48px;gap:8px;align-items:center;font-size:12px;color:var(--color-text-secondary)}
 .score-track{height:8px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden}
-.score-fill{height:100%;border-radius:3px;background:#378ADD;transition:width .2s ease}
+.score-fill{height:100%;border-radius:3px;background:var(--color-beta);transition:width .2s ease}
 .score-val{text-align:right;color:var(--color-text-primary);font-weight:500}
 .buy-result-box{border-radius:var(--border-radius-md);padding:12px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-primary)}
 .buy-result-symbol{font-size:11px;color:var(--color-text-secondary);margin-bottom:2px}
@@ -583,16 +589,16 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
           <span class="sell-step-num" id="sell-sn-5">5</span>
           <span class="sell-step-title">停損與風險控制</span>
         </div>
-        <p class="sell-step-hint">請選擇這檔股票類型：</p>
+        <p class="sell-step-hint">請選擇這檔股票類型；系統以高點回撤判斷警示 / 危險線：</p>
         <div class="sell-opt-group" id="sell-s5-opts">
           <div class="sell-opt" data-step="5" data-val="etf" onclick="pickSellOpt(this)">
-            <i class="ti ti-chart-bar sell-opt-icon sell-icon-green"></i> 大型 ETF → 建議停損 -11%
+            <i class="ti ti-chart-bar sell-opt-icon sell-icon-green"></i> <span id="sell-type-label-etf"></span> → <span id="sell-th-etf"></span>
           </div>
           <div class="sell-opt" data-step="5" data-val="tech" onclick="pickSellOpt(this)">
-            <i class="ti ti-cpu sell-opt-icon sell-icon-yellow"></i> 一般電子 / AI 股 → 建議停損 -9%
+            <i class="ti ti-cpu sell-opt-icon sell-icon-yellow"></i> <span id="sell-type-label-tech"></span> → <span id="sell-th-tech"></span>
           </div>
           <div class="sell-opt" data-step="5" data-val="bio" onclick="pickSellOpt(this)">
-            <i class="ti ti-flask sell-opt-icon sell-icon-red"></i> 生技 / 高波動題材股 → 建議停損 -7%
+            <i class="ti ti-flask sell-opt-icon sell-icon-red"></i> <span id="sell-type-label-bio"></span> → <span id="sell-th-bio"></span>
           </div>
         </div>
         <div class="sell-pnl-display" id="sell-pnl-display" style="margin-top:8px">
@@ -635,13 +641,21 @@ const REBAL_THRESHOLD={beta:5,global:5,defense:5,alpha:3,hedge:3,cash:5};
 const LABELS={beta:'內核 Beta',global:'外核 Global',defense:'防禦 Vol-Abs',alpha:'衛星 Alpha',hedge:'避險 Hedge',cash:'現金 Option'};
 const COLORS={beta:'#378ADD',global:'#7F77DD',defense:'#1D9E75',alpha:'#D85A30',hedge:'#D4537E',cash:'#C8C6C0'};
 const FIXED_KEYS=['beta','global'];
+const DATA_VERSION='v11';
+const isEtfCode=code=>String(code||'').trim().startsWith('00');
+const SELL_TYPE_LABELS={etf:'大型 ETF',tech:'一般電子 / AI 股',bio:'生技 / 高波動題材股'};
 const CONFIG={
   vix:{medium:20,high:30,extremeEnter:35,extremeExit:25},
   vixtwn:{medium:30,high:40,extremeEnter:45,extremeExit:40},
   trend:{threshold:2,bearEnter:-5,bearExit:3,bullEnter:3,bullExit:-2},
   rate:{threshold:0.25},
-  stopLoss:-8,
   drawdown:{warn:5,danger:8},
+  minCashBear:10,
+  singleDayDropWarn:3,
+  concentration:{high:50,medium:30},
+  tradingCost:{commission:0.001425,etfTax:0.001,stockTax:0.003},
+  debounce:{lsSave:300,extremeBearExit:2000,ioMsg:4000},
+  sellThreshold:{bioOffset:2},
   ma60:{overheat:10,warm:6,near:3},
   buyScore:{
     single:{good:75,warn:60,trendThreshold:20},
@@ -727,7 +741,7 @@ function getActionBody(regime,key,target,rate){
 function getActionItems(regime,target,rate){
   const range=REGIME_WEIGHTS.range;
   const DYN_KEYS=['alpha','defense','hedge','cash'];
-  const DYN_LABELS={alpha:'衛星 Alpha',defense:'防禦 Vol-Abs',hedge:'避險 Hedge',cash:'現金 Option'};
+  const DYN_LABELS=DYN_KEYS.reduce((o,k)=>({...o,[k]:LABELS[k]}),{});
   if(regime==='range'){
     const rateNote=isRateActive('range','hedge',rate)?` · ${rate==='rising'?'升息':'降息'} Modifier`:'';
     return[
@@ -799,7 +813,7 @@ const RULES_BASE=[
   {name:'內核 Beta',    ok:['永久核心，季再平衡'],        no:['絕對不主動調整']},
   {name:'外核 Global',  ok:['永久核心，季再平衡'],        no:['絕對不主動調整']},
   {name:'防禦 Vol-Abs', ok:['熊市加碼','過熱減碼'],       no:[]},
-  {name:'衛星 Alpha',   ok:['唯一主動操作層','可停利換股'],no:['單筆虧損 > 8% 停損']},
+  {name:'衛星 Alpha',   ok:['唯一主動操作層','可停利換股'],no:['依高點回撤與風險線控管停損 / 停利']},
   {name:'避險 Hedge',   ok:['逆週期使用'],                no:['不長期重壓']},
   {name:'現金 Option',  ok:['永遠存在','崩盤最大火力'],   no:[]}
 ];
@@ -822,7 +836,7 @@ function getContributedLabel(){
 }
 
 // LocalStorage
-const LS_KEY='daa_sim_v11';
+const LS_KEY='daa_sim_'+DATA_VERSION;
 function setHysteresisStatus(show){
   const el=document.getElementById('hysteresis-status');if(!el)return;
   if(!show){el.style.display='none';el.innerHTML='';return;}
@@ -852,7 +866,19 @@ function initStaticTexts(){
   const tBeta=document.getElementById('txt-th-beta');
   if(tAlpha) tAlpha.textContent=REBAL_THRESHOLD.alpha;
   if(tBeta) tBeta.textContent=REBAL_THRESHOLD.beta;
+  Object.keys(SELL_TYPE_LABELS).forEach(t=>{
+    const el=document.getElementById('sell-type-label-'+t);
+    if(el)el.textContent=SELL_TYPE_LABELS[t];
+  });
+  setSellThresholdText('etf');
+  setSellThresholdText('tech');
+  setSellThresholdText('bio');
   updateVixSourceUI();
+}
+function setSellThresholdText(type){
+  const el=document.getElementById('sell-th-'+type);
+  const th=getSellStopThresholds(type);
+  if(el&&th)el.textContent=`警示 ${th.warn}% / 危險 ${th.danger}%`;
 }
 function setOutputPending(){
   const out=document.getElementById('out');
@@ -894,7 +920,7 @@ function lsSave(){
     }));
   }catch(e){}
 }
-const lsSaveDebounced=debounce(lsSave,300);
+const lsSaveDebounced=debounce(lsSave,CONFIG.debounce.lsSave);
 function lsLoad(){
   try{
     const raw=localStorage.getItem(LS_KEY);if(!raw)return;
@@ -965,9 +991,9 @@ function calcTarget(regime){
   }
   sum=Object.values(base).reduce((a,b)=>a+b,0);
   if(sum!==100)base.cash=Math.max(0,base.cash+(100-sum));
-  if(protectedBear&&base.cash<10){
-    let need=10-base.cash;
-    base.cash=10;
+  if(protectedBear&&base.cash<CONFIG.minCashBear){
+    let need=CONFIG.minCashBear-base.cash;
+    base.cash=CONFIG.minCashBear;
     ['hedge','alpha','defense'].forEach(k=>{
       if(need<=0)return;
       const cut=Math.min(base[k],need);
@@ -1048,7 +1074,7 @@ const debouncedExitExtreme=debounce(function(){
     if(S.trend&&S.vix&&S.rate)render();
     lsSaveDebounced();
   }
-},2000);
+},CONFIG.debounce.extremeBearExit);
 function onVixInput(){
   const v=parseFloat(document.getElementById('vix-input').value);
   const badge=document.getElementById('vix-badge');
@@ -1189,9 +1215,9 @@ function render(){
   if(inExtremeBear&&vv!==null&&vv>vixCfg.extremeExit)
     wa.innerHTML=`<div class="warn-box warn-box-extreme"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>極端恐慌 Hysteresis 鎖定：${vixName} ${fPct(vv)}。停止一切加碼，等待 ${vixName} 回落至 ${vixCfg.extremeExit} 以下才解除熊市防禦。</div>`;
   else if(regime==='extremeBear')
-    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>硬規則：衛星標的出現跳空缺口或單日跌幅 > 3%，禁止動用現金加碼。等待 ${vixName} 回落至 ${vixCfg.extremeExit} 以下才解除極端防禦。</div>`;
+    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>硬規則：衛星標的出現跳空缺口或單日跌幅 > ${CONFIG.singleDayDropWarn}%，禁止動用現金加碼。等待 ${vixName} 回落至 ${vixCfg.extremeExit} 以下才解除極端防禦。</div>`;
   else if(regime==='bear')
-    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>硬規則：衛星標的出現跳空缺口或單日跌幅 > 3%，禁止動用現金加碼。等待 ${vixName} 回落至 ${vixCfg.high} 以下再評估進場。</div>`;
+    wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>硬規則：衛星標的出現跳空缺口或單日跌幅 > ${CONFIG.singleDayDropWarn}%，禁止動用現金加碼。等待 ${vixName} 回落至 ${vixCfg.high} 以下再評估進場。</div>`;
   else if(S.vix==='high')
     wa.innerHTML=`<div class="warn-box"><i class="ti ti-alert-triangle" style="font-size:13px;margin-right:4px"></i>${vixName} > ${vixCfg.high} 高恐慌區間。現金保留充足備用，嚴禁一次性重壓。</div>`;
   else if(indexPct!==null&&indexPct>CONFIG.ma60.overheat)
@@ -1421,7 +1447,7 @@ function getPeakRisk(k,r){
   const c=parseFloat(r.curPrice),p=parseFloat(r.peakPrice);
   if(isNaN(c)||c<=0||isNaN(p)||p<=0)return null;
   const thBase=HOLDING_THRESHOLDS[k];
-  const isAlphaEtf=k==='alpha'&&String(r.code||'').trim().startsWith('00');
+  const isAlphaEtf=k==='alpha'&&isEtfCode(r.code);
   const th=k==='alpha'?(isAlphaEtf?thBase.etf:thBase.stock):thBase;
   const pullback=(c-p)/p*100;
   if(pullback>th.warn)return null;
@@ -1458,7 +1484,7 @@ function refreshStopLoss(al){
         // Backward-compat: avg-based stop-loss when no peak is set
         const avg=parseFloat(r.avgPrice),cur=parseFloat(r.curPrice);
         if(!isNaN(avg)&&avg>0&&!isNaN(cur)&&cur>0){
-          const isEtf=String(r.code||'').trim().startsWith('00');
+          const isEtf=isEtfCode(r.code);
           const alphaTh=HOLDING_THRESHOLDS.alpha;
           const stopLine=isEtf?alphaTh.etf.danger:alphaTh.stock.danger;
           const pnl=(cur-avg)/avg*100;
@@ -1486,13 +1512,13 @@ function checkHWM(){
   const bar=document.getElementById('hwm-bar');if(!bar)return;
   if(fund<=0&&(total>0||cost>0)){
     bar.style.display='flex';
-    bar.innerHTML='<i class="ti ti-info-circle" style="color:#378ADD"></i> 尚未設定高水位 <button class="hwm-update-btn" onclick="updateHWM('+Math.round(suggested)+')">設為 '+fNTD(suggested)+' 元</button>';
+    bar.innerHTML='<i class="ti ti-info-circle" style="color:var(--color-beta)"></i> 尚未設定高水位 <button class="hwm-update-btn" onclick="updateHWM('+Math.round(suggested)+')">設為 '+fNTD(suggested)+' 元</button>';
   }else if(total>fund+1&&fund>0){
     bar.style.display='flex';
-    bar.innerHTML='<i class="ti ti-trophy" style="color:#639922"></i> 持倉淨值 '+fNTD(total)+' 元已超過高水位 '+fNTD(fund)+' 元 <button class="hwm-update-btn" onclick="updateHWM('+Math.round(suggested)+')">更新高水位</button>';
+    bar.innerHTML='<i class="ti ti-trophy" style="color:var(--color-icon-ok)"></i> 持倉淨值 '+fNTD(total)+' 元已超過高水位 '+fNTD(fund)+' 元 <button class="hwm-update-btn" onclick="updateHWM('+Math.round(suggested)+')">更新高水位</button>';
   }else if(cost>fund+1&&fund>0&&cost>0){
     bar.style.display='flex';
-    bar.innerHTML='<i class="ti ti-alert-circle" style="color:#BA7517"></i> 高水位 '+fNTD(fund)+' 元低於持倉成本 '+fNTD(cost)+' 元，回撤計算可能失真 <button class="hwm-update-btn" onclick="updateHWM('+Math.round(cost)+')">修正為 '+fNTD(cost)+' 元</button>';
+    bar.innerHTML='<i class="ti ti-alert-circle" style="color:var(--color-icon-warn)"></i> 高水位 '+fNTD(fund)+' 元低於持倉成本 '+fNTD(cost)+' 元，回撤計算可能失真 <button class="hwm-update-btn" onclick="updateHWM('+Math.round(cost)+')">修正為 '+fNTD(cost)+' 元</button>';
   }else{bar.style.display='none';}
 }
 function updateHWM(ntd){
@@ -1506,7 +1532,7 @@ function checkContributed(){
   const bar=document.getElementById('contributed-bar');if(!bar)return;
   if(TOTAL_CONTRIBUTED<=0&&cost>0){
     bar.style.display='flex';
-    bar.innerHTML='<i class="ti ti-info-circle" style="color:#378ADD"></i> 尚未設定總投入資金 <button class="hwm-update-btn" onclick="updateContributed('+Math.round(cost)+')">設為持倉成本 '+fNTD(cost)+' 元</button>';
+    bar.innerHTML='<i class="ti ti-info-circle" style="color:var(--color-beta)"></i> 尚未設定總投入資金 <button class="hwm-update-btn" onclick="updateContributed('+Math.round(cost)+')">設為持倉成本 '+fNTD(cost)+' 元</button>';
   }else{bar.style.display='none';}
 }
 function updateContributed(ntd){
@@ -1582,7 +1608,7 @@ function renderPnL(){
     const p=parseFloat(r.curPrice),sh=parseFloat(r.shares),code=r.code||'';
     if(isNaN(p)||isNaN(sh)||p<=0||sh<=0)return;
     const mv=p*sh;
-    estSellCost+=Math.floor(mv*0.001425)+Math.floor(mv*(code.trim().startsWith('00')?0.001:0.003));
+    estSellCost+=Math.floor(mv*CONFIG.tradingCost.commission)+Math.floor(mv*(isEtfCode(code)?CONFIG.tradingCost.etfTax:CONFIG.tradingCost.stockTax));
   });});
   const cost=REBAL_KEYS.reduce((s,k)=>s+getHoldingCost(k),0);
   const totalPnL=Math.round(nav-TOTAL_CONTRIBUTED-estSellCost);
@@ -1590,11 +1616,11 @@ function renderPnL(){
   const realized=totalPnL-unrealized;
   const returnPct=fPct2(totalPnL/TOTAL_CONTRIBUTED*100);
   function pnlClass(v){return v>0?'pnl-positive':v<0?'pnl-negative':'pnl-zero';}
-  function fNTD(v){return (v>0?'+':'')+v.toLocaleString();}
-  el.innerHTML=`<div class="pnl-row"><span>總損益 (淨值 − 投入 − 費用)</span><span class="${pnlClass(totalPnL)}">${fNTD(totalPnL)} 元 (${totalPnL>0?'+':''}${returnPct}%)</span></div>`+
-    `<div class="pnl-row"><span>未實現損益 (扣預估賣出費用)</span><span class="${pnlClass(unrealized)}">${fNTD(unrealized)} 元</span></div>`+
-    `<div class="pnl-row"><span>已實現損益 (推算：總損益 − 未實現)</span><span class="${pnlClass(realized)}">${fNTD(realized)} 元</span></div>`+
-    `<div class="pnl-row" style="font-size:11px;color:var(--color-text-tertiary)"><span>預估賣出費用 (手續費0.1425% + 稅)</span><span>${estSellCost.toLocaleString()} 元</span></div>`;
+  function fNTDSigned(v){return (v>0?'+':'')+v.toLocaleString();}
+  el.innerHTML=`<div class="pnl-row"><span>總損益 (淨值 − 投入 − 費用)</span><span class="${pnlClass(totalPnL)}">${fNTDSigned(totalPnL)} 元 (${totalPnL>0?'+':''}${returnPct}%)</span></div>`+
+    `<div class="pnl-row"><span>未實現損益 (扣預估賣出費用)</span><span class="${pnlClass(unrealized)}">${fNTDSigned(unrealized)} 元</span></div>`+
+    `<div class="pnl-row"><span>已實現損益 (推算：總損益 − 未實現)</span><span class="${pnlClass(realized)}">${fNTDSigned(realized)} 元</span></div>`+
+    `<div class="pnl-row" style="font-size:11px;color:var(--color-text-tertiary)"><span>預估賣出費用 (手續費${(CONFIG.tradingCost.commission*100).toFixed(4)}% + 稅)</span><span>${estSellCost.toLocaleString()} 元</span></div>`;
   el.style.display='block';
 }
 
@@ -1741,7 +1767,7 @@ function calcBuyScore(){
 }
 
 function exportJSON(){
-  const data={version:'v11',exportDate:new Date().toISOString(),
+  const data={version:DATA_VERSION,exportDate:new Date().toISOString(),
     params:{trend:S.trend,vix:S.vix,rate:S.rate,vixVal:S.vixVal,vixSource:S.vixSource,
       taiex:document.getElementById('taiex-input').value,
       ma60:document.getElementById('ma60-input').value,
@@ -1876,7 +1902,7 @@ function applyPastedJSON(){
     toggleJsonPastePanel(false);
   }catch(err){showIOMsg('\u274c JSON \u532f\u5165\u5931\u6557\uff1a'+err.message);}
 }
-function showIOMsg(msg){const el=document.getElementById('io-msg');if(!el)return;el.textContent=msg;setTimeout(()=>{el.textContent='';},4000);}
+function showIOMsg(msg){const el=document.getElementById('io-msg');if(!el)return;el.textContent=msg;setTimeout(()=>{el.textContent='';},CONFIG.debounce.ioMsg);}
 function resetAll(){
   if(!confirm('確定要重置所有設定與持倉資料？此操作無法復原。'))return;
   localStorage.removeItem(LS_KEY);
@@ -1924,9 +1950,11 @@ function refreshSellAdvisorDropdown(){
   const sel=document.getElementById('sell-adv-select');if(!sel)return;
   const alpha=getAlphaHoldings();
   const prevVal=sellState.idx!==null?String(sellState.idx):sel.value;
-  sel.innerHTML='<option value="" disabled selected>— 請先在 Alpha 部位輸入持股 —</option>';
+  const hasHolding=r=>!!(r&&[r.code,r.avgPrice,r.curPrice,r.shares,r.peakPrice].some(v=>String(v||'').trim()!==''));
+  const visibleAlpha=alpha.map((r,i)=>({r,i})).filter(x=>hasHolding(x.r));
+  sel.innerHTML='<option value="" disabled selected>— '+(visibleAlpha.length?'請選擇要評估的 Alpha 標的':'請先在 Alpha 部位輸入持股')+' —</option>';
   let unnamed=0;
-  alpha.forEach((r,i)=>{
+  visibleAlpha.forEach(({r,i})=>{
     const opt=document.createElement('option');opt.value=String(i);
     if(r.code&&r.code.trim()){
       opt.textContent=r.code.trim();
@@ -1936,7 +1964,7 @@ function refreshSellAdvisorDropdown(){
     }
     sel.appendChild(opt);
   });
-  if(alpha.length===0){
+  if(visibleAlpha.length===0){
     sellState.idx=null;
     resetSellChoices();
     const steps=document.getElementById('sell-steps-area');if(steps)steps.style.display='none';
@@ -2019,13 +2047,13 @@ function updateSellStep4(r){
   }
   const inf=risk.budgetPct===Infinity;
   let cls,icon,label,desc,action='';
-  if(inf||risk.budgetPct>50){
+  if(inf||risk.budgetPct>CONFIG.concentration.high){
     cls='sell-auto-red';icon='ti-alert-circle';label='高風險';
     desc=inf
       ?'Alpha 目標額度目前為 0，無法分散風險'
       :`已占 Alpha 目標額度 <strong>${fPct(risk.budgetPct)}%</strong>，集中度過高`;
     action='→ 建議優先分批減碼';
-  }else if(risk.budgetPct>=30){
+  }else if(risk.budgetPct>=CONFIG.concentration.medium){
     cls='sell-auto-yellow';icon='ti-alert-triangle';label='中等風險';
     desc=`已占 Alpha 目標額度 <strong>${fPct(risk.budgetPct)}%</strong>，集中度偏高`;
     action='→ 建議留意集中度';
@@ -2042,10 +2070,36 @@ function updateSellStep4(r){
     (action?`<div class="sell-auto-action">${action}</div>`:'')+
     `<div class="sell-auto-meta">Alpha 內占比 ${alphaPct}｜整體資產占比 ${overallPct}</div>`;
 }
-function getSellStopLoss(type){
-  if(type==='etf')return-11;
-  if(type==='tech')return-9;
-  if(type==='bio')return-7;
+function getSellStopThresholds(type){
+  const th=HOLDING_THRESHOLDS.alpha;
+  if(type==='etf')return th.etf;
+  if(type==='tech')return th.stock;
+  if(type==='bio'){
+    const o=CONFIG.sellThreshold.bioOffset;
+    return{warn:th.stock.warn+o,danger:th.stock.danger+o,
+      warnAction:'高波動題材回撤接近警示，停止加碼並檢查 Thesis',
+      dangerAction:'高波動題材已觸及危險線，建議停損或大幅減碼'};
+  }
+  return null;
+}
+function getSellTypeLabel(type){
+  return SELL_TYPE_LABELS[type]||'Alpha 標的';
+}
+function getSellStopRisk(r,type){
+  const th=getSellStopThresholds(type);
+  if(!r||!th)return null;
+  const cur=parseFloat(r.curPrice),peak=parseFloat(r.peakPrice);
+  if(!isNaN(cur)&&cur>0&&!isNaN(peak)&&peak>0){
+    const pullback=(cur-peak)/peak*100;
+    const level=pullback<=th.danger?'danger':(pullback<=th.warn?'warn':'ok');
+    return{basis:'peak',value:pullback,level,hit:level==='danger',warn:level==='warn',th};
+  }
+  const avg=parseFloat(r.avgPrice);
+  if(!isNaN(cur)&&cur>0&&!isNaN(avg)&&avg>0){
+    const pnl=(cur-avg)/avg*100;
+    const level=pnl<=th.danger?'danger':(pnl<=th.warn?'warn':'ok');
+    return{basis:'avgFallback',value:pnl,level,hit:level==='danger',warn:level==='warn',th};
+  }
   return null;
 }
 function updateSellStep5PnL(r){
@@ -2065,26 +2119,27 @@ function updateSellStep5PnL(r){
 function updateSellStep5Box(r){
   const box=document.getElementById('sell-s5-box');if(!box)return;
   if(!sellState.s5||sellState.idx===null){box.style.display='none';return;}
-  const stopLine=getSellStopLoss(sellState.s5);
   if(!r){box.style.display='none';return;}
-  const avg=parseFloat(r.avgPrice),cur=parseFloat(r.curPrice);
-  if(isNaN(avg)||isNaN(cur)||avg<=0){
+  const stopRisk=getSellStopRisk(r,sellState.s5);
+  const th=getSellStopThresholds(sellState.s5);
+  if(!stopRisk){
     box.style.display='block';
     box.className='sell-auto-box sell-auto-neutral';
-    box.textContent='尚未輸入均價或現價，無法判斷是否觸及停損線 ('+stopLine+'%)';
+    box.textContent='尚未輸入高點 / 現價，無法判斷 '+getSellTypeLabel(sellState.s5)+' 的回撤風險';
     return;
   }
-  const pnl=((cur-avg)/avg)*100;
   box.style.display='block';
-  if(pnl<=stopLine){
+  const fallbackNote=stopRisk.basis==='avgFallback'?'未設定高點，暫以均價損益輔助判斷；建議補上高點以啟用完整追蹤。':'';
+  const metric=stopRisk.basis==='peak'?'高點回撤':'目前損益';
+  if(stopRisk.level==='danger'){
     box.className='sell-auto-box sell-auto-red';
-    box.innerHTML='<i class="ti ti-alert-triangle"></i> 已觸及停損線！目前 <strong>'+fPct(pnl)+'%</strong>，建議停損 '+stopLine+'%';
-  }else if(pnl<0){
+    box.innerHTML='<i class="ti ti-alert-triangle"></i> 已觸及危險線：'+metric+' <strong>'+fPct(stopRisk.value)+'%</strong>，危險線 '+th.danger+'%'+(fallbackNote?'<br><span style="font-size:11px">'+fallbackNote+'</span>':'');
+  }else if(stopRisk.level==='warn'){
     box.className='sell-auto-box sell-auto-yellow';
-    box.innerHTML='目前虧損 '+fPct(pnl)+'%，尚未觸及停損線 ('+stopLine+'%)，持續觀察';
+    box.innerHTML=metric+' '+fPct(stopRisk.value)+'%，已進入警示區（警示 '+th.warn+'%，危險 '+th.danger+'%）'+(fallbackNote?'<br><span style="font-size:11px">'+fallbackNote+'</span>':'');
   }else{
     box.className='sell-auto-box sell-auto-green';
-    box.innerHTML='目前獲利 +'+fPct(pnl)+'%，距停損線 ('+stopLine+'%) 尚有安全空間';
+    box.innerHTML=metric+' '+(stopRisk.value>=0?'+':'')+fPct(stopRisk.value)+'%，未觸及警示線（警示 '+th.warn+'%，危險 '+th.danger+'%）'+(fallbackNote?'<br><span style="font-size:11px">'+fallbackNote+'</span>':'');
   }
 }
 function calcSellResult(selectedHolding){
@@ -2095,19 +2150,21 @@ function calcSellResult(selectedHolding){
   const alphaBudgetPct=risk?(risk.budgetPct===Infinity?100:risk.budgetPct||0):0;
   const alphaInnerPct=risk&&risk.alphaPct!==null?risk.alphaPct:0;
   let hitStopLoss=false;
+  let stopWarn=false;
   let pnlVal=null;
   if(selectedHolding&&sellState.s5){
     const avg=parseFloat(selectedHolding.avgPrice),cur=parseFloat(selectedHolding.curPrice);
     if(!isNaN(avg)&&!isNaN(cur)&&avg>0){
       pnlVal=((cur-avg)/avg)*100;
-      const stopLine=getSellStopLoss(sellState.s5);
-      hitStopLoss=pnlVal<=stopLine;
     }
+    const stopRisk=getSellStopRisk(selectedHolding,sellState.s5);
+    hitStopLoss=!!(stopRisk&&stopRisk.hit);
+    stopWarn=!!(stopRisk&&stopRisk.warn);
   }
   let level,title,body;
   const alphaTargetZero=risk&&risk.marketValue>0&&risk.alphaTargetPct<=0;
   const redReasons=[];
-  if(hitStopLoss)redReasons.push('已觸及個人停損線');
+  if(hitStopLoss)redReasons.push('已觸及類型危險線');
   if(sellState.s1==='invalid')redReasons.push('買入 Thesis 已失效');
   if(sellState.s3==='reversed')redReasons.push('趨勢已反轉');
   if(alphaTargetZero)redReasons.push('目前 DAA 目標不承擔 Alpha 額度');
@@ -2119,11 +2176,12 @@ function calcSellResult(selectedHolding){
   else{
     const yellowReasons=[];
     if(sellState.s3==='weak')yellowReasons.push('技術結構明顯轉弱');
-    if(alphaBudgetPct>50)yellowReasons.push('Alpha 目標額度占用過高');
-    else if(alphaBudgetPct>=30)yellowReasons.push('Alpha 目標額度占用較高');
+    if(alphaBudgetPct>CONFIG.concentration.high)yellowReasons.push('Alpha 目標額度占用過高');
+    else if(alphaBudgetPct>=CONFIG.concentration.medium)yellowReasons.push('Alpha 目標額度占用較高');
     if(sellState.s2==='chase'&&pnlVal!==null&&pnlVal<0)yellowReasons.push('追高買入後出現虧損');
     if(sellState.s1==='weak')yellowReasons.push('核心理由部分弱化');
     if(pnlVal!==null&&pnlVal>=30&&sellState.s3!=='strong')yellowReasons.push('獲利已高且技術結構不再強勢');
+    if(stopWarn)yellowReasons.push('高點回撤已進入警示區');
     if(!yellowReasons.length&&alphaInnerPct>=50&&alphaBudgetPct>=20)yellowReasons.push('Alpha 內部集中度較高');
     if(yellowReasons.length){
       level='yellow';
