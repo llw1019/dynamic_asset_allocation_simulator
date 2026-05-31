@@ -544,7 +544,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
     </div>
   </div>
 
-  <p class="section-label"><i class="ti ti-arrow-down-right-circle"></i>Alpha 持股賣出決策助手（長線版）</p>
+  <p class="section-label"><i class="ti ti-arrow-down-right-circle"></i>Alpha 持股賣出決策助手</p>
   <div class="card-base" style="margin-bottom:12px" id="sell-advisor-card">
     <p class="chart-title"><i class="ti ti-target"></i>請選擇要評估的標的</p>
     <select class="sell-adv-select" id="sell-adv-select" onchange="onSellSelectChange()">
@@ -557,7 +557,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
           <span class="sell-step-num" id="sell-sn-1">1</span>
           <span class="sell-step-title">買入的核心理由，現在還有效嗎？ <span class="sell-step-star">★ 最重要</span></span>
         </div>
-        <p class="sell-step-hint">當初你買這檔的主要理由（題材、營收成長、籌碼、外資買超、產業趨勢等），現在還成立嗎？</p>
+        <p class="sell-step-hint">當初你買這檔的主要理由（題材、營收成長、籌碼、外資買超、產業趨勢等）現在還成立嗎？<br/>若原本等待的催化劑（法說、業績、政策、產品發布）已發酵但股價無反應，請選「部分弱化」或「已失效」。</p>
         <div class="sell-opt-group" id="sell-s1-opts">
           <div class="sell-opt" data-step="1" data-val="valid" onclick="pickSellOpt(this)">
             <i class="ti ti-circle-check sell-opt-icon sell-icon-green"></i> 有效（主要理由仍成立）
@@ -588,6 +588,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
             <i class="ti ti-alert-circle sell-opt-icon sell-icon-red"></i> 追高買入（大幅高於短期均線）
           </div>
         </div>
+        <p class="sell-step-hint" id="sell-s2-chase-hint"></p>
       </div>
       <hr class="sell-divider"/>
       <!-- Step 3 -->
@@ -685,7 +686,7 @@ const COLORS={beta:'#378ADD',global:'#7F77DD',defense:'#1D9E75',alpha:'#D85A30',
 const FIXED_KEYS=['beta','global'];
 const DATA_VERSION='v11';
 const isEtfCode=code=>String(code||'').trim().startsWith('00');
-const SELL_TYPE_LABELS={etf:'大型 ETF',tech:'一般電子 / AI 股',bio:'生技 / 高波動題材股'};
+const SELL_TYPE_LABELS={etf:'產業 / 主題 ETF',tech:'一般電子 / AI 股',bio:'生技 / 高波動題材股'};
 const CONFIG={
   vix:{medium:20,high:30,extremeEnter:35,extremeExit:25},
   vixtwn:{medium:30,high:40,extremeEnter:45,extremeExit:40},
@@ -694,10 +695,10 @@ const CONFIG={
   drawdown:{warn:5,danger:8},
   minCashBear:10,
   singleDayDropWarn:3,
-  concentration:{high:50,medium:30},
+  concentration:{high:50,medium:30,innerMin:20},
   tradingCost:{commission:0.001425,etfTax:0.001,stockTax:0.003},
   debounce:{lsSave:300,extremeBearExit:2000,ioMsg:4000},
-  sellThreshold:{bioOffset:2},
+  sellThreshold:{bioOffset:2,chaseWarnPnl:-2,profitWarn:30},
   ma60:{overheat:10,warm:6,near:3},
   buyScore:{
     single:{good:75,warn:60,trendThreshold:20},
@@ -915,6 +916,8 @@ function initStaticTexts(){
   setSellThresholdText('etf');
   setSellThresholdText('tech');
   setSellThresholdText('bio');
+  const chaseHint=document.getElementById('sell-s2-chase-hint');
+  if(chaseHint)chaseHint.textContent='追高入場容錯空間較小；若虧損超過 '+Math.abs(CONFIG.sellThreshold.chaseWarnPnl)+'%，系統將提示分批減碼。';
   updateVixSourceUI();
 }
 function setSellThresholdText(type){
@@ -2220,19 +2223,19 @@ function calcSellResult(selectedHolding){
     if(sellState.s3==='weak')yellowReasons.push('技術結構明顯轉弱');
     if(alphaBudgetPct>CONFIG.concentration.high)yellowReasons.push('Alpha 目標額度占用過高');
     else if(alphaBudgetPct>=CONFIG.concentration.medium)yellowReasons.push('Alpha 目標額度占用較高');
-    if(sellState.s2==='chase'&&pnlVal!==null&&pnlVal<0)yellowReasons.push('追高買入後出現虧損');
+    if(sellState.s2==='chase'&&pnlVal!==null&&pnlVal<CONFIG.sellThreshold.chaseWarnPnl)yellowReasons.push(`追高買入後虧損已達 ${Math.abs(CONFIG.sellThreshold.chaseWarnPnl)}%`);
     if(sellState.s1==='weak')yellowReasons.push('核心理由部分弱化');
-    if(pnlVal!==null&&pnlVal>=30&&sellState.s3!=='strong')yellowReasons.push('獲利已高且技術結構不再強勢');
+    if(pnlVal!==null&&pnlVal>=CONFIG.sellThreshold.profitWarn&&sellState.s3!=='strong')yellowReasons.push(`獲利已達 ${CONFIG.sellThreshold.profitWarn}% 且技術結構不再強勢`);
     if(stopWarn)yellowReasons.push('高點回撤已進入警示區');
-    if(!yellowReasons.length&&alphaInnerPct>=50&&alphaBudgetPct>=20)yellowReasons.push('Alpha 內部集中度較高');
+    if(!yellowReasons.length&&alphaInnerPct>=CONFIG.concentration.high&&alphaBudgetPct>=CONFIG.concentration.innerMin)yellowReasons.push('Alpha 內部集中度較高');
     if(yellowReasons.length){
       level='yellow';
       title='<i class="ti ti-alert-circle"></i> 建議：分批減碼';
       body='理由：'+yellowReasons.join('、')+'。建議先賣出部分，回收本金並降低風險。';
     }else{
       level='green';
-      title='<i class="ti ti-circle-check"></i> 建議：繼續長期持有';
-      body='理由：買入核心理由仍然有效，技術結構尚可，短期波動不影響長線布局。';
+      title='<i class="ti ti-circle-check"></i> 建議：繼續持有';
+      body='理由：買入核心理由仍然有效，技術結構尚可，短期波動屬正常範圍；請繼續留意停損線。';
     }
   }
   area.innerHTML=`<div class="sell-result sell-result-${level}">
