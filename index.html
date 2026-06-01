@@ -361,7 +361,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
         <option value="tw">台股 VIXTWN</option>
       </select>
       <label id="vix-input-label">VIX 數值 (^VIX)</label>
-      <input type="number" id="vix-input" placeholder="—" min="5" max="90" step="0.1" oninput="onVixInput()"/>
+      <input type="number" id="vix-input" placeholder="—" min="5" max="90" step="0.1" oninput="onVixInput()" onchange="fmtDecInput(this,CONFIG.dp.pct)"/>
     </div>
     <span id="vix-badge" class="num-badge" style="display:none"></span>
     <div id="hysteresis-status" style="margin-top:6px;display:none"></div>
@@ -375,9 +375,9 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
     </div>
     <div class="num-input-row">
       <label>現在 %</label>
-      <input type="number" id="rate-now" placeholder="4.30" min="0" max="20" step="0.01" oninput="onRateInput()"/>
+      <input type="number" id="rate-now" placeholder="4.30" min="0" max="20" step="0.01" oninput="onRateInput()" onchange="fmtDecInput(this,CONFIG.dp.rate)"/>
       <label>一個月前 %</label>
-      <input type="number" id="rate-prev" placeholder="4.05" min="0" max="20" step="0.01" oninput="onRateInput()"/>
+      <input type="number" id="rate-prev" placeholder="4.05" min="0" max="20" step="0.01" oninput="onRateInput()" onchange="fmtDecInput(this,CONFIG.dp.rate)"/>
     </div>
     <span id="rate-badge" class="num-badge" style="display:none"></span>
     <p style="font-size:11px;color:var(--color-text-tertiary);margin-top:5px">美債 10Y（^TNX / US10Y）</p>
@@ -490,11 +490,11 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
           </div>
           <div class="buy-field">
             <label>現價</label>
-            <input type="number" id="buy-price" min="0" step="0.01" placeholder="—" oninput="calcBuyScore()"/>
+            <input type="number" id="buy-price" min="0" step="0.01" placeholder="—" oninput="calcBuyScore()" onchange="fmtDecInput(this,CONFIG.dp.price)"/>
           </div>
           <div class="buy-field">
             <label>參考均線</label>
-            <input type="number" id="buy-ma60" min="0" step="0.01" placeholder="建議填 60MA" oninput="calcBuyScore()"/>
+            <input type="number" id="buy-ma60" min="0" step="0.01" placeholder="建議填 60MA" oninput="calcBuyScore()" onchange="fmtDecInput(this,CONFIG.dp.price)"/>
           </div>
           <div class="buy-field">
             <label>均線 / 結構</label>
@@ -525,7 +525,7 @@ h1{font-size:16px;font-weight:600;margin-bottom:1.5rem;color:var(--color-text-pr
           </div>
           <div class="buy-field">
             <label>折溢價 (%)</label>
-            <input type="number" id="buy-etf-premium" step="0.01" placeholder="例如 1.5" oninput="calcBuyScore()"/>
+            <input type="number" id="buy-etf-premium" step="0.01" placeholder="例如 1.5" oninput="calcBuyScore()" onchange="fmtDecInput(this,CONFIG.dp.pct2)"/>
           </div>
         </div>
       </div>
@@ -684,7 +684,7 @@ const LABELS={beta:'內核 Beta',global:'外核 Global',defense:'防禦 Vol-Abs'
 // Chart colors. COLORS.beta must stay in sync with CSS var --color-beta (light:#378ADD).
 const COLORS={beta:'#378ADD',global:'#7F77DD',defense:'#1D9E75',alpha:'#D85A30',hedge:'#D4537E',cash:'#C8C6C0'};
 const FIXED_KEYS=['beta','global'];
-const DATA_VERSION='v11';
+const DATA_VERSION='v12';
 const isEtfCode=code=>String(code||'').trim().startsWith('00');
 const SELL_TYPE_LABELS={etf:'產業 / 主題 ETF',tech:'一般電子 / AI 股',bio:'生技 / 高波動題材股'};
 const CONFIG={
@@ -716,7 +716,8 @@ const CONFIG={
     warnThreshold:1.5,
     vetoThreshold:3.0,
     discountNotify:-0.5
-  }
+  },
+  dp:{pct:1,pct2:2,price:2,rate:2,ntk:2}
 };
 const HOLDING_THRESHOLDS={
   beta:   {warn:-15,danger:-25,warnAction:'回撤接近警示，考慮季再平衡補倉',    dangerAction:'回撤已達警示，建議執行季再平衡補倉'},
@@ -727,9 +728,24 @@ const HOLDING_THRESHOLDS={
     stock:{warn:-8, danger:-12,warnAction:'留意回撤，接近個股警示線',             dangerAction:'已觸及個股警示線，建議停損或停利'},
     etf:  {warn:-10,danger:-15,warnAction:'留意回撤，接近 ETF 警示線',           dangerAction:'已觸及 ETF 警示線，建議停損或停利'}}
 };
-const fPct=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Number(v).toFixed(1):'—';
-const fPct2=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Number(v).toFixed(2):'—';
-const fNTD10k=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?(Number(v)/10000).toFixed(2):'0.00';
+const fPct=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Number(v).toFixed(CONFIG.dp.pct):'—';
+const fPct2=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Number(v).toFixed(CONFIG.dp.pct2):'—';
+function fmtMinDp(v,dp){
+  const s=String(v??'').trim();
+  if(s===''||!Number.isFinite(Number(s)))return'';
+  const m=s.match(/^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/);
+  if(!m||m[4]!==undefined)return fmtMinDp(Number(s).toLocaleString('en-US',{useGrouping:false,maximumFractionDigits:20}),dp);
+  const sign=m[1],intPart=m[2]||'0',dec=m[3];
+  if(dec===undefined)return sign+intPart+'.'+'0'.repeat(dp);
+  return dec.length>=dp?sign+intPart+'.'+dec:sign+intPart+'.'+dec.padEnd(dp,'0');
+}
+function fmtDecInput(el,dp){el.value=fmtMinDp(el.value,dp);}
+function fmtN(v,dp){return fmtMinDp(v,dp);}
+function formatStaticDecInputs(){
+  ['vix-input'].forEach(id=>{ const el=document.getElementById(id); if(el)fmtDecInput(el,CONFIG.dp.pct); });
+  ['rate-now','rate-prev'].forEach(id=>{ const el=document.getElementById(id); if(el)fmtDecInput(el,CONFIG.dp.rate); });
+}
+const fNTD10k=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?(Number(v)/10000).toFixed(CONFIG.dp.ntk):(0).toFixed(CONFIG.dp.ntk);
 const fNTD=v=>(v!==null&&v!==''&&Number.isFinite(Number(v)))?Math.round(Number(v)).toLocaleString():'0';
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
 function getVixConfig(){return S.vixSource==='tw'?CONFIG.vixtwn:CONFIG.vix;}
@@ -983,6 +999,7 @@ function lsLoad(){
     if(d.rateNow) document.getElementById('rate-now').value=d.rateNow;
     if(d.ratePrev)document.getElementById('rate-prev').value=d.ratePrev;
     if(d.holdings){REBAL_KEYS.forEach(k=>{if(Array.isArray(d.holdings[k])){if(k==='cash')holdings[k]=d.holdings[k].map(h=>({amt:String(h.amt||'')}));else holdings[k]=d.holdings[k].map(h=>('avgPrice' in h)?{code:String(h.code||''),avgPrice:String(h.avgPrice||''),curPrice:String(h.curPrice||''),shares:String(h.shares||''),peakPrice:String(h.peakPrice||'')}:{code:String(h.code||''),avgPrice:'',curPrice:'',shares:'',peakPrice:''});}});}
+    formatStaticDecInputs();
     if(d.taiex&&d.ma60)onIndexInput();
     if(d.vixInput)onVixInput();
     if(d.rateNow&&d.ratePrev)onRateInput();
@@ -1336,14 +1353,14 @@ function rebuildRows(k){
       });
       const lblAvg=document.createElement('label');lblAvg.textContent='均價';
       const inpAvg=document.createElement('input');
-      inpAvg.className='inp-avg';inpAvg.type='number';inpAvg.placeholder='元';inpAvg.min='0';inpAvg.step='0.01';inpAvg.value=r.avgPrice||'';
+      inpAvg.className='inp-avg';inpAvg.type='number';inpAvg.placeholder='元';inpAvg.min='0';inpAvg.step='0.01';inpAvg.value=fmtN(r.avgPrice,CONFIG.dp.price);
       const mvEl=document.createElement('span');mvEl.className='holding-mv';mvEl.style.display='none';
       const pnlBadgeEl=document.createElement('span');pnlBadgeEl.className='holding-pnl';pnlBadgeEl.style.display='none';
       const peakBadgeEl=document.createElement('span');peakBadgeEl.className='holding-pnl';peakBadgeEl.style.display='none';
       const lblPeak=document.createElement('label');lblPeak.textContent='高點';
       const inpPeak=document.createElement('input');
       inpPeak.className='inp-peak';inpPeak.type='number';inpPeak.placeholder='元';
-      inpPeak.min='0';inpPeak.step='0.01';inpPeak.value=r.peakPrice||'';
+      inpPeak.min='0';inpPeak.step='0.01';inpPeak.value=fmtN(r.peakPrice,CONFIG.dp.price);
       const peakHintEl=document.createElement('span');peakHintEl.className='peak-hint';
       function updateMvEl(){
         const c=parseFloat(holdings[k][i].curPrice),s=parseFloat(holdings[k][i].shares);
@@ -1387,8 +1404,9 @@ function rebuildRows(k){
         btn.className='hwm-update-btn';
         btn.textContent='更新高點 '+suggestedStr;
         btn.addEventListener('click',function(){
-          holdings[k][i].peakPrice=suggestedStr;
-          inpPeak.value=suggestedStr;
+          const fmtPeak=fmtN(suggestedStr,CONFIG.dp.price);
+          holdings[k][i].peakPrice=fmtPeak;
+          inpPeak.value=fmtPeak;
           peakHintEl.style.display='none';
           updatePeakBadge();
           renderRebalTable();
@@ -1405,9 +1423,10 @@ function rebuildRows(k){
         if(k==='alpha')syncSellAdvisor(false);
         lsSaveDebounced();
       });
+      inpAvg.addEventListener('change',function(){fmtDecInput(this,CONFIG.dp.price);holdings[k][i].avgPrice=this.value;});
       const lblCur=document.createElement('label');lblCur.textContent='現價';
       const inpCur=document.createElement('input');
-      inpCur.className='inp-cur';inpCur.type='number';inpCur.placeholder='元';inpCur.min='0';inpCur.step='0.01';inpCur.value=r.curPrice||'';
+      inpCur.className='inp-cur';inpCur.type='number';inpCur.placeholder='元';inpCur.min='0';inpCur.step='0.01';inpCur.value=fmtN(r.curPrice,CONFIG.dp.price);
       inpCur.addEventListener('input',function(){
         holdings[k][i].curPrice=this.value;
         updateMvEl();updatePnLBadge();updatePeakBadge();updatePeakHint();
@@ -1419,6 +1438,7 @@ function rebuildRows(k){
         updatePeakBadge();
         updatePeakHint();
       });
+      inpCur.addEventListener('change',function(){fmtDecInput(this,CONFIG.dp.price);holdings[k][i].curPrice=this.value;});
       inpPeak.addEventListener('input',function(){
         holdings[k][i].peakPrice=this.value;
         updatePeakBadge();
@@ -1426,6 +1446,7 @@ function rebuildRows(k){
         renderRebalTable();
         lsSaveDebounced();
       });
+      inpPeak.addEventListener('change',function(){fmtDecInput(this,CONFIG.dp.price);holdings[k][i].peakPrice=this.value;});
       const lblSh=document.createElement('label');lblSh.textContent='股';
       const inpSh=document.createElement('input');
       inpSh.className='inp-shares';inpSh.type='number';inpSh.placeholder='股數';inpSh.min='0';inpSh.step='1';inpSh.value=r.shares||'';
@@ -1917,6 +1938,7 @@ function applyImportData(data,sourceLabel){
   setInput('rate-now',normalized.rateNow);
   setInput('rate-prev',normalized.ratePrev);
   REBAL_KEYS.forEach(k=>{holdings[k]=normalized.holdings[k];});
+  formatStaticDecInputs();
   if(normalized.taiexInput&&normalized.ma60Input)onIndexInput();
   if(normalized.vixInput)onVixInput();
   if(normalized.rateNow&&normalized.ratePrev)onRateInput();
