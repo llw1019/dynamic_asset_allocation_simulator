@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DAA Holdings Updater</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'Cascadia Code', Consolas, Menlo, monospace;
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f4;
+    --color-text-primary: #1c1917;
+    --color-text-secondary: #57534e;
+    --color-text-tertiary: #79746E;
+    --color-border-primary: #d6d3d1;
+    --color-border-secondary: #e7e5e4;
+    --color-border-tertiary: #f5f5f4;
+    --border-radius-lg: 12px;
+    --border-radius-md: 8px;
+    --color-success-bg: #EAF3DE;
+    --color-success-text: #27500A;
+    --color-danger-bg: #FCEBEB;
+    --color-danger-text: #A32D2D;
+    --color-warning-bg: #FAEEDA;
+    --color-warning-text: #854F0B;
+    --color-nature-fixed-bg: #E6F1FB;
+    --color-nature-fixed-text: #0C447C;
+    --color-beta: #378ADD;
+    --color-icon-ok: #639922;
+    --color-danger-accent: #E24B4A;
+    --color-rate-bg: #EEEDFE;
+    --color-rate-border: #7F77DD;
+    --color-rate-text: #3C3489;
+    --color-muted: #B4B2A9;
+    --color-on-accent: #ffffff;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1c1917;
+      --color-background-secondary: #292524;
+      --color-text-primary: #fafaf9;
+      --color-text-secondary: #a8a29e;
+      --color-text-tertiary: #8C8882;
+      --color-border-primary: #44403c;
+      --color-border-secondary: #292524;
+      --color-border-tertiary: #292524;
+      --color-success-bg: #1a2e0a;
+      --color-success-text: #9dcc6b;
+      --color-danger-bg: #2e1010;
+      --color-danger-text: #f09595;
+      --color-warning-bg: #2e2008;
+      --color-warning-text: #e0a84a;
+      --color-nature-fixed-bg: #1a2a3d;
+      --color-nature-fixed-text: #7bb8e8;
+      --color-beta: #7bb8e8;
+      --color-icon-ok: #9dcc6b;
+      --color-danger-accent: #f07272;
+      --color-rate-bg: #1e1c38;
+      --color-rate-border: #9B96E8;
+      --color-rate-text: #9B96E8;
+      --color-muted: #6b6965;
+    }
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    height: 100vh;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: auto;
+  }
+
+  /* ── header ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 14px 16px;
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-lg);
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-size: 16px;
+    color: var(--color-text-primary);
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  header .hint {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    padding: 5px 10px;
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+  }
+  header .hint b { color: var(--color-text-primary); font-weight: 500; }
+  header .shortcut {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    white-space: nowrap;
+  }
+  header .shortcut kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-primary);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+  }
+
+  /* ── 2x2 panel grid ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+  }
+
+  .row-lbl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px 8px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    background: var(--color-background-primary);
+    border-bottom: 0.5px solid var(--color-border-secondary);
+    flex-shrink: 0;
+  }
+
+  .row-cnt {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    min-height: 0;
+    flex: 1;
+    background: var(--color-background-primary);
+  }
+
+  /* badge inside label rows */
+  .row-lbl .badge {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    background: var(--color-background-secondary);
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 0.5px solid var(--color-border-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .row-lbl .badge.active {
+    color: var(--color-rate-text);
+    background: var(--color-rate-bg);
+    border-color: var(--color-rate-border);
+  }
+
+  /* push badge to the far right in input/output label rows */
+  .lbl-spacer { flex: 1; }
+
+  /* upload button */
+  .btn-upload {
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-primary);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    padding: 4px 9px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .btn-upload:hover { color: var(--color-text-primary); border-color: var(--color-text-secondary); }
+
+  /* clear button */
+  .btn-clear {
+    background: none;
+    border: none;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px;
+    border-radius: var(--border-radius-md);
+    line-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s, background 0.15s;
+  }
+  .btn-clear:hover { color: var(--color-danger-accent); background: var(--color-danger-bg); }
+
+  /* textareas */
+  textarea {
+    flex: 1;
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-primary);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 10px 12px;
+    resize: none;
+    width: 100%;
+    min-height: 0;
+    transition: border-color 0.15s;
+  }
+  textarea:focus { outline: none; border-color: var(--color-beta); }
+  textarea::placeholder { color: var(--color-text-tertiary); }
+  textarea[readonly] { color: var(--color-text-secondary); cursor: default; }
+  textarea::-webkit-scrollbar { width: 5px; }
+  textarea::-webkit-scrollbar-track { background: transparent; }
+  textarea::-webkit-scrollbar-thumb { background: var(--color-muted); border-radius: 3px; }
+
+  /* ── action row (row 3 right cell) ── */
+  .row-lbl.action {
+    gap: 8px;
+  }
+  .row-lbl.action .status {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+  .row-lbl.action button {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+  button {
+    background: var(--color-beta);
+    border: 0.5px solid var(--color-beta);
+    border-radius: var(--border-radius-md);
+    color: var(--color-on-accent);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  }
+  button:hover:not(:disabled) { filter: brightness(0.96); }
+  button:active:not(:disabled) { filter: brightness(0.92); }
+  button.secondary {
+    background: var(--color-background-secondary);
+    border-color: var(--color-border-primary);
+    color: var(--color-text-secondary);
+  }
+  button.secondary:hover:not(:disabled) { border-color: var(--color-text-secondary); color: var(--color-text-primary); }
+  button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* status pill */
+  .status {
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-primary);
+    background: var(--color-background-secondary);
+    color: var(--color-text-secondary);
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .status.ok  { color: var(--color-success-text); background: var(--color-success-bg); border-color: var(--color-icon-ok); }
+  .status.err { color: var(--color-danger-text); background: var(--color-danger-bg); border-color: var(--color-danger-accent); }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.65;
+    flex-shrink: 0;
+  }
+
+  /* ── diff (row 4 right cell) ── */
+  .diff-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+  .diff-header .diff-label { font-weight: 500; }
+  .diff-header .diff-summary { font-size: 12px; color: var(--color-text-secondary); }
+  .diff-header .diff-summary b { color: var(--color-rate-text); }
+  .diff-header label.toggle {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    user-select: none;
+  }
+  .diff-header label.toggle input { accent-color: var(--color-beta); cursor: pointer; }
+  .diff-header label.toggle:hover { color: var(--color-text-primary); }
+
+  .diff-scroll {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-primary);
+    background: var(--color-background-secondary);
+  }
+  .diff-scroll.visible { display: block; }
+  .diff-scroll::-webkit-scrollbar { width: 5px; }
+  .diff-scroll::-webkit-scrollbar-track { background: transparent; }
+  .diff-scroll::-webkit-scrollbar-thumb { background: var(--color-muted); border-radius: 3px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  th {
+    background: var(--color-background-secondary);
+    color: var(--color-text-secondary);
+    padding: 6px 10px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 12px;
+    border-bottom: 0.5px solid var(--color-border-secondary);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  td { padding: 6px 10px; border-bottom: 0.5px solid var(--color-border-secondary); color: var(--color-text-primary); }
+  tr:last-child td { border-bottom: none; }
+
+  .code-cell  { color: var(--color-rate-text); font-weight: 600; font-family: var(--font-mono); }
+  .cat-cell   { color: var(--color-text-tertiary); font-size: 11px; font-family: var(--font-mono); }
+  .field-name { color: var(--color-text-secondary); }
+  .old-val    { color: var(--color-danger-text); font-family: var(--font-mono); }
+  .new-val    { color: var(--color-success-text); font-family: var(--font-mono); }
+  .arrow      { color: var(--color-text-tertiary); width: 16px; text-align: center; }
+  .unchanged  { color: var(--color-text-tertiary); font-family: var(--font-mono); }
+
+  .diff-row-changed { background: var(--color-rate-bg); }
+  .diff-row-changed:hover td, tr:not(.diff-row-changed):hover td { background: var(--color-border-tertiary); }
+  .notfound-row td { color: var(--color-danger-text); font-style: italic; }
+  tr.hide-unchanged { display: none; }
+
+  @media (max-width: 820px) {
+    body { height: auto; min-height: 100vh; padding: 16px; overflow: auto; }
+    header .shortcut { margin-left: 0; }
+    .main-grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(4, minmax(240px, 34vh));
+      overflow: visible;
+    }
+    .row-lbl.action { align-items: stretch; flex-direction: column; }
+    .btn-row { margin-left: 0; width: 100%; }
+    .btn-row button { flex: 1; justify-content: center; }
+  }
+
+  @media (max-width: 520px) {
+    body { padding: 12px; }
+    header { align-items: flex-start; }
+    header .hint { width: 100%; line-height: 1.5; }
+    .row-lbl { flex-wrap: wrap; }
+    .diff-header { align-items: flex-start; flex-direction: column; }
+    .diff-header label.toggle { margin-left: 0; }
+    table { min-width: 520px; }
+    .btn-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>DAA Holdings Updater</h1>
+  <div class="hint">格式：<b>code &ensp; avgPrice &ensp; curPrice &ensp; shares &ensp; peakPrice</b>（Tab 或空白分隔）</div>
+  <div class="shortcut"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> 套用更新</div>
+</header>
+
+<div class="main-grid">
+
+  <section class="panel">
+    <div class="row-lbl">
+      輸入 JSON
+      <button class="btn-upload" onclick="document.getElementById('fileInput').click()" title="上傳 JSON 檔案"><i class="ti ti-upload"></i>上傳</button>
+      <input type="file" id="fileInput" accept=".json,application/json" style="display:none" onchange="uploadJSON(this)">
+      <span class="lbl-spacer"></span>
+      <span class="badge" id="inputBadge">—</span>
+      <button class="btn-clear" onclick="clearInput()" title="清除"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="row-cnt">
+      <textarea id="jsonInput" placeholder="貼上 DAA JSON…" oninput="onInputChange()"></textarea>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="row-lbl">
+      更新資料
+      <span class="lbl-spacer"></span>
+      <span class="badge" id="updateBadge">—</span>
+      <button class="btn-clear" onclick="clearUpdate()" title="清除"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="row-cnt">
+      <textarea id="updateData"
+        placeholder="00403A&#9;10.22&#9;10.79&#9;10000&#9;10.82&#10;009816&#9;11.28&#9;15.74&#9;16000&#9;15.74"
+        oninput="onUpdateChange()"></textarea>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="row-lbl">
+      輸出 JSON
+      <span class="lbl-spacer"></span>
+      <span class="badge" id="outputBadge">—</span>
+    </div>
+    <div class="row-cnt">
+      <textarea id="jsonOutput" readonly placeholder="套用更新後顯示於此…"></textarea>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="row-lbl action">
+      <div id="status" class="status">
+        <span class="status-dot"></span>
+        <span id="statusText">尚未套用</span>
+      </div>
+      <div class="btn-row">
+        <button id="btnApply" onclick="applyUpdates()"><i class="ti ti-check"></i>套用更新</button>
+        <button id="btnCopy" class="secondary" onclick="copyOutput()" disabled><i class="ti ti-copy"></i>複製輸出</button>
+        <button id="btnDownload" class="secondary" onclick="downloadOutput()" disabled><i class="ti ti-download"></i>下載 JSON</button>
+      </div>
+    </div>
+    <div class="row-cnt">
+      <div class="diff-header">
+        <span class="diff-label">修改差異</span>
+        <span class="diff-summary" id="diffSummary"></span>
+        <label class="toggle">
+          <input type="checkbox" id="onlyChanges" checked onchange="toggleChangesFilter()">
+          只顯示變更
+        </label>
+      </div>
+      <div class="diff-scroll" id="diffSection">
+        <table>
+          <thead>
+            <tr><th>類別</th><th>代碼</th><th>欄位</th><th>原值</th><th></th><th>新值</th></tr>
+          </thead>
+          <tbody id="diffBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const PRICE_FIELDS  = ['avgPrice', 'curPrice', 'peakPrice'];
+const FIELDS        = ['avgPrice', 'curPrice', 'shares', 'peakPrice'];
+const FIELD_LABELS  = { avgPrice: '均價', curPrice: '現價', shares: '股數', peakPrice: '高點' };
+
+// ── formatting ──────────────────────────────────────────────────
+function fmt(val, field) {
+  if (!PRICE_FIELDS.includes(field)) {
+    const n = parseFloat(val);
+    return isNaN(n) ? val : String(n);
+  }
+  const s = String(val).trim();
+  const dot = s.indexOf('.');
+  if (dot === -1) return s + '.00';
+  const dec = s.length - dot - 1;
+  return dec < 2 ? s + '0'.repeat(2 - dec) : s;
+}
+
+function parseUpdates(raw) {
+  const updates = {};
+  for (const line of raw.trim().split('\n')) {
+    if (!line.trim()) continue;
+    const parts = line.trim().split(/\s+/);
+    if (parts.length < 5) continue;
+    const [code, avgPrice, curPrice, shares, peakPrice] = parts;
+    updates[code] = {
+      avgPrice:  fmt(avgPrice,  'avgPrice'),
+      curPrice:  fmt(curPrice,  'curPrice'),
+      shares:    fmt(shares,    'shares'),
+      peakPrice: fmt(peakPrice, 'peakPrice'),
+    };
+  }
+  return updates;
+}
+
+// ── live badge counters ──────────────────────────────────────────
+function countLines(text) {
+  return text.trim() ? text.trim().split('\n').length : 0;
+}
+function onInputChange() {
+  const v = document.getElementById('jsonInput').value.trim();
+  const badge = document.getElementById('inputBadge');
+  try {
+    JSON.parse(v);
+    badge.textContent = 'valid JSON';
+    badge.className = 'badge active';
+  } catch {
+    badge.textContent = v ? 'invalid' : '—';
+    badge.className = 'badge';
+  }
+}
+function onUpdateChange() {
+  const n = countLines(document.getElementById('updateData').value);
+  const badge = document.getElementById('updateBadge');
+  badge.textContent = n ? `${n} 筆` : '—';
+  badge.className = n ? 'badge active' : 'badge';
+}
+
+// ── main apply ──────────────────────────────────────────────────
+function applyUpdates() {
+  const statusEl  = document.getElementById('status');
+  const statusDot = statusEl.querySelector('.status-dot');
+  const statusTxt = document.getElementById('statusText');
+  const diffSec   = document.getElementById('diffSection');
+  const diffBody  = document.getElementById('diffBody');
+
+  const setStatus = (type, msg) => {
+    statusEl.className = 'status ' + type;
+    statusDot.style.background = '';
+    statusTxt.textContent = msg;
+  };
+
+  try {
+    const jsonText   = document.getElementById('jsonInput').value.trim();
+    const rawUpdates = document.getElementById('updateData').value;
+    if (!jsonText)          throw new Error('請貼上 JSON');
+    if (!rawUpdates.trim()) throw new Error('請貼上更新資料');
+
+    const data    = JSON.parse(jsonText);
+    const updates = parseUpdates(rawUpdates);
+    if (!data.holdings) throw new Error('JSON 中找不到 holdings 欄位');
+
+    const matched  = [];
+    const notFound = [];
+    const diffRows = [];
+
+    for (const [category, items] of Object.entries(data.holdings)) {
+      if (!Array.isArray(items)) continue;
+      for (const item of items) {
+        if (!item.code || !updates[item.code]) continue;
+        const u = updates[item.code];
+        for (const field of FIELDS) {
+          const oldVal = item[field] !== undefined ? String(item[field]) : '';
+          const newVal = u[field];
+          diffRows.push({ category, code: item.code, field, oldVal, newVal, changed: oldVal !== newVal });
+          item[field] = newVal;
+        }
+        matched.push(item.code);
+      }
+    }
+
+    for (const code of Object.keys(updates)) {
+      if (!matched.includes(code)) notFound.push(code);
+    }
+
+    const output = JSON.stringify(data, null, 2);
+    document.getElementById('jsonOutput').value = output;
+
+    const outBadge = document.getElementById('outputBadge');
+    outBadge.textContent = `${output.split('\n').length} 行`;
+    outBadge.className = 'badge active';
+
+    // build diff table
+    const changedCount = diffRows.filter(r => r.changed).length;
+    diffBody.innerHTML = '';
+    const onlyChanges = document.getElementById('onlyChanges').checked;
+    for (const r of diffRows) {
+      const tr = document.createElement('tr');
+      tr.dataset.code = r.code;
+      tr.dataset.cat  = r.category;
+      if (r.changed) {
+        tr.className = 'diff-row-changed';
+      } else {
+        tr.className = 'row-unchanged' + (onlyChanges ? ' hide-unchanged' : '');
+      }
+      tr.innerHTML = `
+        <td class="cat-cell"></td>
+        <td class="code-cell"></td>
+        <td class="field-name">${FIELD_LABELS[r.field]}</td>
+        <td class="${r.changed ? 'old-val' : 'unchanged'}">${r.oldVal}</td>
+        <td class="arrow">${r.changed ? '→' : ''}</td>
+        <td class="${r.changed ? 'new-val' : 'unchanged'}">${r.changed ? r.newVal : ''}</td>
+      `;
+      diffBody.appendChild(tr);
+    }
+    relabelRows();
+    for (const code of notFound) {
+      const tr = document.createElement('tr');
+      tr.className = 'notfound-row';
+      tr.innerHTML = `<td colspan="6">找不到代碼：${code}</td>`;
+      diffBody.appendChild(tr);
+    }
+
+    document.getElementById('diffSummary').innerHTML =
+      `<b>${changedCount}</b> 欄位有更新，共 <b>${matched.length}</b> 筆`;
+    diffSec.classList.add('visible');
+
+    document.getElementById('btnCopy').disabled     = false;
+    document.getElementById('btnDownload').disabled = false;
+
+    setStatus('ok', notFound.length
+      ? `已更新 ${matched.length} 筆，找不到：${notFound.join(', ')}`
+      : `已更新 ${matched.length} 筆`);
+  } catch (e) {
+    setStatus('err', '錯誤：' + e.message);
+    diffSec.classList.remove('visible');
+  }
+}
+
+// ── diff filter toggle ───────────────────────────────────────────
+function toggleChangesFilter() {
+  const only = document.getElementById('onlyChanges').checked;
+  document.querySelectorAll('#diffBody tr.row-unchanged').forEach(tr => {
+    tr.classList.toggle('hide-unchanged', only);
+  });
+  relabelRows();
+}
+
+function relabelRows() {
+  const seen = new Set();
+  document.querySelectorAll('#diffBody tr[data-code] .cat-cell, #diffBody tr[data-code] .code-cell').forEach(td => {
+    td.textContent = '';
+  });
+  document.querySelectorAll('#diffBody tr[data-code]').forEach(tr => {
+    if (tr.classList.contains('hide-unchanged')) return;
+    const code = tr.dataset.code;
+    if (seen.has(code)) return;
+    seen.add(code);
+    tr.querySelector('.cat-cell').textContent  = tr.dataset.cat;
+    tr.querySelector('.code-cell').textContent = code;
+  });
+}
+
+// ── copy / download ──────────────────────────────────────────────
+function copyOutput() {
+  const out = document.getElementById('jsonOutput').value;
+  if (!out) return;
+  navigator.clipboard.writeText(out).then(() => {
+    const btn = document.getElementById('btnCopy');
+    const orig = btn.textContent;
+    btn.textContent = '已複製 ✓';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  });
+}
+
+function downloadOutput() {
+  const out = document.getElementById('jsonOutput').value;
+  if (!out) return;
+  let filename = 'DAA_updated.json';
+  try {
+    const d = JSON.parse(out);
+    if (d.exportDate) filename = `DAA_${d.exportDate.slice(0, 10)}.json`;
+  } catch {}
+  const blob = new Blob([out], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// ── upload JSON ──────────────────────────────────────────────────
+function uploadJSON(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('jsonInput').value = e.target.result;
+    onInputChange();
+  };
+  reader.readAsText(file, 'UTF-8');
+  input.value = '';
+}
+
+// ── clear helpers ────────────────────────────────────────────────
+function clearInput() {
+  document.getElementById('jsonInput').value = '';
+  document.getElementById('inputBadge').textContent = '—';
+  document.getElementById('inputBadge').className = 'badge';
+}
+function clearUpdate() {
+  document.getElementById('updateData').value = '';
+  document.getElementById('updateBadge').textContent = '—';
+  document.getElementById('updateBadge').className = 'badge';
+}
+
+// ── keyboard shortcut ────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    applyUpdates();
+  }
+});
+</script>
+</body>
+</html>
