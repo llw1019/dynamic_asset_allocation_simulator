@@ -1,6 +1,6 @@
 # 股票追蹤系統設計文件
 
-**版本：** 1.1.0
+**版本：** 1.2.0
 **最後更新：** 2026-06-06
 
 ---
@@ -44,7 +44,7 @@
 | FIFO剩餘股數 | Formula | 此批次買入目前尚未賣出的股數 | 交易紀錄、股票代號、交易、ID、股數、當沖股數 |
 | 成交日期 | Date (Auto) | 交易成交日期 | — |
 | 類別 | Formula | 依股票代號判斷 ETF/個股、現股/零股 | 股票代號、股數 |
-| 交易紀錄 | Rollup | • Relation: `股票代號` • Target property: `股票交易紀錄` • Calculate: `Show original` | 股票代號 |
+| 交易紀錄 | Rollup | - Relation: `股票代號` <br> - Target property: `股票交易紀錄` <br> - Calculate: `Show original` | 股票代號 |
 | ID | ID | 資料庫自動流水號，用於排序判斷先後順序 | — |
 
 ---
@@ -260,26 +260,26 @@ if(
 | --- | --- | --- | --- |
 | 名稱 | Title | 股票代號 | — |
 | 類別 | Select | 股票分類 | — |
-| 剩餘投資成本 | Formula | FIFO 含手續費的持倉成本 | 股票交易紀錄．FIFO剩餘股數、收付金額、股數 |
-| 剩餘成交均價 | Formula | 持倉的 FIFO 加權平均成本價 | 剩餘投資成本、剩餘股數 |
+| 持倉成本 | Formula | FIFO 含手續費的持倉成本 | 股票交易紀錄．FIFO剩餘股數、收付金額、股數 |
+| 持倉均價 | Formula | 持倉的 FIFO 加權平均成本價 | 持倉成本、持倉股數 |
 | 市價 | Number | 手動填入現價 | — |
-| 剩餘股數 | Formula | 目前持倉股數 | 股票交易紀錄．FIFO剩餘股數 |
-| 市值 | Formula | `市價 * 剩餘股數` | 市價、剩餘股數 |
+| 持倉股數 | Formula | 目前持倉股數 | 股票交易紀錄．FIFO剩餘股數 |
+| 市值 | Formula | `市價 * 持倉股數` | 市價、持倉股數 |
 | 高點 | Number (Auto) | 由 Automation 維護，記錄持倉期間最高價 | — |
 | 高點回撤率 | Formula | 市價相對高點的漲跌幅 | 市價、高點 |
-| 未實現損益 | Formula | `預估收入 - 剩餘投資成本` | 預估收入、剩餘投資成本 |
-| 未實現報酬率 | Formula | 未實現損益 / 剩餘投資成本 | 未實現損益、剩餘投資成本 |
-| 損益平衡價 | Formula | 回收剩餘投資成本所需的賣出價 | 剩餘投資成本、剩餘股數、股票代號 |
-| 預估賣出費用 | Formula | 假設現在賣出的手續費與交易稅 | 市值、股票代號 |
-| 預估收入 | Formula | 假設現在賣出的淨收入 | 市值、預估賣出費用、剩餘股數 |
+| 浮動損益 | Formula | `賣出收入 - 持倉成本` | 賣出收入、持倉成本 |
+| 浮動報酬率 | Formula | 浮動損益 / 持倉成本 | 浮動損益、持倉成本 |
+| 損益平衡價 | Formula | 回收持倉成本所需的賣出價 | 持倉成本、持倉股數、股票代號 |
+| 賣出費用 | Formula | 假設現在賣出的手續費與交易稅 | 市值、股票代號 |
+| 賣出收入 | Formula | 假設現在賣出的淨收入 | 市值、賣出費用、持倉股數 |
 | 淨收付合計 | Formula | 所有交易收付金額加總 | 股票交易紀錄．收付金額 |
-| 預估損益 | Formula | `預估收入 + 淨收付合計` | 預估收入、淨收付合計 |
-| 預估總報酬率 | Formula | 預估損益 / 買入總成本 | 預估損益、淨收付合計、股票交易紀錄．收付金額 |
-| 年化報酬率 | Formula | 預估總報酬率換算為年化 | 預估總報酬率、股票交易紀錄．成交日期 |
-| 總損益平衡價 | Formula | 回收含過往損益所需的賣出價 | 淨收付合計、剩餘股數、股票代號 |
+| 總損益 | Formula | `賣出收入 + 淨收付合計` | 賣出收入、淨收付合計 |
+| 總報酬率 | Formula | 總損益 / 買入總成本 | 總損益、淨收付合計、股票交易紀錄．收付金額 |
+| 年化報酬率 | Formula | 總報酬率換算為年化 | 總報酬率、股票交易紀錄．成交日期 |
+| 總損益平衡價 | Formula | 回收含過往損益所需的賣出價 | 淨收付合計、持倉股數、股票代號 |
 | 股票交易紀錄 | Relation | 關聯至股票交易紀錄 Database | — |
-| 更新高點 | Checkbox (Auto) | 當市價或剩餘成交均價超過現有高點時自動勾選，作為新高提醒。使用者手動取消勾選後觸發高點更新。 | 剩餘成交均價、市價、高點 |
-| 已結清 | Formula | `if(剩餘股數 > 0, false, true)` | 剩餘股數 |
+| 更新高點 | Checkbox (Auto) | 當市價或持倉均價超過現有高點時自動勾選，作為新高提醒。使用者手動取消勾選後觸發高點更新。 | 持倉均價、市價、高點 |
+| 已結清 | Formula | `if(持倉股數 > 0, false, true)` | 持倉股數 |
 
 ---
 
@@ -299,7 +299,7 @@ Do
 `My value`:
 if(
   or(
-    context("Trigger page").prop("剩餘成交均價") > context("Trigger page").prop("高點"),
+    context("Trigger page").prop("持倉均價") > context("Trigger page").prop("高點"),
     context("Trigger page").prop("市價") > context("Trigger page").prop("高點")
   ),
   true,
@@ -315,9 +315,9 @@ Do
 
 `My value`:
 ifs(
-  context("Trigger page").prop("剩餘股數") == 0, 0,
+  context("Trigger page").prop("持倉股數") == 0, 0,
   max(
-    if(empty(context("Trigger page").prop("剩餘成交均價")), 0, context("Trigger page").prop("剩餘成交均價")),
+    if(empty(context("Trigger page").prop("持倉均價")), 0, context("Trigger page").prop("持倉均價")),
     if(empty(context("Trigger page").prop("市價")), 0, context("Trigger page").prop("市價")),
     if(empty(context("Trigger page").prop("高點")), 0, context("Trigger page").prop("高點"))
   )
@@ -336,7 +336,7 @@ Do
 
 ## 公式定義
 
-### 剩餘投資成本
+### 持倉成本
 
 ```jsx
 let(
@@ -353,12 +353,12 @@ let(
 
 ---
 
-### 剩餘成交均價
+### 持倉均價
 
 ```jsx
 if(
-  prop("剩餘股數") > 0,
-  round(prop("剩餘投資成本") / prop("剩餘股數") * 100) / 100,
+  prop("持倉股數") > 0,
+  round(prop("持倉成本") / prop("持倉股數") * 100) / 100,
   empty()
 )
 ```
@@ -367,7 +367,7 @@ if(
 
 ---
 
-### 剩餘股數
+### 持倉股數
 
 ```jsx
 let(
@@ -392,7 +392,7 @@ let(
 ### 市值
 
 ```jsx
-prop("市價") * prop("剩餘股數")
+prop("市價") * prop("持倉股數")
 ```
 
 ---
@@ -411,20 +411,20 @@ if(
 
 ---
 
-### 未實現損益
+### 浮動損益
 
 ```jsx
-prop("預估收入") - prop("剩餘投資成本")
+prop("賣出收入") - prop("持倉成本")
 ```
 
 ---
 
-### 未實現報酬率
+### 浮動報酬率
 
 ```jsx
 if(
-  prop("剩餘投資成本") > 0,
-  prop("未實現損益") / prop("剩餘投資成本"),
+  prop("持倉成本") > 0,
+  prop("浮動損益") / prop("持倉成本"),
   empty()
 )
 ```
@@ -435,7 +435,7 @@ if(
 
 ### 損益平衡價（純持倉）
 
-回收剩餘投資成本所需的最低賣出價，含預估賣出費用。
+回收持倉成本所需的最低賣出價，含賣出費用。
 
 ```jsx
 let(
@@ -445,13 +445,13 @@ let(
     if(code.substring(0, 2) == "00", 0.001, 0.003)
   ),
   if(
-    prop("剩餘股數") > 0,
+    prop("持倉股數") > 0,
     let(
-      price, prop("剩餘投資成本") / (prop("剩餘股數") * (1 - 0.001425 - tax_rate)),
-      amount, price * prop("剩餘股數"),
+      price, prop("持倉成本") / (prop("持倉股數") * (1 - 0.001425 - tax_rate)),
+      amount, price * prop("持倉股數"),
       fee, floor(amount * 0.001425),
       tax, floor(amount * tax_rate),
-      round((prop("剩餘投資成本") + fee + tax) / prop("剩餘股數") * 100) / 100
+      round((prop("持倉成本") + fee + tax) / prop("持倉股數") * 100) / 100
     ),
     empty()
   )
@@ -460,7 +460,7 @@ let(
 
 ---
 
-### 預估賣出費用
+### 賣出費用
 
 ```jsx
 let(
@@ -486,12 +486,12 @@ let(
 
 ---
 
-### 預估收入
+### 賣出收入
 
 ```jsx
 if(
-  prop("剩餘股數") > 0,
-  prop("市值") - prop("預估賣出費用"),
+  prop("持倉股數") > 0,
+  prop("市值") - prop("賣出費用"),
   empty()
 )
 ```
@@ -509,17 +509,17 @@ let(
 
 ---
 
-### 預估損益
+### 總損益
 
 ```jsx
-prop("預估收入") + prop("淨收付合計")
+prop("賣出收入") + prop("淨收付合計")
 ```
 
 > 含已實現與未實現的總損益。假設現在全部賣出的總損益。
 
 ---
 
-### 預估總報酬率
+### 總報酬率
 
 ```jsx
 if(
@@ -528,7 +528,7 @@ if(
     buy_cost, prop("股票交易紀錄").filter(
       contains(current.prop("交易"), "買")
     ).map(current.prop("收付金額")).sum() * -1,
-    if(buy_cost > 0, prop("預估損益") / buy_cost, empty())
+    if(buy_cost > 0, prop("總損益") / buy_cost, empty())
   ),
   empty()
 )
@@ -548,8 +548,8 @@ let(
   first_date, buys.sort(current.prop("成交日期")).first().prop("成交日期"),
   days, dateBetween(now(), first_date, "days"),
   if(
-    not empty(prop("預估總報酬率")) and days > 0,
-    (1 + prop("預估總報酬率")) ^ (365 / days) - 1,
+    not empty(prop("總報酬率")) and days > 0,
+    (1 + prop("總報酬率")) ^ (365 / days) - 1,
     empty()
   )
 )
@@ -571,13 +571,13 @@ let(
     if(code.substring(0, 2) == "00", 0.001, 0.003)
   ),
   if(
-    prop("剩餘股數") > 0,
+    prop("持倉股數") > 0,
     let(
       target, prop("淨收付合計") * -1,
       amount, target / (1 - 0.001425 - tax_rate),
       fee, floor(amount * 0.001425),
       tax, floor(amount * tax_rate),
-      round((target + fee + tax) / prop("剩餘股數") * 100) / 100
+      round((target + fee + tax) / prop("持倉股數") * 100) / 100
     ),
     empty()
   )
@@ -594,8 +594,8 @@ let(
 | --- | --- | --- | --- |
 | 名稱 | Title | 結算 | — |
 | 總投入金額 | Number | 手動填寫投入股票總金額 | — |
-| 總淨收付合計 | Rollup | • Relation: `股票代號` • Property: `淨收付合計` • Calculate: `Sum` | 股票代號．淨收付合計 |
-| 總預估損益 | Rollup | • Relation: `股票代號` • Property: `預估損益` • Calculate: `Sum` | 股票代號．預估損益 |
+| 總淨收付合計 | Rollup | - Relation: `股票代號` <br> - Property: `淨收付合計` <br> - Calculate: `Sum` | 股票代號．淨收付合計 |
+| 總預估損益 | Rollup | - Relation: `股票代號` <br> - Property: `總損益` <br> - Calculate: `Sum` | 股票代號．總損益 |
 | 剩餘現金 | Formula | 投入金額 + 淨收付合計 | 總投入金額、總淨收付合計 |
 | 股票代號 | Relation | 關聯至股票代號 Database | — |
 
@@ -629,18 +629,18 @@ prop("總投入金額") + prop("總淨收付合計")
           ↓
 股票代號 Database
   ├── 淨收付合計
-  ├── 剩餘股數（from FIFO剩餘股數）
-  ├── 剩餘投資成本（from FIFO剩餘股數 × 收付金額）
-  ├── 剩餘成交均價（from 剩餘投資成本 ÷ 剩餘股數）
-  ├── 市值（市價 × 剩餘股數）
-  ├── 預估賣出費用（from 市值）
-  ├── 預估收入（from 市值 - 預估賣出費用）
-  ├── 未實現損益（from 預估收入 - 剩餘投資成本）
-  ├── 未實現報酬率（from 未實現損益 ÷ 剩餘投資成本）
-  ├── 預估損益（from 預估收入 + 淨收付合計）
-  ├── 預估總報酬率（from 預估損益 ÷ 買入總成本）
-  ├── 年化報酬率（from 預估總報酬率 + 首次買入日期）
-  ├── 損益平衡價（from 剩餘投資成本）
+  ├── 持倉股數（from FIFO剩餘股數）
+  ├── 持倉成本（from FIFO剩餘股數 × 收付金額）
+  ├── 持倉均價（from 持倉成本 ÷ 持倉股數）
+  ├── 市值（市價 × 持倉股數）
+  ├── 賣出費用（from 市值）
+  ├── 賣出收入（from 市值 - 賣出費用）
+  ├── 浮動損益（from 賣出收入 - 持倉成本）
+  ├── 浮動報酬率（from 浮動損益 ÷ 持倉成本）
+  ├── 總損益（from 賣出收入 + 淨收付合計）
+  ├── 總報酬率（from 總損益 ÷ 買入總成本）
+  ├── 年化報酬率（from 總報酬率 + 首次買入日期）
+  ├── 損益平衡價（from 持倉成本）
   ├── 總損益平衡價（from 淨收付合計）
   └── 高點回撤率（from 市價 vs 高點）
             ↓
@@ -656,4 +656,4 @@ prop("總投入金額") + prop("總淨收付合計")
 3. **手續費計算**：使用 `floor`（無條件捨去），與券商實際計算方式一致
 4. **當沖排除**：FIFO 計算使用 `股數 - 當沖股數`，自動排除當沖部分
 5. **零股**：當沖股數公式只處理整張（1000 股倍數），零股當沖股數為 0
-6. **稅率判斷**：`預估賣出費用`、`損益平衡價`、`總損益平衡價` 三個公式各自內建稅率判斷邏輯，如需調整費率須同步修改三處
+6. **稅率判斷**：`賣出費用`、`損益平衡價`、`總損益平衡價` 三個公式各自內建稅率判斷邏輯，如需調整費率須同步修改三處
