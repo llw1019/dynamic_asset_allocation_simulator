@@ -1,6 +1,6 @@
 # 股票追蹤系統設計文件
 
-**版本：** 1.3.4
+**版本：** 1.3.5
 **最後更新：** 2026-06-06
 
 ---
@@ -437,6 +437,8 @@ if(
 
 ```jsx
 let(
+  /* min_days: 最短持倉天數門檻，min: 1，預設: 30 */
+  min_days, 30,
   buys, prop("股票交易紀錄").filter(
     contains(current.prop("交易"), "買") and
     current.prop("FIFO剩餘股數") > 0
@@ -444,14 +446,14 @@ let(
   first_date, buys.sort(current.prop("成交日期")).first().prop("成交日期"),
   days, dateBetween(now(), first_date, "days"),
   if(
-    not empty(prop("浮動報酬率")) and days > 0,
+    not empty(prop("浮動報酬率")) and days >= max(1, min_days),
     (1 + prop("浮動報酬率")) ^ (365 / days) - 1,
     empty()
   )
 )
 ```
 
-> Number format 設為 Percent。持有天數從目前仍在庫存（FIFO剩餘股數 > 0）的最早買入日起算至今日。
+> Number format 設為 Percent。持有天數從目前仍在庫存（FIFO剩餘股數 > 0）的最早買入日起算至今日。持倉未達 `min_days` 天不顯示（可調整，預設 30，最小值 1）。
 
 ---
 
