@@ -1,6 +1,6 @@
 # 股票追蹤系統設計文件
 
-**版本：** 1.3.5
+**版本：** 1.4.3
 **最後更新：** 2026-06-06
 
 ---
@@ -267,6 +267,8 @@ if(
 | 市值 | Formula | `市價 * 持倉股數` | 市價、持倉股數 |
 | 高點 | Number (Auto) | 由 Automation 維護，記錄持倉期間最高價 | — |
 | 高點回撤率 | Formula | 市價相對高點的漲跌幅 | 市價、高點 |
+| 低點 | Number (Auto) | 由 Automation 維護，記錄已結清後觀察期間最低價 | — |
+| 低點反彈率 | Formula | 市價相對低點的反彈幅度 | 市價、低點 |
 | 浮動損益 | Formula | `賣出收入 - 持倉成本` | 賣出收入、持倉成本 |
 | 浮動報酬率 | Formula | 浮動損益 / 持倉成本 | 浮動損益、持倉成本 |
 | 持倉年化率 | Formula | 浮動報酬率換算為年化 | 浮動報酬率、股票交易紀錄．成交日期 |
@@ -278,49 +280,77 @@ if(
 | 總報酬率 | Formula | 總損益 / 買入總成本 | 總損益、淨收付合計、股票交易紀錄．收付金額 |
 | 總損益平衡價 | Formula | 回收含過往損益所需的賣出價 | 淨收付合計、持倉股數、股票代號 |
 | 股票交易紀錄 | Relation | 關聯至股票交易紀錄 Database | — |
-| 更新高點 | Checkbox (Auto) | 當市價或持倉均價超過現有高點時自動勾選，作為新高提醒。使用者手動取消勾選後觸發高點更新。 | 持倉均價、市價、高點 |
+| 更新端點 | Checkbox (Auto) | 當市價或持倉均價觸及高點或低點條件時自動勾選，作為端點更新提醒。使用者手動取消勾選後觸發高點或低點更新。 | 持倉均價、市價、高點、低點、持倉股數 |
 | 已結清 | Formula | `if(持倉股數 > 0, false, true)` | 持倉股數 |
 
 ---
 
 ## 資料庫 Automations
 
-兩段式高點更新流程：
+兩段式高低點更新流程：
 
-1. 市價編輯時偵測新高 → 自動勾選 `更新高點`（提醒使用者）
-2. 使用者確認後取消勾選 → 觸發高點數值更新
+1. 市價編輯時偵測端點條件 → 自動勾選 `更新端點`（提醒使用者）
+2. 使用者確認後取消勾選 → 同時觸發高點與低點數值更新
 
 ```jsx
 When `any` triggers occur
     └── `市價` is edited
 Do
-    └── Set `更新高點` to `My value`
+    └── Set `更新端點` to `My value`
 
 `My value`:
 if(
   or(
-    context("Trigger page").prop("持倉均價") > context("Trigger page").prop("高點"),
-    context("Trigger page").prop("市價") > context("Trigger page").prop("高點")
+    and(
+      context("Trigger page").prop("持倉股數") > 0,
+      or(
+        context("Trigger page").prop("持倉均價") > context("Trigger page").prop("高點"),
+        context("Trigger page").prop("市價") > context("Trigger page").prop("高點")
+      )
+    ),
+    and(
+      context("Trigger page").prop("持倉股數") == 0,
+      or(
+        context("Trigger page").prop("低點") == 0,
+        context("Trigger page").prop("市價") < context("Trigger page").prop("低點")
+      )
+    )
   ),
   true,
-  context("Trigger page").prop("更新高點")
+  context("Trigger page").prop("更新端點")
 )
 ```
 
 ```jsx
 When `any` triggers occur
-    └── `更新高點` set to `unchecked`
+    └── `更新端點` set to `unchecked`
 Do
     └── Set `高點` to `My value`
+    └── Set `低點` to `My value`
 
-`My value`:
-ifs(
-  context("Trigger page").prop("持倉股數") == 0, 0,
+Set `高點` My value:
+if(
+  context("Trigger page").prop("持倉股數") > 0,
   max(
     if(empty(context("Trigger page").prop("持倉均價")), 0, context("Trigger page").prop("持倉均價")),
     if(empty(context("Trigger page").prop("市價")), 0, context("Trigger page").prop("市價")),
     if(empty(context("Trigger page").prop("高點")), 0, context("Trigger page").prop("高點"))
-  )
+  ),
+  0
+)
+
+Set `低點` My value:
+if(
+  context("Trigger page").prop("持倉股數") == 0,
+  if(
+    context("Trigger page").prop("低點") == 0,
+    context("Trigger page").prop("市價"),
+    min(
+      if(empty(context("Trigger page").prop("市價")), 0, context("Trigger page").prop("市價")),
+      if(empty(context("Trigger page").prop("低點")), 0, context("Trigger page").prop("低點"))
+    )
+  ),
+  0
 )
 ```
 
@@ -408,6 +438,20 @@ if(
 ```
 
 > Number format 設為 Percent。正數代表超越高點，負數代表回撤。
+
+---
+
+### 低點反彈率
+
+```jsx
+if(
+  not empty(prop("低點")) and prop("低點") > 0,
+  (prop("市價") - prop("低點")) / prop("低點"),
+  empty()
+)
+```
+
+> Number format 設為 Percent。正數代表從低點回彈幅度，用於已結清股票觀察再進場時機。
 
 ---
 
@@ -638,6 +682,10 @@ prop("總投入金額") + prop("總淨收付合計")
   ├── 市值（市價 × 持倉股數）
   ├── 賣出費用（from 市值）
   ├── 賣出收入（from 市值 - 賣出費用）
+  ├── 高點（from Automation）
+  ├── 高點回撤率（from 市價 vs 高點）
+  ├── 低點（from Automation）
+  ├── 低點反彈率（from 市價 vs 低點）
   ├── 浮動損益（from 賣出收入 - 持倉成本）
   ├── 浮動報酬率（from 浮動損益 ÷ 持倉成本）
   ├── 持倉年化率（from 浮動報酬率 + 持倉起始日期）
@@ -645,7 +693,7 @@ prop("總投入金額") + prop("總淨收付合計")
   ├── 總報酬率（from 總損益 ÷ 買入總成本）
   ├── 損益平衡價（from 持倉成本）
   ├── 總損益平衡價（from 淨收付合計）
-  └── 高點回撤率（from 市價 vs 高點）
+  └── 已結清（from 持倉股數）
             ↓
 資產 Database
 ```
