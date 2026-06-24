@@ -2,7 +2,9 @@
 .io-bar{display:flex;gap:8px;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center}
 .io-btn{font-size:12px;padding:6px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans);display:flex;align-items:center;gap:5px;transition:border-color .15s}
 .io-btn:hover{border-color:var(--color-text-secondary)}
+.io-btn:disabled{opacity:.5;cursor:default;border-color:var(--color-border-primary)}
 .io-file{display:none}
+.fugle-key-input{font-size:12px;padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans);min-width:200px;flex:1 1 200px;max-width:340px;box-sizing:border-box}
 .json-paste-panel{display:none;margin:-.6rem 0 1.2rem;padding:10px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary)}
 .json-paste-panel.open{display:block}
 .json-paste-panel textarea{width:100%;min-height:150px;resize:vertical;font-size:12px;line-height:1.5;padding:8px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-mono,Consolas,Menlo,monospace);box-sizing:border-box}

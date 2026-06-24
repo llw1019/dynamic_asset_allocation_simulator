@@ -124,6 +124,18 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════════
+     共用區塊 ── 富果 API 即時現價更新
+     對應：fugle.js（金鑰存於本機 localStorage，不隨設定匯出）
+════════════════════════════════════════════════════════════ -->
+<div class="io-bar">
+  <span style="font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;gap:5px"><i class="ti ti-key"></i>富果金鑰</span>
+  <input type="password" id="fugle-key" class="fugle-key-input" placeholder="貼上富果行情 API Key（僅存本機）" autocomplete="off" oninput="onFugleKeyInput()"/>
+  <button class="io-btn" id="fugle-update-btn" onclick="updatePricesFromFugle()"><i class="ti ti-refresh"></i>更新現價</button>
+  <button class="io-btn" onclick="clearFugleKey()"><i class="ti ti-key-off"></i>清除金鑰</button>
+  <span id="fugle-msg" style="font-size:11px;color:var(--color-text-tertiary)"></span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
      輸出區塊 ── 模擬結果（填妥三項參數後解除 .pending 並渲染）
      對應：render.js（總渲染入口）
 ════════════════════════════════════════════════════════════ -->
@@ -405,6 +417,7 @@
 <script src="js/portfolio-metrics.js"></script>
 <script src="js/buy-score.js"></script>
 <script src="js/import-export.js"></script>
+<script src="js/fugle.js"></script>
 <script src="js/sell-advisor.js"></script>
 <script src="js/bootstrap.js"></script>
 </body>

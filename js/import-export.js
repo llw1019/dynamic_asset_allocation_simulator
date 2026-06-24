@@ -138,7 +138,7 @@ function applyPastedJSON(){
 }
 function showIOMsg(msg){const el=document.getElementById('io-msg');if(!el)return;el.textContent=msg;setTimeout(()=>{el.textContent='';},CONFIG.debounce.ioMsg);}
 function resetAll(){
-  if(!confirm('確定要重置所有設定與持倉資料？此操作無法復原。'))return;
+  if(!confirm('確定要重置所有設定與持倉資料（不含富果 API 金鑰）？此操作無法復原。'))return;
   localStorage.removeItem(LS_KEY);
   location.reload();
 }

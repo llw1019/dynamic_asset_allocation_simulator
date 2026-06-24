@@ -1,4 +1,4 @@
-const CACHE = 'daa-12.1';
+const CACHE = 'daa-12.2';
 const BASE = '/dynamic_asset_allocation_simulator/';
 const ASSETS = [
   BASE,
@@ -29,6 +29,7 @@ const ASSETS = [
   BASE + 'js/portfolio-metrics.js',
   BASE + 'js/buy-score.js',
   BASE + 'js/import-export.js',
+  BASE + 'js/fugle.js',
   BASE + 'js/sell-advisor.js',
   BASE + 'js/bootstrap.js'
 ];
