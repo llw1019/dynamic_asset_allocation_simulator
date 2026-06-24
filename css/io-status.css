@@ -1,0 +1,19 @@
+/* Import/export bar, JSON paste panel, drawdown & P&L status */
+.io-bar{display:flex;gap:8px;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center}
+.io-btn{font-size:12px;padding:6px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans);display:flex;align-items:center;gap:5px;transition:border-color .15s}
+.io-btn:hover{border-color:var(--color-text-secondary)}
+.io-file{display:none}
+.json-paste-panel{display:none;margin:-.6rem 0 1.2rem;padding:10px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary)}
+.json-paste-panel.open{display:block}
+.json-paste-panel textarea{width:100%;min-height:150px;resize:vertical;font-size:12px;line-height:1.5;padding:8px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-mono,Consolas,Menlo,monospace);box-sizing:border-box}
+.json-paste-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
+.drawdown-bar{margin-top:10px;padding:10px 14px;border-radius:var(--border-radius-md);font-size:12px;line-height:1.6;display:flex;align-items:center;gap:4px}
+.dd-ok{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.dd-warn{background:var(--color-warning-bg);color:var(--color-warning-text);border:0.5px solid var(--color-icon-warn)}
+.dd-danger{background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid var(--color-danger-border)}
+.pnl-area{margin-top:8px;padding:10px 14px;border-radius:var(--border-radius-md);font-size:12px;line-height:1.8;background:var(--color-background-secondary);color:var(--color-text-secondary);display:none}
+.pnl-area .pnl-row{display:flex;justify-content:space-between;align-items:center}
+.pnl-positive{color:var(--color-icon-ok);font-weight:600}
+.pnl-negative{color:var(--color-danger-text);font-weight:600}
+.pnl-zero{color:var(--color-text-tertiary)}
+.rebal-freq-note{font-size:11px;color:var(--color-text-tertiary);margin-bottom:8px;display:flex;align-items:center;gap:5px;line-height:1.6;padding:8px 12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md)}

@@ -1,0 +1,22 @@
+/* Regime banner, rate modifiers, trigger & hysteresis tags */
+.regime-banner{border-radius:var(--border-radius-lg);padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.regime-bull{background:var(--color-success-bg);border:0.5px solid var(--color-icon-ok)}
+.regime-bear{background:var(--color-danger-bg);border:0.5px solid var(--color-danger-accent)}
+.regime-range{background:var(--color-warning-bg);border:0.5px solid var(--color-icon-warn)}
+.regime-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.regime-name{font-size:15px;font-weight:500}
+.regime-bull .regime-name{color:var(--color-success-text)}.regime-bear .regime-name{color:var(--color-danger-text)}.regime-range .regime-name{color:var(--color-warning-text)}
+.regime-sub{font-size:12px;margin-left:auto}
+.regime-bull .regime-sub{color:var(--color-success-mid)}.regime-bear .regime-sub{color:var(--color-danger-sub)}.regime-range .regime-sub{color:var(--color-warning-text)}
+.modifier-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.2rem}
+.mod-tag{font-size:11px;padding:3px 10px;border-radius:4px;font-weight:500}
+.mod-neutral{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-primary)}
+.mod-rising{background:var(--color-warning-bg);color:var(--color-warning-text);border:0.5px solid var(--color-icon-warn)}
+.mod-falling{background:var(--color-nature-fixed-bg);color:var(--color-nature-fixed-text);border:0.5px solid var(--color-beta)}
+.mod-cash-locked{background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid var(--color-danger-accent)}
+.mod-cash-ok{background:var(--color-success-bg);color:var(--color-success-mid);border:0.5px solid var(--color-icon-ok)}
+.mod-cash-wait{background:var(--color-warning-bg);color:var(--color-warning-text);border:0.5px solid var(--color-icon-warn)}
+.trigger-tag{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500}
+.trigger-vix{background:var(--color-trigger-vix-bg);color:var(--color-trigger-vix-text)}.trigger-trend{background:var(--color-trigger-trend-bg);color:var(--color-trigger-trend-text)}
+.trigger-both{background:var(--color-danger-accent);color:var(--color-on-accent)}.trigger-extreme{background:var(--color-trigger-extreme-bg);color:var(--color-on-accent)}
+.hysteresis-tag{font-size:11px;padding:3px 10px;border-radius:4px;font-weight:500;background:var(--color-danger-bg);color:var(--color-danger-text);border:0.5px solid var(--color-danger-accent)}

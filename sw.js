@@ -1,11 +1,36 @@
-const CACHE = 'daa-12.0';
+const CACHE = 'daa-12.1';
+const BASE = '/dynamic_asset_allocation_simulator/';
 const ASSETS = [
-  '/dynamic_asset_allocation_simulator/',
-  '/dynamic_asset_allocation_simulator/index.html',
-  '/dynamic_asset_allocation_simulator/manifest.json',
-  '/dynamic_asset_allocation_simulator/icon.svg',
-  '/dynamic_asset_allocation_simulator/icon-192.png',
-  '/dynamic_asset_allocation_simulator/icon-512.png'
+  BASE,
+  BASE + 'index.html',
+  BASE + 'manifest.json',
+  BASE + 'icon.svg',
+  BASE + 'icon-192.png',
+  BASE + 'icon-512.png',
+  BASE + 'css/tokens.css',
+  BASE + 'css/base.css',
+  BASE + 'css/parameters.css',
+  BASE + 'css/regime.css',
+  BASE + 'css/allocation.css',
+  BASE + 'css/io-status.css',
+  BASE + 'css/buy-score.css',
+  BASE + 'css/sell-advisor.css',
+  BASE + 'js/state.js',
+  BASE + 'js/config.js',
+  BASE + 'js/format.js',
+  BASE + 'js/regime-presenter.js',
+  BASE + 'js/portfolio-base.js',
+  BASE + 'js/market-ui.js',
+  BASE + 'js/storage.js',
+  BASE + 'js/regime-logic.js',
+  BASE + 'js/input-handlers.js',
+  BASE + 'js/render.js',
+  BASE + 'js/holdings.js',
+  BASE + 'js/portfolio-metrics.js',
+  BASE + 'js/buy-score.js',
+  BASE + 'js/import-export.js',
+  BASE + 'js/sell-advisor.js',
+  BASE + 'js/bootstrap.js'
 ];
 
 self.addEventListener('install', e => {

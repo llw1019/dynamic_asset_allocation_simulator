@@ -1,0 +1,29 @@
+/* Target buy-in scoring UI + responsive tweaks */
+.buy-score-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:12px}
+.buy-form{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.buy-field{display:flex;flex-direction:column;gap:4px}
+.buy-field.wide{grid-column:1/-1}
+.buy-field label{font-size:11px;color:var(--color-text-secondary)}
+.buy-field input,.buy-field select{width:100%;font-size:12px;padding:6px 9px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-primary);background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans)}
+.score-list{display:flex;flex-direction:column;gap:7px}
+.score-row{display:grid;grid-template-columns:96px 1fr 48px;gap:8px;align-items:center;font-size:12px;color:var(--color-text-secondary)}
+.score-track{height:8px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden}
+.score-fill{height:100%;border-radius:3px;background:var(--color-beta);transition:width .2s ease}
+.score-val{text-align:right;color:var(--color-text-primary);font-weight:500}
+.buy-result-box{border-radius:var(--border-radius-md);padding:12px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-primary)}
+.buy-result-symbol{font-size:11px;color:var(--color-text-secondary);margin-bottom:2px}
+.buy-result-title{font-size:18px;font-weight:600;color:var(--color-text-primary);margin-bottom:2px}
+.buy-result-action{font-size:13px;font-weight:500;margin-bottom:8px}
+.buy-result-good{color:var(--color-success-text)}.buy-result-warn{color:var(--color-warning-text)}.buy-result-bad{color:var(--color-danger-text)}
+.buy-notes{font-size:11px;line-height:1.6;color:var(--color-text-secondary);display:flex;flex-direction:column;gap:4px}
+.buy-note{display:flex;gap:5px;align-items:flex-start}
+.buy-note i{font-size:12px;margin-top:2px;flex-shrink:0}
+@media(max-width:720px){.buy-score-grid{grid-template-columns:1fr}.buy-form{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.buy-form{grid-template-columns:1fr}}
+@media(max-width:500px){.rebalance-table .col-tgt-pct,.rebalance-table .col-hold-pct{display:none}}
+@media(max-width:400px){.bar-row{flex-wrap:wrap}.bar-track{flex:1 0 150px}.bar-amt{margin-left:auto}}
+@media(max-width:520px){
+  .inp-peak{width:55px}
+  .peak-hint{margin-left:0;margin-top:2px}
+  .holding-row{row-gap:4px}
+}
