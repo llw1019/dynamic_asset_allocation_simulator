@@ -183,6 +183,28 @@
   /* push badge to the far right in input/output label rows */
   .lbl-spacer { flex: 1; }
 
+  /* inline 高水位 / 現金 fields in the 更新資料 header */
+  .row-lbl.wrap { flex-wrap: wrap; }
+  .mini-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+  }
+  .mini-field input {
+    width: 88px;
+    font-size: 12px;
+    padding: 4px 7px;
+    border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-primary);
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+  }
+  .mini-field input:focus { outline: none; border-color: var(--color-beta); }
+
   /* upload button */
   .btn-upload {
     background: var(--color-background-secondary);
@@ -503,9 +525,11 @@
   </section>
 
   <section class="panel">
-    <div class="row-lbl">
+    <div class="row-lbl wrap">
       更新資料
       <span class="lbl-spacer"></span>
+      <label class="mini-field">高水位<input type="number" id="hwmInput" min="0" step="1" placeholder="選填"></label>
+      <label class="mini-field">現金<input type="number" id="cashInput" min="0" step="1" placeholder="選填"></label>
       <span class="badge" id="updateBadge">—</span>
       <button class="btn-clear" onclick="clearUpdate()" title="清除"><i class="ti ti-x"></i></button>
     </div>
@@ -636,8 +660,10 @@ function applyUpdates() {
   try {
     const jsonText   = document.getElementById('jsonInput').value.trim();
     const rawUpdates = document.getElementById('updateData').value;
-    if (!jsonText)          throw new Error('請貼上 JSON');
-    if (!rawUpdates.trim()) throw new Error('請貼上更新資料');
+    const hwmRaw     = document.getElementById('hwmInput').value.trim();
+    const cashRaw    = document.getElementById('cashInput').value.trim();
+    if (!jsonText) throw new Error('請貼上 JSON');
+    if (!rawUpdates.trim() && !hwmRaw && !cashRaw) throw new Error('請貼上更新資料，或填寫高水位 / 現金');
 
     const data    = JSON.parse(jsonText);
     const updates = parseUpdates(rawUpdates);
@@ -666,6 +692,28 @@ function applyUpdates() {
       if (!matched.includes(code)) notFound.push(code);
     }
 
+    // ── 組合層級欄位：資產高水位 / 現金 ──
+    const extraUpdated = [];
+    if (hwmRaw) {
+      const n = Number(hwmRaw);
+      if (!Number.isFinite(n) || n <= 0) throw new Error('高水位必須是正數');
+      const oldVal = (data.hwm !== undefined && data.hwm !== null) ? String(data.hwm) : '';
+      const newVal = String(n);
+      diffRows.push({ category: '組合設定', code: '高水位', field: '__amt__', fieldLabel: '金額(元)', oldVal, newVal, changed: oldVal !== newVal });
+      data.hwm = n;
+      extraUpdated.push('高水位');
+    }
+    if (cashRaw) {
+      const n = Number(cashRaw);
+      if (!Number.isFinite(n) || n < 0) throw new Error('現金必須是非負數');
+      if (!Array.isArray(data.holdings.cash) || !data.holdings.cash.length) data.holdings.cash = [{ amt: '' }];
+      const oldVal = (data.holdings.cash[0].amt !== undefined && data.holdings.cash[0].amt !== null) ? String(data.holdings.cash[0].amt) : '';
+      const newVal = String(n);
+      diffRows.push({ category: 'cash', code: '現金', field: '__amt__', fieldLabel: '金額(元)', oldVal, newVal, changed: oldVal !== newVal });
+      data.holdings.cash[0].amt = newVal;
+      extraUpdated.push('現金');
+    }
+
     const output = JSON.stringify(data, null, 2);
     document.getElementById('jsonOutput').value = output;
 
@@ -689,7 +737,7 @@ function applyUpdates() {
       tr.innerHTML = `
         <td class="cat-cell"></td>
         <td class="code-cell"></td>
-        <td class="field-name">${FIELD_LABELS[r.field]}</td>
+        <td class="field-name">${r.fieldLabel || FIELD_LABELS[r.field] || ''}</td>
         <td class="${r.changed ? 'old-val' : 'unchanged'}">${r.oldVal}</td>
         <td class="arrow">${r.changed ? '→' : ''}</td>
         <td class="${r.changed ? 'new-val' : 'unchanged'}">${r.changed ? r.newVal : ''}</td>
@@ -704,16 +752,18 @@ function applyUpdates() {
       diffBody.appendChild(tr);
     }
 
+    const extraNote = extraUpdated.length ? `（含 ${extraUpdated.join('、')}）` : '';
     document.getElementById('diffSummary').innerHTML =
-      `<b>${changedCount}</b> 欄位有更新，共 <b>${matched.length}</b> 筆`;
+      `<b>${changedCount}</b> 欄位有更新，共 <b>${matched.length}</b> 筆${extraNote}`;
     diffSec.classList.add('visible');
 
     document.getElementById('btnCopy').disabled     = false;
     document.getElementById('btnDownload').disabled = false;
 
+    const extraMsg = extraUpdated.length ? `，${extraUpdated.join('、')}已更新` : '';
     setStatus('ok', notFound.length
-      ? `已更新 ${matched.length} 筆，找不到：${notFound.join(', ')}`
-      : `已更新 ${matched.length} 筆`);
+      ? `已更新 ${matched.length} 筆${extraMsg}，找不到：${notFound.join(', ')}`
+      : `已更新 ${matched.length} 筆${extraMsg}`);
   } catch (e) {
     setStatus('err', '錯誤：' + e.message);
     diffSec.classList.remove('visible');
@@ -792,6 +842,8 @@ function clearInput() {
 }
 function clearUpdate() {
   document.getElementById('updateData').value = '';
+  document.getElementById('hwmInput').value = '';
+  document.getElementById('cashInput').value = '';
   document.getElementById('updateBadge').textContent = '—';
   document.getElementById('updateBadge').className = 'badge';
 }
